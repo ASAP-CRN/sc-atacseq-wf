@@ -42,28 +42,40 @@ def main(args):
         renamed = f"{sample_id}_{sample}_{lane}_{read}_001{extension}"
 
     # Auto-detect R3 files and apply swap logic
-    # If this is an R3 file, rename it to R2
-    if "_R3_" in renamed:
-        renamed = renamed.replace("_R3_", "_R2_")
-    # If this is an R2 file, check if there's a corresponding R3 file
-    elif "_R2_" in renamed:
-        # Extract sample and lane info to check for R3
-        sample_match = re.search(r"(S[0-9]+)", fastq_basename)
-        lane_match = re.search(r"(L[0-9]{3})", fastq_basename)
+    ## If sample has R1, R2, R3, I1 then R3 -> R2, and R2 -> I2
+    ## If sample has R1, R2, R3 then R3 -> R2, and R2 -> I1
+    sample_match = re.search(r"(S[0-9]+)", fastq_basename)
+    lane_match = re.search(r"(L[0-9]{3})", fastq_basename)
+
+    if sample_match and lane_match:
+        sample_num = sample_match.group(1)
+        lane_num = lane_match.group(1)
         
-        if sample_match and lane_match:
-            sample_num = sample_match.group(1)
-            lane_num = lane_match.group(1)
-            # Check if R3 file exists for this sample/lane
-            r3_pattern = join(fastq_dir, f"*{sample_num}*{lane_num}*R3*.fastq*")
-            r3_files = glob(r3_pattern)
-            
-            if r3_files:
-                # R3 exists, so this R2 should become I2
-                renamed = renamed.replace("_R2_", "_I2_")
+        # Check for presence of each read type
+        r1_pattern = join(fastq_dir, f"*{sample_num}*{lane_num}*R1*.fastq*")
+        r2_pattern = join(fastq_dir, f"*{sample_num}*{lane_num}*R2*.fastq*")
+        r3_pattern = join(fastq_dir, f"*{sample_num}*{lane_num}*R3*.fastq*")
+        i1_pattern = join(fastq_dir, f"*{sample_num}*{lane_num}*I1*.fastq*")
+        
+        has_r1 = bool(glob(r1_pattern))
+        has_r2 = bool(glob(r2_pattern))
+        has_r3 = bool(glob(r3_pattern))
+        has_i1 = bool(glob(i1_pattern))
+        
+        # Only apply renaming if we have R3
+        if has_r3:
+            # R3 becomes R2
+            if "_R3_" in renamed:
+                renamed = renamed.replace("_R3_", "_R2_")
+            # R2 becomes I1 (if no I1) or I2 (if I1 exists)
+            elif "_R2_" in renamed:
+                if has_i1:
+                    renamed = renamed.replace("_R2_", "_I2_")
+                else:
+                    renamed = renamed.replace("_R2_", "_I1_")
 
     print(renamed)
-
+    
 
 if __name__ == "__main__":
     parser = ArgumentParser(
