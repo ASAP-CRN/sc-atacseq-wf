@@ -1,0 +1,10 @@
+argparse==1.4.0
+episcanpy==0.4.0
+harmonypy==0.2.0
+jax==0.9.0
+pyarrow==23.0.0
+scanpy==1.12
+scib-metrics==0.5.7
+scvi-tools[cuda]==1.4.1
+tables==3.10.2
+torch==2.10.0
