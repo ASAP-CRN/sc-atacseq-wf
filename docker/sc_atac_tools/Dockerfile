@@ -33,6 +33,11 @@ RUN apt-get -qq update \
 		libffi-dev \
 		liblzma-dev \
 		git \
+		gfortran \
+		libopenblas-dev \
+		liblapack-dev \
+		pkg-config \
+		libhdf5-dev \
 	&& rm -rf /var/lib/apt/lists/*
 
 # gcloud sdk; needed to upload output files
