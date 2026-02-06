@@ -1,0 +1,109 @@
+#!/usr/bin/env python3
+
+import argparse
+import anndata as ad
+import scanpy as sc
+import snapatac2 as snap
+
+
+def merge_adata(
+    adata_objects_fofn: str, chunk_size: int = 5
+):
+    sample_files = []
+    # Note that the sample id should be the official ASAP_samples
+    with open(adata_objects_fofn, "r") as file:
+        for sample in file:
+            # Check that sample line is not empty
+            if sample.strip():
+                columns = sample.strip().split("\t")
+                sample_files.append(columns)
+
+    print(f"Processing {len(sample_files)} samples in chunks of {chunk_size}")
+
+    merged_chunks = []
+
+    for i in range(0, len(sample_files), chunk_size):
+        chunk_files = sample_files[i:i+chunk_size]
+        print(f"Processing chunk {i//chunk_size + 1}/{(len(sample_files)-1)//chunk_size + 1}")
+
+        adatas = {}
+        for sample_name, file_path in chunk_files:
+            raw = sc.read_h5ad(file_path)
+            adatas[sample_name] = raw
+
+        chunk_adata = ad.concat(
+            adatas, 
+            merge="same", 
+            uns_merge="same", 
+            index_unique="_"
+        )
+
+        merged_chunks.append(chunk_adata)
+
+        # Clean up memory
+        del adatas
+
+    # We could subset to the top_genes here before concat if we have memory issues (e.g. whole dataset harmonization)
+    print("Merging all chunks...")
+    final_adata = ad.concat(
+        merged_chunks,
+        merge="same",
+        uns_merge="same",
+        index_unique="_"
+    )
+
+    return final_adata
+
+
+def compute_qc_metrics(
+    adatas: AnnData
+):
+    snap.metrics.tsse(adatas, snap.genome.hg38)
+    snap.pp.filter_cells(adatas, min_tsse=7)
+    snap.pp.add_tile_matrix(adatas, bin_size=5000)
+    snap.pp.select_features(adatas, n_features=50000)
+    snap.pp.scrublet(adatas)
+    snap.pp.filter_doublets(adatas)
+
+    return adatas
+
+
+def main(args):
+    adatas = merge_adata(args.adata_objects_fofn)
+    qc_adatas = compute_qc_metrics(adatas)
+
+    adata.write_h5ad(filename=args.adata_output, compression="gzip")
+    print(f"Wrote {args.adata_output}")
+    adata.obs.to_csv(args.output_metadata_file, index=True)
+    print(f"Wrote {args.output_metadata_file}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Merge AnnData objects and calculate and plot QC metrics including tile matrices, features, and doublets"
+    )
+    parser.add_argument(
+        "a",
+        "--adata-objects-fofn",
+        type=str,
+        required=True,
+        help="Newline-delimited TSV of sample names and paths to the set of input adata objects (file-of-filenames)"
+    )
+    parser.add_argument(
+        "o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+    parser.add_argument(
+        "m",
+        "--output-metadata",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object metadata"
+    )
+
+    args = parser.parse_args()
+
+    main(args)

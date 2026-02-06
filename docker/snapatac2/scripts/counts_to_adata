@@ -78,7 +78,7 @@ if __name__ == "__main__":
         "--adata-output",
         type=str,
         required=True,
-        help="Output file name for the AnnData object"
+        help="Output file name for saving the AnnData object"
     )
 
     args = parser.parse_args()
