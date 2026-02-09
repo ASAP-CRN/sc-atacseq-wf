@@ -63,7 +63,6 @@ def compute_qc_metrics(
     frag_size_distr_out = f"{plot_prefix}.frag_size_distr.png"
     snap.pl.frag_size_distr(
         adatas,
-        interactive=False,
         show=False,
         out_file=frag_size_distr_out
     )
@@ -73,7 +72,6 @@ def compute_qc_metrics(
     tsse_out = f"{plot_prefix}.tsse.png"
     snap.pl.tsse(
         adatas,
-        interactive=False,
         show=False,
         out_file=tsse_out
     )

@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+import argparse
+import snapatac2 as snap
+
+
+def cluster(
+    adata: AnnData, plot_prefix: str
+):
+    print(f"Clustering...")
+    snap.pp.knn(adata, use_rep="X_spectral_harmony")
+    snap.tl.leiden(adata)
+
+    umap_leiden_out = f"{plot_prefix}.umap_leiden.png"
+    snap.pl.umap(
+        adata,
+        color="leiden",
+        show=False,
+        out_file=umap_leiden_out
+    )
+    print(f"Wrote {umap_leiden_out}")
+
+    return adata
+
+
+def main(args):
+    adata = snap.read(args.adata_input)
+    adata_clustered = cluster(adata, args.plot_prefix)
+
+    adata_clustered.write(
+        filename=args.adata_output,
+        backend="hdf5",
+        compression="gzip"
+    )
+    print(f"Wrote {args.adata_output}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Cell clustering using k-nearest neighbor graph and Leiden community detection"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset",
+    )
+    parser.add_argument(
+        "-p",
+        "--plot-prefix",
+        type=str,
+        required=True,
+        help="Prefix used to name plots"
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+
+    args = parser.parse_args()
+
+    main(args)
