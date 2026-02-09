@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+import argparse
+import pandas as pd
+import snapatac2 as snap
+
+
+def run_harmony(
+    adata: AnnData, batch_key: str
+):
+    print(f"Running Harmony integration...")
+    snap.pp.harmony(
+        adata,
+        batch=batch_key,
+        max_iter_harmony=20
+    )
+
+    return adata
+
+
+def main(args):
+    adata = snap.read(args.adata_input)
+    adata_harmony = run_harmony(adata, args.batch_key)
+
+    adata_harmony.write(
+        filename=args.adata_output,
+        backend="hdf5",
+        compression="gzip"
+    )
+    print(f"Wrote {args.adata_output}")
+
+    metadata = adata_harmony.obs
+    metadata["UMAP_1"] = adata_harmony.obsm["X_umap"][:, 0]
+    metadata["UMAP_2"] = adata_harmony.obsm["X_umap"][:, 1]
+    metadata.to_csv(
+        args.output_metadata,
+        index=True
+    )
+    print(f"Wrote {args.output_metadata}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Run Harmony for batch correction"
+    )
+    parser.add_argument(
+        "-b",
+        "--batch-key",
+        type=str,
+        required=True,
+        help="Key in AnnData object for batch information"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset",
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+    parser.add_argument(
+        "-m",
+        "--output-metadata",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object metadata"
+    )
+
+    args = parser.parse_args()
+
+    main(args)
