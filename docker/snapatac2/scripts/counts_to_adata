@@ -33,7 +33,8 @@ def main(args):
     )
     adata.write(
         filename=args.adata_output,
-        backend="hdf5"
+        backend="hdf5",
+        compression="gzip"
     )
     print(f"Wrote {args.adata_output}")
 

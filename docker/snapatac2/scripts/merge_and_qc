@@ -56,12 +56,34 @@ def merge_adata(
 
 
 def compute_qc_metrics(
-    merged_adata: AnnData
+    merged_adata: AnnData, plot_prefix: str
 ):
+    # TODO - check all plots
+    frag_size_distr_out = f"{plot_prefix}.frag_size_distr.png"
+    snap.pl.frag_size_distr(
+        adatas,
+        interactive=False,
+        show=False,
+        out_file=frag_size_distr_out
+    )
+    print(f"Wrote {frag_size_distr_out}")
+
     snap.metrics.tsse(adatas, snap.genome.hg38)
+    tsse_out = f"{plot_prefix}.tsse.png"
+    snap.pl.tsse(
+        adatas,
+        interactive=False,
+        show=False,
+        out_file=tsse_out
+    )
+    print(f"Wrote {tsse_out}")
+
     snap.pp.filter_cells(adatas, min_tsse=7)
+    # snap.pp.filter_cells(adatas, min_counts=5000, min_tsse=10, max_counts=100000)
+
     snap.pp.add_tile_matrix(adatas, bin_size=5000)
     snap.pp.select_features(adatas, n_features=50000)
+
     snap.pp.scrublet(adatas)
     snap.pp.filter_doublets(adatas)
 
@@ -70,13 +92,15 @@ def compute_qc_metrics(
 
 def main(args):
     adatas = merge_adata(args.adata_objects_fofn)
-    adatas_qc = compute_qc_metrics(adatas)
+    adatas_qc = compute_qc_metrics(adatas, args.plot_prefix)
 
     adatas_qc.write(
         filename=args.adata_output,
-        backend="hdf5"
+        backend="hdf5",
+        compression="gzip"
     )
     print(f"Wrote {args.adata_output}")
+    
     adatas_qc.obs.to_csv(
         args.output_metadata_file,
         index=True
@@ -89,21 +113,28 @@ if __name__ == "__main__":
         description="Merge AnnData objects and calculate and plot QC metrics including tile matrices, features, and doublets"
     )
     parser.add_argument(
-        "a",
+        "-a",
         "--adata-objects-fofn",
         type=str,
         required=True,
         help="Newline-delimited TSV of sample names and paths to the set of input adata objects (file-of-filenames)"
     )
     parser.add_argument(
-        "o",
+        "-p",
+        "--plot-prefix",
+        type=str,
+        required=True,
+        help="Prefix used to name plots"
+    )
+    parser.add_argument(
+        "-o",
         "--adata-output",
         type=str,
         required=True,
         help="Output file name for saving the AnnData object"
     )
     parser.add_argument(
-        "m",
+        "-m",
         "--output-metadata",
         type=str,
         required=True,
