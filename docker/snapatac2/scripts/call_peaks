@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+import argparse
+import pandas as pd
+import snapatac2 as snap
+
+
+def call_peaks(
+    adata: AnnData, output_prefix: str
+):
+    print(f"Calling peaks by Leiden...")
+    snap.tl.macs3(adata, groupby="leiden", replicate="sample")
+    merged_peaks = snap.tl.merge_peaks(adata.uns["macs3"], chrom_sizes=snap.genome.hg38)
+    print(f"Merged peaks dim:")
+    merged_peaks.shape
+
+    adata.uns["merged_peaks"] = merged_peaks
+
+    peaks_df = pd.DataFrame({
+        'chrom': merged_peaks.chrom,
+        'start': merged_peaks.start,
+        'end': merged_peaks.end
+    })
+
+    return adata, peaks_df
+
+
+def main(args):
+    adata = snap.read(args.adata_input)
+    adata_clustered, merged_peaks_df = cluster(adata, args.output_prefix)
+
+    adata_clustered.write(
+        filename=args.adata_output,
+        backend="hdf5",
+        compression="gzip"
+    )
+    print(f"Wrote {args.adata_output}")
+
+    merged_peaks_bed = f"{args.output_prefix}.merged_peaks.bed"
+    merged_peaks_df.to_csv(
+        merged_peaks_bed,
+        sep="\t",
+        header=False,
+        index=False
+    )
+    print(f"Wrote {merged_peaks_bed}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Peak calling with MACS3 to identify accessible chromatin regions"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset",
+    )
+    parser.add_argument(
+        "-p",
+        "--output-prefix",
+        type=str,
+        required=True,
+        help="Prefix used to name output files (i.e. merged peaks bed file)"
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+
+    args = parser.parse_args()
+
+    main(args)
