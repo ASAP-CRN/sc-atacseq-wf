@@ -7,6 +7,7 @@ import snapatac2 as snap
 def add_metadata(
     adata: AnnData, sample_id: str, batch: str, team_id: str, dataset_id: str
 ):
+    print("Adding metadata to sample-level AnnData object")
     adata.obs["sample"] = sample_id
     adata.obs["batch"] = batch
     adata.obs["team"] = team_id
@@ -17,9 +18,11 @@ def add_metadata(
 
 
 def main(args):
+    # This computes basic QC metrics like the number of unique fragments per cell, fraction of duplicated reads and fraction of mitochondrial read 
     adata = snap.pp.import_fragments(
         fragment_file=args.cellranger_atac_fragments,
-        chrom_sizes=snap.genome.hg38
+        chrom_sizes=snap.genome.hg38,
+        sorted_by_barcode=False
     )
     adata = add_metadata(
         adata,
@@ -32,6 +35,7 @@ def main(args):
         filename=args.adata_output,
         backend="hdf5"
     )
+    print(f"Wrote {args.adata_output}")
 
 
 if __name__ == "__main__":

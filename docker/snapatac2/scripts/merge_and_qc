@@ -2,7 +2,7 @@
 
 import argparse
 import anndata as ad
-import scanpy as sc
+import pandas as pd
 import snapatac2 as snap
 
 
@@ -28,7 +28,7 @@ def merge_adata(
 
         adatas = {}
         for sample_name, file_path in chunk_files:
-            raw = sc.read_h5ad(file_path)
+            raw = snap.read(file_path)
             adatas[sample_name] = raw
 
         chunk_adata = ad.concat(
@@ -45,18 +45,18 @@ def merge_adata(
 
     # We could subset to the top_genes here before concat if we have memory issues (e.g. whole dataset harmonization)
     print("Merging all chunks...")
-    final_adata = ad.concat(
+    merged_adata = ad.concat(
         merged_chunks,
         merge="same",
         uns_merge="same",
         index_unique="_"
     )
 
-    return final_adata
+    return merged_adata
 
 
 def compute_qc_metrics(
-    adatas: AnnData
+    merged_adata: AnnData
 ):
     snap.metrics.tsse(adatas, snap.genome.hg38)
     snap.pp.filter_cells(adatas, min_tsse=7)
@@ -70,11 +70,17 @@ def compute_qc_metrics(
 
 def main(args):
     adatas = merge_adata(args.adata_objects_fofn)
-    qc_adatas = compute_qc_metrics(adatas)
+    adatas_qc = compute_qc_metrics(adatas)
 
-    adata.write_h5ad(filename=args.adata_output, compression="gzip")
+    adatas_qc.write(
+        filename=args.adata_output,
+        backend="hdf5"
+    )
     print(f"Wrote {args.adata_output}")
-    adata.obs.to_csv(args.output_metadata_file, index=True)
+    adatas_qc.obs.to_csv(
+        args.output_metadata_file,
+        index=True
+    )
     print(f"Wrote {args.output_metadata_file}")
 
 

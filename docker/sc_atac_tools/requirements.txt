@@ -1,5 +1,4 @@
 argparse==1.4.0
-harmonypy==0.2.0
 jax==0.9.0
 pyarrow==23.0.0
 scanpy==1.11.3
