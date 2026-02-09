@@ -58,6 +58,7 @@ def merge_adata(
 def compute_qc_metrics(
     merged_adata: AnnData, plot_prefix: str
 ):
+    print("Computing QC metrics...")
     # TODO - check all plots
     frag_size_distr_out = f"{plot_prefix}.frag_size_distr.png"
     snap.pl.frag_size_distr(
@@ -100,7 +101,7 @@ def main(args):
         compression="gzip"
     )
     print(f"Wrote {args.adata_output}")
-    
+
     adatas_qc.obs.to_csv(
         args.output_metadata_file,
         index=True
