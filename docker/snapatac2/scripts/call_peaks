@@ -17,9 +17,9 @@ def call_peaks(
     adata.uns["merged_peaks"] = merged_peaks
 
     peaks_df = pd.DataFrame({
-        'chrom': merged_peaks.chrom,
-        'start': merged_peaks.start,
-        'end': merged_peaks.end
+        "chrom": merged_peaks.chrom,
+        "start": merged_peaks.start,
+        "end": merged_peaks.end
     })
 
     return adata, peaks_df
@@ -27,9 +27,9 @@ def call_peaks(
 
 def main(args):
     adata = snap.read(args.adata_input)
-    adata_clustered, merged_peaks_df = cluster(adata, args.output_prefix)
+    adata_peaks, merged_peaks_df = cluster(adata, args.output_prefix)
 
-    adata_clustered.write(
+    adata_peaks.write(
         filename=args.adata_output,
         backend="hdf5",
         compression="gzip"
