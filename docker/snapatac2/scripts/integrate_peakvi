@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+
+import os
+import argparse
+import scanpy as sc
+import scvi
+
+
+def train_model(
+    adata: AnnData, batch_key: str, latent_key: str
+):
+    print(f"Training data with PeakVI...")
+    scvi.model.PEAKVI.setup_anndata(
+        adata,
+        layer="counts",
+        batch_key=batch_key
+    )
+
+    model = scvi.model.PEAKVI(adata)
+    model.train()
+
+    latent = model.get_latent_representation()
+    adata.obsm[latent_key] = latent
+    print(f"Latent space dim:")
+    latent.shape
+
+    return adata, model
+
+
+def main(args):
+    # Set the number of data loader workers
+    scvi.settings.dl_num_workers = max(1, os.cpu_count() - 1)
+    print(f"Using {scvi.settings.dl_num_workers} workers")
+
+    adata = sc.read_h5ad(args.adata_input)
+    adata_peakvi, peakvi_model = train_model(adata, args.batch_key, args.latent_key)
+
+    peakvi_model.save(args.output_scvi_dir, overwrite=True)
+    print(f"Wrote PeakVI model to {args.output_scvi_dir}")
+
+    adata_peakvi.write_h5ad(
+        filename=args.adata_output,
+        compression="gzip"
+    )
+    print(f"Wrote {args.adata_output}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Run PeakVI integration"
+    )
+    parser.add_argument(
+        "-b",
+        "--batch-key",
+        type=str,
+        required=True,
+        help="Key in AnnData object for batch information"
+    )
+    parser.add_argument(
+        "-l",
+        "--latent-key",
+        type=str,
+        required=True,
+        help="Latent key to save the PeakVI latent to",
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset",
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+    parser.add_argument(
+        "-s",
+        "--output-scvi-dir",
+        type=str,
+        required=True,
+        help="Output folder to save PeakVI model",
+    )
+
+    args = parser.parse_args()
+
+    main(args)
