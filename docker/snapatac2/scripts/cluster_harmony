@@ -11,14 +11,14 @@ def cluster(
     snap.pp.knn(adata, use_rep="X_spectral_harmony")
     snap.tl.leiden(adata)
 
-    umap_leiden_out = f"{plot_prefix}.umap_leiden.png"
+    umap_out = f"{plot_prefix}.harmony.umap.png"
     snap.pl.umap(
         adata,
         color="leiden",
         show=False,
-        out_file=umap_leiden_out
+        out_file=umap_out
     )
-    print(f"Wrote {umap_leiden_out}")
+    print(f"Wrote {umap_out}")
 
     return adata
 

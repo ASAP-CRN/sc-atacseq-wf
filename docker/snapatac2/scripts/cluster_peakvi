@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+
+import argparse
+import scanpy as sc
+import scvi
+
+
+def cluster(
+    adata: AnnData, latent_key: str
+):
+    print(f"Clustering...")
+    PEAKVI_CLUSTERS_KEY = "clusters_peakvi"
+    # Compute the k-nearest-neighbor graph that is used in both clustering and UMAP algorithms
+    sc.pp.neighbors(adata, use_rep=latent_key)
+    sc.tl.umap(adata, min_dist=0.2)
+    sc.tl.leiden(
+        adata,
+        key_added=PEAKVI_CLUSTERS_KEY,
+        resolution=0.2 # TODO
+    )
+
+    sc.pl.umap(
+        adata,
+        color=PEAKVI_CLUSTERS_KEY,
+        save=".png"
+    )
+    print(f"Wrote umap.png; will rename")
+
+    return adata
+
+
+def main(args):
+    adata = sc.read_h5ad(args.adata_input)
+    adata_clustered = cluster(adata, args.latent_key)
+
+    adata_clustered.write(
+        filename=args.adata_output,
+        compression="gzip"
+    )
+    print(f"Wrote {args.adata_output}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Cell clustering with Leiden algorithm on PeakVI latent space"
+    )
+    parser.add_argument(
+        "-l",
+        "--latent-key",
+        type=str,
+        required=True,
+        help="Latent key to save the PeakVI latent to",
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset",
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+
+    args = parser.parse_args()
+
+    main(args)
