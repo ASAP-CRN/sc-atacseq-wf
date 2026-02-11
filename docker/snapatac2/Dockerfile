@@ -54,6 +54,5 @@ RUN update-alternatives --install /usr/bin/python3 python3 /opt/Python-${PYTHON3
 COPY ./requirements.txt /opt/requirements.txt
 RUN python3 -m pip install -r /opt/requirements.txt
 
-COPY --from=scripts /opt/scripts /opt/scripts
 COPY scripts /opt/scripts
 ENV PATH "${PATH}:/opt/scripts:/opt/scripts/main"
