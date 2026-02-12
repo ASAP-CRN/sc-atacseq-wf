@@ -6,7 +6,7 @@ import snapatac2 as snap
 
 
 def call_peaks(
-    adata: AnnData, output_prefix: str
+    adata: snap.AnnData, output_prefix: str
 ):
     print(f"Calling peaks by Leiden...")
     snap.tl.macs3(adata, groupby="leiden", replicate="sample")

@@ -6,7 +6,7 @@ import snapatac2 as snap
 
 
 def run_harmony(
-    adata: AnnData, batch_key: str
+    adata: snap.AnnData, batch_key: str
 ):
     print(f"Running Harmony integration...")
     snap.pp.harmony(

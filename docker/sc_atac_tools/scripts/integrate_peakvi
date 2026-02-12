@@ -7,7 +7,7 @@ import scvi
 
 
 def train_model(
-    adata: AnnData, batch_key: str, latent_key: str
+    adata: sc.AnnData, batch_key: str, latent_key: str
 ):
     print(f"Training data with PeakVI...")
     scvi.model.PEAKVI.setup_anndata(

@@ -6,7 +6,7 @@ import scvi
 
 
 def cluster(
-    adata: AnnData, latent_key: str
+    adata: sc.AnnData, latent_key: str
 ):
     print(f"Clustering...")
     PEAKVI_CLUSTERS_KEY = "clusters_peakvi"

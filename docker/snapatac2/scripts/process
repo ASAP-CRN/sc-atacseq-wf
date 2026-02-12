@@ -5,7 +5,7 @@ import snapatac2 as snap
 
 
 def reduce_dims(
-    adata: AnnData
+    adata: snap.AnnData
 ):
     print(f"Performing dimension reduction...")
     snap.tl.spectral(adata)

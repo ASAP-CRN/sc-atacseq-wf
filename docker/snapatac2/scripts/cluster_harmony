@@ -5,7 +5,7 @@ import snapatac2 as snap
 
 
 def cluster(
-    adata: AnnData, plot_prefix: str
+    adata: snap.AnnData, plot_prefix: str
 ):
     print(f"Clustering...")
     snap.pp.knn(adata, use_rep="X_spectral_harmony")

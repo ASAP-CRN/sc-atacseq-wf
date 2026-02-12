@@ -56,7 +56,7 @@ def merge_adata(
 
 
 def compute_qc_metrics(
-    merged_adata: AnnData, plot_prefix: str
+    merged_adata: snap.AnnData, plot_prefix: str
 ):
     print("Computing QC metrics...")
     # TODO - check all plots

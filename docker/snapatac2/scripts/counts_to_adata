@@ -5,7 +5,7 @@ import snapatac2 as snap
 
 
 def add_metadata(
-    adata: AnnData, sample_id: str, batch: str, team_id: str, dataset_id: str
+    adata: snap.AnnData, sample_id: str, batch: str, team_id: str, dataset_id: str
 ):
     print("Adding metadata to sample-level AnnData object")
     adata.obs["sample"] = sample_id
