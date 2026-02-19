@@ -20,7 +20,8 @@ def run_harmony(
 
 
 def main(args):
-    adata = snap.read(args.adata_input)
+    # Read AnnData into memory so metadata can be manipulated
+    adata = snap.read(args.adata_input, backed=None)
     adata_harmony = run_harmony(adata, args.batch_key)
 
     adata_harmony.write(
