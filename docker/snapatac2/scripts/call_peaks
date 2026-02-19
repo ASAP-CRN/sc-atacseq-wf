@@ -31,7 +31,6 @@ def main(args):
 
     adata_peaks.write(
         filename=args.adata_output,
-        backend="hdf5",
         compression="gzip"
     )
     print(f"Wrote {args.adata_output}")
