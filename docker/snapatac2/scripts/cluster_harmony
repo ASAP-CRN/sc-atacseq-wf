@@ -28,8 +28,7 @@ def main(args):
     adata_clustered = cluster(adata, args.plot_prefix)
 
     adata_clustered.write(
-        filename=args.adata_output,
-        compression="gzip"
+        filename=args.adata_output
     )
     print(f"Wrote {args.adata_output}")
 
