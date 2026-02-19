@@ -6,6 +6,9 @@ import pandas as pd
 import kaleido
 import snapatac2 as snap
 
+# Patch that makes all pandas Series have a nonzero() method - removed after pandas 2.1+
+pd.Series.nonzero = lambda self: self.to_numpy().nonzero()
+
 
 def merge_adata(
     adata_objects_fofn: str, chunk_size: int = 5
