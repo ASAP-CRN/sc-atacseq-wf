@@ -3,6 +3,7 @@
 import argparse
 import anndata as ad
 import pandas as pd
+import kaleido
 import snapatac2 as snap
 
 
