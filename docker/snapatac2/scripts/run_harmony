@@ -3,6 +3,7 @@
 import argparse
 import pandas as pd
 import snapatac2 as snap
+import harmonypy
 
 
 def run_harmony(
