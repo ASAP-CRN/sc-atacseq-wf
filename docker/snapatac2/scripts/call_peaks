@@ -16,11 +16,7 @@ def call_peaks(
 
     adata.uns["merged_peaks"] = merged_peaks
 
-    peaks_df = pd.DataFrame({
-        "chrom": merged_peaks.chrom,
-        "start": merged_peaks.start,
-        "end": merged_peaks.end
-    })
+    peaks_df = adata.uns["merged_peaks"].to_pandas()
 
     return adata, peaks_df
 
@@ -35,14 +31,13 @@ def main(args):
     )
     print(f"Wrote {args.adata_output}")
 
-    merged_peaks_bed = f"{args.output_prefix}.merged_peaks.bed"
+    merged_peaks_csv = f"{args.output_prefix}.merged_peaks.csv"
     merged_peaks_df.to_csv(
-        merged_peaks_bed,
-        sep="\t",
-        header=False,
+        merged_peaks_csv,
+        header=True,
         index=False
     )
-    print(f"Wrote {merged_peaks_bed}")
+    print(f"Wrote {merged_peaks_csv}")
 
 
 if __name__ == "__main__":
@@ -61,7 +56,7 @@ if __name__ == "__main__":
         "--output-prefix",
         type=str,
         required=True,
-        help="Prefix used to name output files (i.e. merged peaks bed file)"
+        help="Prefix used to name output files (i.e. merged peaks csv file)"
     )
     parser.add_argument(
         "-o",
