@@ -16,6 +16,9 @@ def reduce_dims(
 
 def main(args):
     adata = snap.read(args.adata_input)
+
+    adata.layers["counts"] = adata.X.copy()
+
     adata_dr = reduce_dims(adata)
 
     adata_dr.write(
