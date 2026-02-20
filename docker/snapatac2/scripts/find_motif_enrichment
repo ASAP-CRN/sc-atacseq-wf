@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+
+import argparse
+import snapatac2 as snap
+import scanpy as sc
+
+
+def find_motif_enrichment(
+    adata: snap.AnnData
+):
+    marker_peaks = snap.tl.marker_regions(adata, groupby="cell_type", pvalue=0.01)
+
+    snap.pl.regions(adata, groupby="cell_type", peaks=marker_peaks, interactive=False)
+
+    motifs = snap.tl.motif_enrichment(
+        motifs=snap.datasets.cis_bp(unique=True),
+        regions=marker_peaks,
+        genome_fasta=snap.genome.hg38,
+    )
+
+    return motifs
+
+
+def main(args):
+    adata = snap.read(args.adata_input)
+    adata_motifs = find_motif_enrichment(adata)
+
+    adata_motifs.close()
+    adata_motifs.write(
+        filename=args.adata_output
+    )
+    print(f"Wrote {args.adata_output}")
+
+    heatmap_out = f"{plot_prefix}.motif_enrichment.heatmap.png"
+    snap.pl.motif_enrichment(
+        motifs,
+        max_fdr=0.0001,
+        height=1600,
+        interactive=False,
+        show=False,
+        out_file=heatmap_out
+    )
+    print(f"Wrote {heatmap_out}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Identify marker regions for each cell type"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset's peak matrix",
+    )
+    parser.add_argument(
+        "-p",
+        "--output-prefix",
+        type=str,
+        required=True,
+        help="Prefix used to name output files (i.e. motif enrichment heatmap)"
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+
+    args = parser.parse_args()
+
+    main(args)
