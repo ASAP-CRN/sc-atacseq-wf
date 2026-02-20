@@ -6,10 +6,12 @@ import snapatac2 as snap
 
 
 def call_peaks(
-    adata: snap.AnnData, output_prefix: str
+    adata: snap.AnnData, groupby: str, output_prefix: str
 ):
-    print(f"Calling peaks by Leiden...")
-    snap.tl.macs3(adata, groupby="leiden", replicate="sample")
+    if groupby not in adata.obs.columns:
+        raise ValueError(f"'{groupby}' not found in adata.obs")
+    print(f"Calling peaks by {groupby} and setting replicate as 'sample'...")
+    snap.tl.macs3(adata, groupby=groupby, replicate="sample")
     merged_peaks = snap.tl.merge_peaks(adata.uns["macs3"], chrom_sizes=snap.genome.hg38)
     print(f"Merged peaks dim:")
     merged_peaks.shape
@@ -23,7 +25,7 @@ def call_peaks(
 
 def main(args):
     adata = snap.read(args.adata_input)
-    adata_peaks, merged_peaks_df = cluster(adata, args.output_prefix)
+    adata_peaks, merged_peaks_df = cluster(adata, args.macs3_groupby, args.args.output_prefix)
 
     adata_peaks.close()
     adata_peaks.write(
@@ -43,6 +45,13 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Peak calling with MACS3 to identify accessible chromatin regions"
+    )
+    parser.add_argument(
+        "-g",
+        "--macs3-groupby",
+        type=str,
+        required=True,
+        help="SnapATAC2 MACS3 groupby flag (e.g. leiden)",
     )
     parser.add_argument(
         "-a",
