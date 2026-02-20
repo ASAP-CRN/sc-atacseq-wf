@@ -20,12 +20,14 @@ def call_peaks(
 
     peaks_df = adata.uns["merged_peaks"].to_pandas()
 
-    return adata, peaks_df
+    peaks_mat = snap.pp.make_peak_matrix(adata, use_rep=peaks['Peaks'])
+
+    return adata, peaks_df, peaks_mat
 
 
 def main(args):
     adata = snap.read(args.adata_input)
-    adata_peaks, merged_peaks_df = cluster(adata, args.macs3_groupby, args.args.output_prefix)
+    adata_peaks, merged_peaks_df, adata_peaks_mat = call_peaks(adata, args.macs3_groupby, args.args.output_prefix)
 
     adata_peaks.close()
     adata_peaks.write(
@@ -40,6 +42,12 @@ def main(args):
         index=False
     )
     print(f"Wrote {merged_peaks_csv}")
+
+    adata_peaks_mat_out = f"{args.output_prefix}.merged_peaks_matrix.h5ad"
+    adata_peaks_mat.write(
+        filename=adata_peaks_mat_out
+    )
+    print(f"Wrote {adata_peaks_mat_out}")
 
 
 if __name__ == "__main__":
@@ -65,7 +73,7 @@ if __name__ == "__main__":
         "--output-prefix",
         type=str,
         required=True,
-        help="Prefix used to name output files (i.e. merged peaks csv file)"
+        help="Prefix used to name output files (i.e. merged peaks csv file and peaks matrix)"
     )
     parser.add_argument(
         "-o",
