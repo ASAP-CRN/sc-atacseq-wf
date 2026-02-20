@@ -27,6 +27,7 @@ def main(args):
     adata = snap.read(args.adata_input)
     adata_clustered = cluster(adata, args.plot_prefix)
 
+    adata_clustered.close()
     adata_clustered.write(
         filename=args.adata_output
     )

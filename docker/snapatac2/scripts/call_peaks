@@ -25,6 +25,7 @@ def main(args):
     adata = snap.read(args.adata_input)
     adata_peaks, merged_peaks_df = cluster(adata, args.output_prefix)
 
+    adata_peaks.close()
     adata_peaks.write(
         filename=args.adata_output
     )

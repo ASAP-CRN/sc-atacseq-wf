@@ -97,6 +97,7 @@ def main(args):
     adatas = merge_adata(args.adata_objects_fofn)
     adatas_qc = compute_qc_metrics(adatas, args.plot_prefix)
 
+    adatas_qc.close()
     adatas_qc.write(
         filename=args.adata_output
     )

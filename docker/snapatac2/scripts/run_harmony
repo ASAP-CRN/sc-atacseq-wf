@@ -23,6 +23,7 @@ def main(args):
     adata = snap.read(args.adata_input)
     adata_harmony = run_harmony(adata, args.batch_key)
 
+    adata_harmony.close()
     adata_harmony.write(
         filename=args.adata_output
     )
