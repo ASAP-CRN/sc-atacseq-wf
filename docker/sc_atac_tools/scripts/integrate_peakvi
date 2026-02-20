@@ -2,6 +2,7 @@
 
 import os
 import argparse
+import leidenalg
 import scanpy as sc
 import scvi
 
