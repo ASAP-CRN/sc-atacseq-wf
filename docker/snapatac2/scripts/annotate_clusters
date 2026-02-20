@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+
+import argparse
+import snapatac2 as snap
+import scanpy as sc
+
+
+def annotate_clusters(
+    adata: snap.AnnData
+):
+    gene_matrix = snap.pp.make_gene_matrix(adata, snap.genome.hg38)
+
+    sc.pp.filter_genes(gene_matrix, min_cells= 5)
+    sc.pp.normalize_total(gene_matrix)
+    sc.pp.log1p(gene_matrix)
+
+    sc.external.pp.magic(gene_matrix, solver="approximate")
+
+    # Copy over UMAP embedding
+    gene_matrix.obsm["X_umap"] = adata.obsm["X_umap"]
+
+    return gene_matrix
+
+
+def main(args):
+    adata = snap.read(args.adata_input)
+    adata_gene_matrix = annotate_clusters(adata)
+
+    adata_gene_matrix.close()
+    adata_gene_matrix.write(
+        filename=args.adata_output
+    )
+    print(f"Wrote {args.adata_output}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Cell cluster annotation"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset",
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+
+    args = parser.parse_args()
+
+    main(args)
