@@ -23,7 +23,6 @@ def main(args):
     adata = snap.read(args.adata_input)
     adata_harmony = run_harmony(adata, args.batch_key)
 
-    adata_harmony.close()
     adata_harmony.write(
         filename=args.adata_output
     )
@@ -37,6 +36,8 @@ def main(args):
         index=True
     )
     print(f"Wrote {args.output_metadata}")
+
+    adata_harmony.close()
 
 
 if __name__ == "__main__":
@@ -69,7 +70,7 @@ if __name__ == "__main__":
         "--output-metadata",
         type=str,
         required=True,
-        help="Output file name for saving the AnnData object metadata"
+        help="Output file name for saving the AnnData object metadata as csv file"
     )
 
     args = parser.parse_args()

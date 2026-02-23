@@ -27,11 +27,12 @@ def main(args):
     adata_gene_matrix = annotate_clusters(adata)
 
     adata_gene_matrix_out = f"{args.output_prefix}.gene_matrix.h5ad"
-    adata_gene_matrix.close()
     adata_gene_matrix.write(
         filename=adata_gene_matrix_out
     )
     print(f"Wrote {adata_gene_matrix_out}")
+
+    adata_gene_matrix.close()
 
 
 if __name__ == "__main__":

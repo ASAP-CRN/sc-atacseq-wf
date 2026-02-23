@@ -27,11 +27,12 @@ def main(args):
     adata = snap.read(args.adata_input)
     adata_clustered = cluster(adata, args.plot_prefix)
 
-    adata_clustered.close()
     adata_clustered.write(
         filename=args.adata_output
     )
     print(f"Wrote {args.adata_output}")
+
+    adata_clustered.close()
 
 
 if __name__ == "__main__":

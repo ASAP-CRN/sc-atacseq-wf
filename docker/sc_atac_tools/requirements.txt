@@ -3,5 +3,4 @@ snapatac2==2.8.0
 scanpy==1.11.3
 kaleido==0.2.1
 harmonypy==0.2.0
-leidenalg==0.11.0
 magic-impute==3.0.0

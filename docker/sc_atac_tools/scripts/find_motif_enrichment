@@ -27,7 +27,6 @@ def main(args):
     adata_peaks_matrix = snap.read(args.adata_input)
     adata_motifs = find_motif_enrichment(adata_peaks_matrix)
 
-    adata_motifs.close()
     adata_motifs.write(
         filename=args.adata_output
     )
@@ -43,6 +42,8 @@ def main(args):
         out_file=heatmap_out
     )
     print(f"Wrote {heatmap_out}")
+
+    adata_motifs.close()
 
 
 if __name__ == "__main__":
