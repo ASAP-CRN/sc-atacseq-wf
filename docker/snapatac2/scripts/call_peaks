@@ -2,13 +2,14 @@
 
 import argparse
 import pandas as pd
+import polars as pl
 import snapatac2 as snap
 
 
 def call_peaks(
-    adata: snap.AnnData, groupby: str, output_prefix: str
+    adata: snap.AnnData, groupby: str
 ):
-    if groupby not in adata.obs.columns:
+    if groupby not in adata.obs[:].columns:
         raise ValueError(f"'{groupby}' not found in adata.obs")
     print(f"Calling peaks by {groupby} and setting replicate as 'sample'...")
     snap.tl.macs3(adata, groupby=groupby, replicate="sample")
@@ -16,18 +17,16 @@ def call_peaks(
     print(f"Merged peaks dim:")
     merged_peaks.shape
 
-    adata.uns["merged_peaks"] = peaks_df
+    adata.uns["merged_peaks"] = merged_peaks
 
-    peaks_df = adata.uns["merged_peaks"].to_pandas()
+    peaks_mat = snap.pp.make_peak_matrix(adata, use_rep=merged_peaks['Peaks'])
 
-    peaks_mat = snap.pp.make_peak_matrix(adata, use_rep=peaks['Peaks'])
-
-    return adata, peaks_df, peaks_mat
+    return adata, merged_peaks, peaks_mat
 
 
 def main(args):
     adata = snap.read(args.adata_input)
-    adata_peaks, merged_peaks_df, adata_peaks_mat = call_peaks(adata, args.macs3_groupby, args.args.output_prefix)
+    adata_peaks, merged_peaks_df, adata_peaks_mat = call_peaks(adata, args.macs3_groupby)
 
     adata_peaks.close()
     adata_peaks.write(
@@ -36,10 +35,8 @@ def main(args):
     print(f"Wrote {args.adata_output}")
 
     merged_peaks_csv = f"{args.output_prefix}.merged_peaks.csv"
-    merged_peaks_df.to_csv(
-        merged_peaks_csv,
-        header=True,
-        index=False
+    merged_peaks_df.write_csv(
+        merged_peaks_csv
     )
     print(f"Wrote {merged_peaks_csv}")
 
