@@ -24,8 +24,8 @@ def find_motif_enrichment(
 
 
 def main(args):
-    adata = snap.read(args.adata_input)
-    adata_motifs = find_motif_enrichment(adata)
+    adata_peaks_matrix = snap.read(args.adata_input)
+    adata_motifs = find_motif_enrichment(adata_peaks_matrix)
 
     adata_motifs.close()
     adata_motifs.write(
@@ -33,7 +33,7 @@ def main(args):
     )
     print(f"Wrote {args.adata_output}")
 
-    heatmap_out = f"{plot_prefix}.motif_enrichment.heatmap.png"
+    heatmap_out = f"{plot_prefix}.motif_enrichment_heatmap.png"
     snap.pl.motif_enrichment(
         motifs,
         max_fdr=0.0001,

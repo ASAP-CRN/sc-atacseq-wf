@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import pandas as pd
 import polars as pl
 import snapatac2 as snap
 
@@ -19,14 +18,14 @@ def call_peaks(
 
     adata.uns["merged_peaks"] = merged_peaks
 
-    peaks_mat = snap.pp.make_peak_matrix(adata, use_rep=merged_peaks['Peaks'])
+    peaks_matrix = snap.pp.make_peak_matrix(adata, use_rep=merged_peaks['Peaks'])
 
-    return adata, merged_peaks, peaks_mat
+    return adata, merged_peaks, peaks_matrix
 
 
 def main(args):
     adata = snap.read(args.adata_input)
-    adata_peaks, merged_peaks_df, adata_peaks_mat = call_peaks(adata, args.macs3_groupby)
+    adata_peaks, merged_peaks_df, adata_peaks_matrix = call_peaks(adata, args.macs3_groupby)
 
     adata_peaks.close()
     adata_peaks.write(
@@ -40,11 +39,12 @@ def main(args):
     )
     print(f"Wrote {merged_peaks_csv}")
 
-    adata_peaks_mat_out = f"{args.output_prefix}.merged_peaks_matrix.h5ad"
-    adata_peaks_mat.write(
-        filename=adata_peaks_mat_out
+    adata_peaks_matrix_out = f"{args.output_prefix}.merged_peaks_matrix.h5ad"
+    adata_peaks_matrix.close()
+    adata_peaks_matrix.write(
+        filename=adata_peaks_matrix_out
     )
-    print(f"Wrote {adata_peaks_mat_out}")
+    print(f"Wrote {adata_peaks_matrix_out}")
 
 
 if __name__ == "__main__":
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         "--output-prefix",
         type=str,
         required=True,
-        help="Prefix used to name output files (i.e. merged peaks csv file and peaks matrix)"
+        help="Prefix used to name output files (i.e. merged peaks csv file and peaks matrix AnnData object)"
     )
     parser.add_argument(
         "-o",
