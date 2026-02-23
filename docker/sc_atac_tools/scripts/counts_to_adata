@@ -28,8 +28,8 @@ def main(args):
         adata,
         args.sample_id,
         args.batch,
-        args.dataset,
-        args.team
+        args.dataset_id,
+        args.team_id
     )
     adata.write(
         filename=args.adata_output,

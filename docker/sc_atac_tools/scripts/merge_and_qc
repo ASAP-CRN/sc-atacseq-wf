@@ -32,7 +32,7 @@ def merge_adata(
 
         adatas = {}
         for sample_name, file_path in chunk_files:
-            raw = snap.read(file_path)
+            raw = snap.read(file_path, backed=None)
             adatas[sample_name] = raw
 
         chunk_adata = ad.concat(
@@ -66,31 +66,31 @@ def compute_qc_metrics(
     # TODO - check all plots
     frag_size_distr_out = f"{plot_prefix}.frag_size_distr.png"
     snap.pl.frag_size_distr(
-        adatas,
+        merged_adata,
         show=False,
         out_file=frag_size_distr_out
     )
     print(f"Wrote {frag_size_distr_out}")
 
-    snap.metrics.tsse(adatas, snap.genome.hg38)
+    snap.metrics.tsse(merged_adata, snap.genome.hg38)
     tsse_out = f"{plot_prefix}.tsse.png"
     snap.pl.tsse(
-        adatas,
+        merged_adata,
         show=False,
         out_file=tsse_out
     )
     print(f"Wrote {tsse_out}")
 
-    snap.pp.filter_cells(adatas, min_tsse=7)
-    # snap.pp.filter_cells(adatas, min_counts=5000, min_tsse=10, max_counts=100000)
+    snap.pp.filter_cells(merged_adata, min_tsse=7)
+    # snap.pp.filter_cells(merged_adata, min_counts=5000, min_tsse=10, max_counts=100000)
 
-    snap.pp.add_tile_matrix(adatas, bin_size=5000)
-    snap.pp.select_features(adatas, n_features=50000)
+    snap.pp.add_tile_matrix(merged_adata, bin_size=5000)
+    snap.pp.select_features(merged_adata, n_features=50000)
 
-    snap.pp.scrublet(adatas)
-    snap.pp.filter_doublets(adatas)
+    snap.pp.scrublet(merged_adata)
+    snap.pp.filter_doublets(merged_adata)
 
-    return adatas
+    return merged_adata
 
 
 def main(args):
@@ -140,7 +140,7 @@ if __name__ == "__main__":
         "--output-metadata",
         type=str,
         required=True,
-        help="Output file name for saving the AnnData object metadata"
+        help="Output file name for saving the AnnData object metadata as csv file"
     )
 
     args = parser.parse_args()
