@@ -8,6 +8,8 @@ import scanpy as sc
 def find_motif_enrichment(
     adata: snap.AnnData
 ):
+    # Note: This does not consider the variations across cell.
+    # Use a regression-based differential test to identify cell type–specific peaks.
     marker_peaks = snap.tl.marker_regions(adata, groupby="cell_type", pvalue=0.01)
 
     snap.pl.regions(adata, groupby="cell_type", peaks=marker_peaks, interactive=False)
