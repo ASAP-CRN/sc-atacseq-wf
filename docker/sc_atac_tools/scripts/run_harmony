@@ -28,7 +28,8 @@ def main(args):
     )
     print(f"Wrote {args.adata_output}")
 
-    metadata = adata_harmony.obs
+    metadata = adata_harmony.obs[:].to_pandas()
+    metadata.index = adata_harmony.obs_names
     metadata["UMAP_1"] = adata_harmony.obsm["X_umap"][:, 0]
     metadata["UMAP_2"] = adata_harmony.obsm["X_umap"][:, 1]
     metadata.to_csv(
