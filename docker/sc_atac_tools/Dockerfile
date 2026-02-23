@@ -1,10 +1,4 @@
-ARG CUDA_VERSION
-ARG UBUNTU_VERSION
 FROM us-central1-docker.pkg.dev/dnastack-asap-parkinsons/workflow-images/util:1.2.0 as scripts
-
-FROM nvcr.io/nvidia/cuda:${CUDA_VERSION}-base-ubuntu${UBUNTU_VERSION}
-ENV CUDA_VERSION "${CUDA_VERSION}"
-ENV UBUNTU_VERSION "${UBUNTU_VERSION}"
 
 LABEL maintainer="bioinformatics@dnastack.com"
 
@@ -33,11 +27,6 @@ RUN apt-get -qq update \
 		libffi-dev \
 		liblzma-dev \
 		git \
-		gfortran \
-		libopenblas-dev \
-		liblapack-dev \
-		pkg-config \
-		libhdf5-dev \
 	&& rm -rf /var/lib/apt/lists/*
 
 # gcloud sdk; needed to upload output files
@@ -65,6 +54,5 @@ RUN update-alternatives --install /usr/bin/python3 python3 /opt/Python-${PYTHON3
 COPY ./requirements.txt /opt/requirements.txt
 RUN python3 -m pip install -r /opt/requirements.txt
 
-COPY --from=scripts /opt/scripts /opt/scripts
 COPY scripts /opt/scripts
 ENV PATH "${PATH}:/opt/scripts:/opt/scripts/main"

@@ -1,7 +1,7 @@
 argparse==1.4.0
-jax==0.9.0
-pyarrow==23.0.0
+snapatac2==2.8.0
 scanpy==1.11.3
-scib-metrics==0.5.7
-scvi-tools[cuda]==1.4.1
-torch==2.10.0
+kaleido==0.2.1
+harmonypy==0.2.0
+leidenalg==0.11.0
+magic-impute==3.0.0
