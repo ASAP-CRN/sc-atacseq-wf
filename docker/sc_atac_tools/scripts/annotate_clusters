@@ -10,6 +10,10 @@ def create_gene_matrix(
 ):
     gene_matrix = snap.pp.make_gene_matrix(adata, snap.genome.hg38)
 
+    sc.pp.filter_genes(gene_matrix, min_cells= 5)
+    sc.pp.normalize_total(gene_matrix)
+    sc.pp.log1p(gene_matrix)
+
     # Copy over UMAP embedding
     gene_matrix.obsm["X_umap"] = adata.obsm["X_umap"]
 
@@ -19,10 +23,6 @@ def create_gene_matrix(
 def magic_imputation(
     adata: snap.AnnData
 ):
-    sc.pp.filter_genes(adata, min_cells= 5)
-    sc.pp.normalize_total(adata)
-    sc.pp.log1p(adata)
-
     sc.external.pp.magic(adata, solver="approximate")
 
     return adata
