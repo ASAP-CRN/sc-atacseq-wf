@@ -4,3 +4,4 @@ scanpy==1.11.3
 kaleido==0.2.1
 harmonypy==0.2.0
 magic-impute==3.0.0
+ipython==8.38.0
