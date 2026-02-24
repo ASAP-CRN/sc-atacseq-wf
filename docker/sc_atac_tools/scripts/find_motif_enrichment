@@ -43,7 +43,8 @@ def main(args):
     )
     print(f"Wrote {heatmap_out}")
 
-    adata_motifs.close()
+    if adata_motifs.isbacked:
+        adata_motifs.close()
 
 
 if __name__ == "__main__":

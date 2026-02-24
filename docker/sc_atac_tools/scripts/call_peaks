@@ -44,7 +44,8 @@ def main(args):
     )
     print(f"Wrote {adata_peaks_matrix_out}")
 
-    adata_peaks.close()
+    if adata_peaks.isbacked:
+        adata_peaks.close()
 
 
 if __name__ == "__main__":

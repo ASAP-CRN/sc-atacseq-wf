@@ -38,7 +38,8 @@ def main(args):
     )
     print(f"Wrote {args.output_metadata}")
 
-    adata_harmony.close()
+    if adata_harmony.isbacked:
+        adata_harmony.close()
 
 
 if __name__ == "__main__":
