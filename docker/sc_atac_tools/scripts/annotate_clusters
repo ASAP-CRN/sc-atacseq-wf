@@ -5,16 +5,10 @@ import snapatac2 as snap
 import scanpy as sc
 
 
-def annotate_clusters(
+def create_gene_matrix(
     adata: snap.AnnData
 ):
     gene_matrix = snap.pp.make_gene_matrix(adata, snap.genome.hg38)
-
-    sc.pp.filter_genes(gene_matrix, min_cells= 5)
-    sc.pp.normalize_total(gene_matrix)
-    sc.pp.log1p(gene_matrix)
-
-    sc.external.pp.magic(gene_matrix, solver="approximate")
 
     # Copy over UMAP embedding
     gene_matrix.obsm["X_umap"] = adata.obsm["X_umap"]
@@ -22,15 +16,34 @@ def annotate_clusters(
     return gene_matrix
 
 
+def magic_imputation(
+    adata: snap.AnnData
+):
+    sc.pp.filter_genes(adata, min_cells= 5)
+    sc.pp.normalize_total(adata)
+    sc.pp.log1p(adata)
+
+    sc.external.pp.magic(adata, solver="approximate")
+
+    return adata
+
+
 def main(args):
     adata = snap.read(args.adata_input)
-    adata_gene_matrix = annotate_clusters(adata)
+    adata_gene_matrix = create_gene_matrix(adata)
+    adata_magic_imputed = magic_imputation(adata_gene_matrix)
 
     adata_gene_matrix_out = f"{args.output_prefix}.gene_matrix.h5ad"
     adata_gene_matrix.write(
         filename=adata_gene_matrix_out
     )
     print(f"Wrote {adata_gene_matrix_out}")
+
+    adata_magic_imputed_out = f"{args.output_prefix}.gene_matrix.magic_imputed.h5ad"
+    adata_magic_imputed.write(
+        filename=adata_magic_imputed_out
+    )
+    print(f"Wrote {adata_magic_imputed_out}")
 
 
 if __name__ == "__main__":
