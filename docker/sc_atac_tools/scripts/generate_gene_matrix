@@ -5,28 +5,33 @@ import snapatac2 as snap
 import scanpy as sc
 
 
-def magic_imputation(
+def create_gene_matrix(
     adata: snap.AnnData
 ):
-    sc.external.pp.magic(adata, solver="approximate")
+    gene_matrix = snap.pp.make_gene_matrix(adata, snap.genome.hg38)
 
-    return adata
+    sc.pp.filter_genes(gene_matrix, min_cells= 5)
+
+    # Copy over UMAP embedding
+    gene_matrix.obsm["X_umap"] = adata.obsm["X_umap"]
+
+    return gene_matrix
 
 
 def main(args):
     adata = snap.read(args.adata_input)
-    adata_magic_imputed = magic_imputation(adata_gene_matrix)
+    adata_gene_matrix = create_gene_matrix(adata)
 
-    adata_magic_imputed_out = f"{args.output_prefix}.gene_matrix.magic_imputed.h5ad"
-    adata_magic_imputed.write(
-        filename=adata_magic_imputed_out
+    adata_gene_matrix_out = f"{args.output_prefix}.gene_matrix.h5ad"
+    adata_gene_matrix.write(
+        filename=adata_gene_matrix_out
     )
-    print(f"Wrote {adata_magic_imputed_out}")
+    print(f"Wrote {adata_gene_matrix_out}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Cell cluster annotation"
+        description="Generate cell by gene activity matrix and filter"
     )
     parser.add_argument(
         "-a",

@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+
+import argparse
+import snapatac2 as snap
+import scanpy as sc
+
+
+def normalize(
+    adata: snap.AnnData
+):
+    sc.pp.normalize_total(adata)
+    sc.pp.log1p(adata)
+
+    return adata
+
+
+def main(args):
+    adata = snap.read(args.adata_input)
+
+    adata.layers["gene_counts"] = adata.X[:]
+
+    adata_processed_gene_matrix = normalize(adata)
+
+    adata_processed_gene_matrix_out = f"{args.output_prefix}.gene_matrix.processed.h5ad"
+    adata_processed_gene_matrix.write(
+        filename=adata_processed_gene_matrix_out
+    )
+    print(f"Wrote {adata_processed_gene_matrix_out}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Process and normalize gene matrix AnnData object"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset's gene matrix",
+    )
+    parser.add_argument(
+        "-p",
+        "--output-prefix",
+        type=str,
+        required=True,
+        help="Prefix used to name output files (i.e. processed gene matrix AnnData object)"
+    )
+
+    args = parser.parse_args()
+
+    main(args)
