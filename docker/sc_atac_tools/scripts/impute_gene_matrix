@@ -26,7 +26,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Cell cluster annotation"
+        description="Smooth and impute the sparse cell by gene activity matrix using MAGIC"
     )
     parser.add_argument(
         "-a",
