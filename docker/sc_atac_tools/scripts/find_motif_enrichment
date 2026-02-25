@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
+import polars as pl
 import snapatac2 as snap
 import scanpy as sc
 
 
 def find_motif_enrichment(
-    adata: snap.AnnData
+    adata: snap.AnnData, plot_prefix: str
 ):
     # Note: This does not consider the variations across cell.
     # Use a regression-based differential test to identify cell type–specific peaks.
@@ -20,18 +21,6 @@ def find_motif_enrichment(
         genome_fasta=snap.genome.hg38,
     )
 
-    return motifs
-
-
-def main(args):
-    adata_peaks_matrix = snap.read(args.adata_input)
-    adata_motifs = find_motif_enrichment(adata_peaks_matrix)
-
-    adata_motifs.write(
-        filename=args.adata_output
-    )
-    print(f"Wrote {args.adata_output}")
-
     heatmap_out = f"{plot_prefix}.motif_enrichment_heatmap.png"
     snap.pl.motif_enrichment(
         motifs,
@@ -43,8 +32,18 @@ def main(args):
     )
     print(f"Wrote {heatmap_out}")
 
-    if adata_motifs.isbacked:
-        adata_motifs.close()
+    return motifs
+
+
+def main(args):
+    adata_peaks_matrix = snap.read(args.adata_input)
+    motifs_df = find_motif_enrichment(adata_peaks_matrix)
+
+    motifs_csv = f"{args.output_prefix}.motifs.csv"
+    motifs_df.write_csv(
+        motifs_csv
+    )
+    print(f"Wrote {motifs_csv}")
 
 
 if __name__ == "__main__":
@@ -64,13 +63,6 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Prefix used to name output files (i.e. motif enrichment heatmap)"
-    )
-    parser.add_argument(
-        "-o",
-        "--adata-output",
-        type=str,
-        required=True,
-        help="Output file name for saving the AnnData object"
     )
 
     args = parser.parse_args()
