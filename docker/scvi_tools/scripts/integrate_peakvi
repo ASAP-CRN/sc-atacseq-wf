@@ -51,6 +51,13 @@ if __name__ == "__main__":
         description="Run PeakVI integration"
     )
     parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset",
+    )
+    parser.add_argument(
         "-b",
         "--batch-key",
         type=str,
@@ -63,13 +70,6 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Latent key to save the PeakVI latent to",
-    )
-    parser.add_argument(
-        "-a",
-        "--adata-input",
-        type=str,
-        required=True,
-        help="AnnData object for a dataset",
     )
     parser.add_argument(
         "-o",

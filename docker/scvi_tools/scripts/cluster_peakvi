@@ -45,18 +45,18 @@ if __name__ == "__main__":
         description="Cell clustering with Leiden algorithm on PeakVI latent space"
     )
     parser.add_argument(
-        "-l",
-        "--latent-key",
-        type=str,
-        required=True,
-        help="Latent key to save the PeakVI latent to",
-    )
-    parser.add_argument(
         "-a",
         "--adata-input",
         type=str,
         required=True,
         help="AnnData object for a dataset",
+    )
+    parser.add_argument(
+        "-l",
+        "--latent-key",
+        type=str,
+        required=True,
+        help="Latent key to save the PeakVI latent to",
     )
     parser.add_argument(
         "-o",

@@ -47,18 +47,18 @@ if __name__ == "__main__":
         description="Run Harmony for batch correction"
     )
     parser.add_argument(
-        "-b",
-        "--batch-key",
-        type=str,
-        required=True,
-        help="Key in AnnData object for batch information"
-    )
-    parser.add_argument(
         "-a",
         "--adata-input",
         type=str,
         required=True,
         help="AnnData object for a dataset"
+    )
+    parser.add_argument(
+        "-b",
+        "--batch-key",
+        type=str,
+        required=True,
+        help="Key in AnnData object for batch information"
     )
     parser.add_argument(
         "-o",
