@@ -45,7 +45,7 @@ if __name__ == "__main__":
         "--adata-input",
         type=str,
         required=True,
-        help="AnnData object for a dataset",
+        help="AnnData object for a dataset"
     )
     parser.add_argument(
         "-p",

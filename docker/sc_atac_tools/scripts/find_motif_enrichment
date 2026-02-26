@@ -55,7 +55,7 @@ if __name__ == "__main__":
         "--adata-input",
         type=str,
         required=True,
-        help="AnnData object for a dataset's peak matrix",
+        help="AnnData object for a dataset's peak matrix"
     )
     parser.add_argument(
         "-p",

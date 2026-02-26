@@ -57,14 +57,14 @@ if __name__ == "__main__":
         "--macs3-groupby",
         type=str,
         required=True,
-        help="SnapATAC2 MACS3 groupby flag (e.g. leiden)",
+        help="SnapATAC2 MACS3 groupby flag (e.g. leiden)"
     )
     parser.add_argument(
         "-a",
         "--adata-input",
         type=str,
         required=True,
-        help="AnnData object for a dataset",
+        help="AnnData object for a dataset"
     )
     parser.add_argument(
         "-p",
