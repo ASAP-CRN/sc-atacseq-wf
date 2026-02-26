@@ -36,8 +36,8 @@ def main(args):
     adata = sc.read_h5ad(args.adata_input)
     adata_peakvi, peakvi_model = train_model(adata, args.batch_key, args.latent_key)
 
-    peakvi_model.save(args.output_scvi_dir, overwrite=True)
-    print(f"Wrote PeakVI model to {args.output_scvi_dir}")
+    peakvi_model.save(args.output_peakvi_dir, overwrite=True)
+    print(f"Wrote PeakVI model to {args.output_peakvi_dir}")
 
     adata_peakvi.write_h5ad(
         filename=args.adata_output,
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-s",
-        "--output-scvi-dir",
+        "--output-peakvi-dir",
         type=str,
         required=True,
         help="Output folder to save PeakVI model",
