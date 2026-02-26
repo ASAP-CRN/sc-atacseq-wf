@@ -3,6 +3,8 @@ version 1.0
 # Run steps in the cohort analysis
 
 import "../../wf-common/wdl/tasks/write_cohort_sample_list.wdl" as WriteCohortSampleList
+import "harmony_integration/harmony_integration.wdl" as HarmonyIntegration
+import "peakvi_integration/peakvi_integration.wdl" as PeakVIIntegration
 import "../../wf-common/wdl/tasks/upload_final_outputs.wdl" as UploadFinalOutputs
 
 workflow cohort_analysis {
@@ -72,6 +74,28 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			merged_adata_object = merge_and_qc.merged_adata_object, #!FileCoercion
+			container_registry = container_registry,
+			zones = zones
+	}
+
+	call HarmonyIntegration.harmony_integration {
+		input:
+			cohort_id = cohort_id,
+			processed_bins_adata_object = reduce_dimensions.processed_bins_adata_object,
+			batch_key = batch_key,
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
+	call PeakVIIntegration.peakvi_integration {
+		input:
+			cohort_id = cohort_id,
+			processed_bins_adata_object = reduce_dimensions.processed_bins_adata_object,
+			batch_key = batch_key,
+			peakvi_latent_key = peakvi_latent_key,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -96,7 +120,16 @@ workflow cohort_analysis {
 			merge_and_qc.merged_adata_object,
 			merge_and_qc.qc_initial_metadata_csv
 		],
-		merge_and_qc.qc_plots_png
+		merge_and_qc.qc_plots_png,
+		[
+			harmony_integration.harmony_clustered_adata_object,
+			harmony_integration.harmony_clustered_umap_png
+		],
+		[
+			peakvi_integration.peakvi_model_tar_gz,
+			peakvi_integration.peakvi_clustered_adata_object,
+			peakvi_integration.peakvi_clustered_umap_png
+		]
 	]) #!StringCoercion
 
 	call UploadFinalOutputs.upload_final_outputs as upload_cohort_analysis_files {
@@ -111,11 +144,22 @@ workflow cohort_analysis {
 	output {
 		File cohort_sample_list = write_cohort_sample_list.cohort_sample_list #!FileCoercion
 
-		# Merged adata objects, processed bins adata object
+		# Merged adata objects and processed bins adata object
 		File merged_adata_object = merge_and_qc.merged_adata_object #!FileCoercion
 		File qc_initial_metadata_csv = merge_and_qc.qc_initial_metadata_csv #!FileCoercion
 		Array[File] qc_plots_png = merge_and_qc.qc_plots_png #!FileCoercion
 		File processed_bins_adata_object = reduce_dimensions.processed_bins_adata_object
+
+		# Harmony integratated adata objects and outputs
+		File harmony_integrated_adata_object = harmony_integration.harmony_integrated_adata_object
+		File harmony_clustered_adata_object = harmony_integration.harmony_clustered_adata_object #!FileCoercion
+		File harmony_clustered_umap_png = harmony_integration.harmony_clustered_umap_png #!FileCoercion
+
+		# PeakVI integratated adata objects and outputs
+		File peakvi_integrated_adata_object = peakvi_integration.peakvi_integrated_adata_object
+		File peakvi_model_tar_gz = peakvi_integration.peakvi_model_tar_gz #!FileCoercion
+		File peakvi_clustered_adata_object = peakvi_integration.peakvi_clustered_adata_object #!FileCoercion
+		File peakvi_clustered_umap_png = peakvi_integration.peakvi_clustered_umap_png #!FileCoercion
 
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
@@ -188,9 +232,6 @@ task reduce_dimensions {
 		String cohort_id
 		File merged_adata_object
 
-		String raw_data_path
-		Array[Array[String]] workflow_info
-		String billing_project
 		String container_registry
 		String zones
 	}
@@ -204,12 +245,6 @@ task reduce_dimensions {
 		process_bins \
 			--adata-input ~{merged_adata_object} \
 			--adata-output ~{cohort_id}.bins_processed.h5ad
-
-		upload_outputs \
-			-b ~{billing_project} \
-			-d ~{raw_data_path} \
-			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.processed_bins.h5ad"
 	>>>
 
 	output {

@@ -8,7 +8,7 @@ workflow peakvi_integration {
 		File processed_bins_adata_object
 
 		String batch_key
-		String latent_key
+		String peakvi_latent_key
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -22,7 +22,7 @@ workflow peakvi_integration {
 			cohort_id = cohort_id,
 			processed_bins_adata_object = processed_bins_adata_object,
 			batch_key = batch_key,
-			latent_key = latent_key,
+			peakvi_latent_key = peakvi_latent_key,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -34,7 +34,7 @@ workflow peakvi_integration {
 		input:
 			cohort_id = cohort_id,
 			peakvi_integrated_adata_object = integrate_peakvi.peakvi_integrated_adata_object,
-			latent_key = latent_key,
+			peakvi_latent_key = peakvi_latent_key,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -56,7 +56,7 @@ task integrate_peakvi {
 		File processed_bins_adata_object
 
 		String batch_key
-		String latent_key
+		String peakvi_latent_key
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -76,7 +76,7 @@ task integrate_peakvi {
 		integrate_peakvi \
 			--adata-input ~{processed_bins_adata_object} \
 			--batch-key ~{batch_key} \
-			--latent-key ~{latent_key} \
+			--latent-key ~{peakvi_latent_key} \
 			--adata-output ~{cohort_id}.peakvi_integrated.h5ad \
 			--output-peakvi-dir "~{cohort_id}_peakvi_model"
 
@@ -111,7 +111,7 @@ task cluster_peakvi {
 		String cohort_id
 		File peakvi_integrated_adata_object
 
-		String latent_key
+		String peakvi_latent_key
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -128,7 +128,7 @@ task cluster_peakvi {
 
 		cluster_peakvi \
 			--adata-input ~{peakvi_integrated_adata_object} \
-			--latent-key ~{latent_key} \
+			--latent-key ~{peakvi_latent_key} \
 			--adata-output ~{cohort_id}.peakvi_clustered.h5ad
 
 		mv "plots/umap.png" "plots/~{cohort_id}.peakvi_umap.png"
