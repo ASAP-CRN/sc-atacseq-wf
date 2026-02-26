@@ -21,9 +21,6 @@ workflow harmony_integration {
 			cohort_id = cohort_id,
 			processed_bins_adata_object = processed_bins_adata_object,
 			batch_key = batch_key,
-			raw_data_path = raw_data_path,
-			workflow_info = workflow_info,
-			billing_project = billing_project,
 			container_registry = container_registry,
 			zones = zones
 	}
@@ -41,7 +38,6 @@ workflow harmony_integration {
 
 	output {
 		File harmony_integrated_adata_object = integrate_harmony.harmony_integrated_adata_object
-		File harmony_integrated_metadata_csv = integrate_harmony.harmony_integrated_metadata_csv #!FileCoercion
 		File harmony_clustered_adata_object = cluster_harmony.harmony_clustered_adata_object #!FileCoercion
 		File harmony_clustered_umap_png = cluster_harmony.harmony_clustered_umap_png #!FileCoercion
 	}
@@ -54,9 +50,6 @@ task integrate_harmony {
 
 		String batch_key
 
-		String raw_data_path
-		Array[Array[String]] workflow_info
-		String billing_project
 		String container_registry
 		String zones
 	}
@@ -70,19 +63,11 @@ task integrate_harmony {
 		integrate_harmony \
 			--adata-input ~{processed_bins_adata_object} \
 			--batch-key ~{batch_key} \
-			--adata-output ~{cohort_id}.harmony_integrated.h5ad \
-			--output-metadata ~{cohort_id}.harmony_integrated_metadata.csv
-
-		upload_outputs \
-			-b ~{billing_project} \
-			-d ~{raw_data_path} \
-			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.harmony_integrated_metadata.csv"
+			--adata-output ~{cohort_id}.harmony_integrated.h5ad
 	>>>
 
 	output {
 		File harmony_integrated_adata_object = "~{cohort_id}.harmony_integrated.h5ad"
-		String harmony_integrated_metadata_csv = "~{raw_data_path}/~{cohort_id}.harmony_integrated_metadata.csv"
 	}
 
 	runtime {

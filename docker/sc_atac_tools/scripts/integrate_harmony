@@ -28,16 +28,6 @@ def main(args):
     )
     print(f"Wrote {args.adata_output}")
 
-    metadata = adata_harmony.obs[:].to_pandas()
-    metadata.index = adata_harmony.obs_names
-    metadata["UMAP_1"] = adata_harmony.obsm["X_umap"][:, 0]
-    metadata["UMAP_2"] = adata_harmony.obsm["X_umap"][:, 1]
-    metadata.to_csv(
-        args.output_metadata,
-        index=True
-    )
-    print(f"Wrote {args.output_metadata}")
-
     if adata_harmony.isbacked:
         adata_harmony.close()
 
@@ -67,14 +57,7 @@ if __name__ == "__main__":
         required=True,
         help="Output file name for saving the AnnData object"
     )
-    parser.add_argument(
-        "-m",
-        "--output-metadata",
-        type=str,
-        required=True,
-        help="Output file name for saving the AnnData object metadata as csv file"
-    )
-
+    
     args = parser.parse_args()
 
     main(args)
