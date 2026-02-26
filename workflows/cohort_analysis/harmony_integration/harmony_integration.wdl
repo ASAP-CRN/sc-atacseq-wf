@@ -2,7 +2,7 @@ version 1.0
 
 # Integrate Harmony and cluster
 
-workflow cohort_analysis {
+workflow harmony_integration {
 	input {
 		String cohort_id
 		File processed_bins_adata_object
@@ -67,7 +67,7 @@ task integrate_harmony {
 	command <<<
 		set -euo pipefail
 
-		run_harmony \
+		integrate_harmony \
 			--adata-input ~{processed_bins_adata_object} \
 			--batch-key ~{batch_key} \
 			--adata-output ~{cohort_id}.harmony_integrated.h5ad \
