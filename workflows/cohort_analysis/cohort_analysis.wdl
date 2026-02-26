@@ -68,6 +68,17 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
+	call reduce_dimensions {
+		input:
+			cohort_id = cohort_id,
+			merged_adata_object = merge_and_qc.merged_adata_object, #!FileCoercion
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
 	call UploadFinalOutputs.upload_final_outputs as upload_preprocess_files {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
@@ -100,10 +111,11 @@ workflow cohort_analysis {
 	output {
 		File cohort_sample_list = write_cohort_sample_list.cohort_sample_list #!FileCoercion
 
-		# Merged adata objects
+		# Merged adata objects, processed bins adata object
 		File merged_adata_object = merge_and_qc.merged_adata_object #!FileCoercion
 		File qc_initial_metadata_csv = merge_and_qc.qc_initial_metadata_csv #!FileCoercion
 		Array[File] qc_plots_png = merge_and_qc.qc_plots_png #!FileCoercion
+		File processed_bins_adata_object = reduce_dimensions.processed_bins_adata_object
 
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
@@ -163,6 +175,50 @@ task merge_and_qc {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		memory: "~{mem_gb} GB"
+		disks: "local-disk ~{disk_size} HDD"
+		preemptible: 3
+		bootDiskSizeGb: 40
+		zones: zones
+	}
+}
+
+task reduce_dimensions {
+	input {
+		String cohort_id
+		File merged_adata_object
+
+		String raw_data_path
+		Array[Array[String]] workflow_info
+		String billing_project
+		String container_registry
+		String zones
+	}
+
+	Int mem_gb = ceil(size(merged_adata_object, "GB") * 2 + 20)
+	Int disk_size = ceil(size(merged_adata_object, "GB") * 2 + 50)
+
+	command <<<
+		set -euo pipefail
+
+		process_bins \
+			--adata-input ~{merged_adata_object} \
+			--adata-output ~{cohort_id}.bins_processed.h5ad
+
+		upload_outputs \
+			-b ~{billing_project} \
+			-d ~{raw_data_path} \
+			-i ~{write_tsv(workflow_info)} \
+			-o "~{cohort_id}.processed_bins.h5ad"
+	>>>
+
+	output {
+		File processed_bins_adata_object = "~{cohort_id}.processed_bins.h5ad"
+	}
+
+	runtime {
+		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
