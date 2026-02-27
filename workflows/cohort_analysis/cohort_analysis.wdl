@@ -5,6 +5,7 @@ version 1.0
 import "../../wf-common/wdl/tasks/write_cohort_sample_list.wdl" as WriteCohortSampleList
 import "harmony_integration/harmony_integration.wdl" as HarmonyIntegration
 import "peakvi_integration/peakvi_integration.wdl" as PeakVIIntegration
+import "../../sc-rnaseq-wf/workflows/cohort_analysis/cohort_analysis.wdl" as ScCohortAnalysis
 import "../../wf-common/wdl/tasks/upload_final_outputs.wdl" as UploadFinalOutputs
 
 workflow cohort_analysis {
@@ -153,6 +154,45 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
+	call ScCohortAnalysis.map_cell_types {
+		input:
+			cohort_id = cohort_id,
+			filtered_adata_object = make_gene_matrix.gene_matrix_adata_object,
+			allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
+	call process_gene_matrix {
+		input:
+			cohort_id = cohort_id,
+			gene_matrix_adata_object = make_gene_matrix.gene_matrix_adata_object,
+			batch_key = batch_key,
+			n_top_genes = n_top_genes,
+			n_comps = n_comps,
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
+	call ScCohortAnalysis.add_mapped_cell_types {
+		input:
+			cohort_id = cohort_id,
+			normalized_adata_object = process_gene_matrix.processed_gene_matrix_adata_object,
+			mmc_results_csv = map_cell_types.mmc_results_csv, #!FileCoercion
+			raw_data_path = raw_data_path,
+			workflow_name = workflow_name,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
 	call UploadFinalOutputs.upload_final_outputs as upload_preprocess_files {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
@@ -196,6 +236,9 @@ workflow cohort_analysis {
 		],
 		[
 			make_gene_matrix.gene_matrix_adata_object
+		],
+		[
+			process_gene_matrix.processed_gene_matrix_adata_object
 		]
 	]) #!StringCoercion
 
@@ -240,6 +283,16 @@ workflow cohort_analysis {
 
 		# Gene matrix adata object
 		File gene_matrix_adata_object = make_gene_matrix.gene_matrix_adata_object #!FileCoercion
+		File processed_gene_matrix_adata_object = process_gene_matrix.processed_gene_matrix_adata_object
+		File all_genes_csv = process_gene_matrix.all_genes_csv #!FileCoercion
+		File hvg_genes_csv = process_gene_matrix.hvg_genes_csv #!FileCoercion
+
+		# MMC from sc RNA-seq pipeline
+		File mmc_extended_results_json = map_cell_types.mmc_extended_results_json #!FileCoercion
+		File mmc_results_csv = map_cell_types.mmc_results_csv #!FileCoercion
+		File mmc_log_txt = map_cell_types.mmc_log_txt #!FileCoercion
+		File mmc_adata_object = add_mapped_cell_types.mmc_adata_object
+		File mmc_results_parquet = add_mapped_cell_types.mmc_results_parquet #!FileCoercion
 
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
@@ -480,6 +533,62 @@ task make_gene_matrix {
 
 	output {
 		String gene_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.gene_matrix.h5ad"
+	}
+
+	runtime {
+		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		cpu: 2
+		memory: "~{mem_gb} GB"
+		disks: "local-disk ~{disk_size} HDD"
+		preemptible: 3
+		bootDiskSizeGb: 40
+		zones: zones
+	}
+}
+
+task process_gene_matrix {
+	input {
+		String cohort_id
+		File gene_matrix_adata_object
+
+		String batch_key
+		Int n_top_genes
+		Int n_comps
+
+		String raw_data_path
+		Array[Array[String]] workflow_info
+		String billing_project
+		String container_registry
+		String zones
+	}
+
+	Int mem_gb = ceil(size(gene_matrix_adata_object, "GB") * 2 + 20)
+	Int disk_size = ceil(size(gene_matrix_adata_object, "GB") * 2 + 50)
+
+	command <<<
+		set -euo pipefail
+
+		process_genes \
+			--adata-input ~{gene_matrix_adata_object} \
+			--batch-key ~{batch_key} \
+			--n-top-genes ~{n_top_genes} \
+			--n-comps ~{n_comps} \
+			--adata-output ~{cohort_id}.processed_gene_matrix.h5ad \
+			--output-all-genes ~{cohort_id}.all_genes.csv \
+			--output-hvg-genes ~{cohort_id}.hvg_genes.csv
+
+		upload_outputs \
+			-b ~{billing_project} \
+			-d ~{raw_data_path} \
+			-i ~{write_tsv(workflow_info)} \
+			-o "~{cohort_id}.all_genes.csv" \
+			-o "~{cohort_id}.hvg_genes.csv"
+	>>>
+
+	output {
+		File processed_gene_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.processed_gene_matrix.h5ad"
+		String all_genes_csv = "~{raw_data_path}/~{cohort_id}.all_genes.csv"
+		String hvg_genes_csv = "~{raw_data_path}/~{cohort_id}.hvg_genes.csv"
 	}
 
 	runtime {
