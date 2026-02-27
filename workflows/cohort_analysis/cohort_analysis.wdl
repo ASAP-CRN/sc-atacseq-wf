@@ -129,6 +129,17 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
+	call make_gene_matrix {
+		input:
+			cohort_id = cohort_id,
+			harmony_merged_peaks_adata_object = harmony_peak_calling.merged_peaks_adata_object, #!FileCoercion
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
 	call UploadFinalOutputs.upload_final_outputs as upload_preprocess_files {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
@@ -165,6 +176,9 @@ workflow cohort_analysis {
 			peakvi_peak_calling.merged_peaks_adata_object,
 			peakvi_peak_calling.merged_peaks_csv,
 			peakvi_peak_calling.peaks_matrix_adata_object
+		],
+		[
+			make_gene_matrix.gene_matrix_adata_object
 		]
 	]) #!StringCoercion
 
@@ -202,6 +216,9 @@ workflow cohort_analysis {
 		File peakvi_merged_peaks_adata_object = peakvi_peak_calling.merged_peaks_adata_object #!FileCoercion
 		File peakvi_merged_peaks_csv = peakvi_peak_calling.merged_peaks_csv #!FileCoercion
 		File peakvi_peaks_matrix_adata_object = peakvi_peak_calling.peaks_matrix_adata_object #!FileCoercion
+
+		# Gene matrix adata object
+		File gene_matrix_adata_object = make_gene_matrix.gene_matrix_adata_object #!FileCoercion
 
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
@@ -344,6 +361,50 @@ task peak_calling {
 		String merged_peaks_adata_object = "~{raw_data_path}/~{cohort_id}.merged_peaks.h5ad"
 		String merged_peaks_csv = "~{raw_data_path}/~{cohort_id}.merged_peaks.csv"
 		String peaks_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.peaks_matrix.h5ad"
+	}
+
+	runtime {
+		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		cpu: 2
+		memory: "~{mem_gb} GB"
+		disks: "local-disk ~{disk_size} HDD"
+		preemptible: 3
+		bootDiskSizeGb: 40
+		zones: zones
+	}
+}
+
+task make_gene_matrix {
+	input {
+		String cohort_id
+		File harmony_merged_peaks_adata_object
+
+		String raw_data_path
+		Array[Array[String]] workflow_info
+		String billing_project
+		String container_registry
+		String zones
+	}
+
+	Int mem_gb = ceil(size(harmony_merged_peaks_adata_object, "GB") * 2 + 20)
+	Int disk_size = ceil(size(harmony_merged_peaks_adata_object, "GB") * 2 + 50)
+
+	command <<<
+		set -euo pipefail
+
+		generate_gene_matrix \
+			--adata-input ~{harmony_merged_peaks_adata_object} \
+			--output-prefix ~{cohort_id}
+
+		upload_outputs \
+			-b ~{billing_project} \
+			-d ~{raw_data_path} \
+			-i ~{write_tsv(workflow_info)} \
+			-o "~{cohort_id}.gene_matrix.h5ad"
+	>>>
+
+	output {
+		String gene_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.gene_matrix.h5ad"
 	}
 
 	runtime {
