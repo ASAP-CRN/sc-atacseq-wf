@@ -129,6 +129,19 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
+	call benchmark_sc_integration {
+		input:
+			cohort_id = cohort_id,
+			harmony_merged_peaks_adata_object = harmony_peak_calling.merged_peaks_adata_object, #!FileCoercion
+			peakvi_merged_peaks_adata_object = peakvi_peak_calling.merged_peaks_adata_object, #!FileCoercion
+			batch_key = batch_key,
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
 	call make_gene_matrix {
 		input:
 			cohort_id = cohort_id,
@@ -178,6 +191,10 @@ workflow cohort_analysis {
 			peakvi_peak_calling.peaks_matrix_adata_object
 		],
 		[
+			benchmark_sc_integration.scib_report_results_csv,
+			benchmark_sc_integration.scib_report_results_svg
+		],
+		[
 			make_gene_matrix.gene_matrix_adata_object
 		]
 	]) #!StringCoercion
@@ -216,6 +233,10 @@ workflow cohort_analysis {
 		File peakvi_merged_peaks_adata_object = peakvi_peak_calling.merged_peaks_adata_object #!FileCoercion
 		File peakvi_merged_peaks_csv = peakvi_peak_calling.merged_peaks_csv #!FileCoercion
 		File peakvi_peaks_matrix_adata_object = peakvi_peak_calling.peaks_matrix_adata_object #!FileCoercion
+
+		# Benchmark sc integration tools
+		File scib_report_results_csv = benchmark_sc_integration.scib_report_results_csv #!FileCoercion
+		File scib_report_results_svg = benchmark_sc_integration.scib_report_results_svg #!FileCoercion
 
 		# Gene matrix adata object
 		File gene_matrix_adata_object = make_gene_matrix.gene_matrix_adata_object #!FileCoercion
@@ -365,6 +386,60 @@ task peak_calling {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		cpu: 2
+		memory: "~{mem_gb} GB"
+		disks: "local-disk ~{disk_size} HDD"
+		preemptible: 3
+		bootDiskSizeGb: 40
+		zones: zones
+	}
+}
+
+task benchmark_sc_integration {
+	input {
+		String cohort_id
+		File harmony_merged_peaks_adata_object
+		File peakvi_merged_peaks_adata_object
+
+		String batch_key
+
+		String raw_data_path
+		Array[Array[String]] workflow_info
+		String billing_project
+		String container_registry
+		String zones
+	}
+
+	Int mem_gb = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 2 + 20)
+	Int disk_size = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 2 + 50)
+
+	command <<<
+		set -euo pipefail
+
+		benchmark_sc_integration \
+			--adata-harmony-input ~{harmony_merged_peaks_adata_object} \
+			--adata-peakvi-input ~{peakvi_merged_peaks_adata_object} \
+			--batch-key ~{batch_key} \
+			--output-report-dir scib_report_dir
+
+		mv "scib_report_dir/scib_report.csv" "scib_report_dir/~{cohort_id}.scib_report.csv"
+		mv "scib_report_dir/scib_results.svg" "scib_report_dir/~{cohort_id}.scib_results.svg"
+
+		upload_outputs \
+			-b ~{billing_project} \
+			-d ~{raw_data_path} \
+			-i ~{write_tsv(workflow_info)} \
+			-o "scib_report_dir/~{cohort_id}.scib_report.csv" \
+			-o "scib_report_dir/~{cohort_id}.scib_results.svg"
+	>>>
+
+	output {
+		String scib_report_results_csv = "~{raw_data_path}/~{cohort_id}.scib_report.csv"
+		String scib_report_results_svg = "~{raw_data_path}/~{cohort_id}.scib_results.svg"
+	}
+
+	runtime {
+		docker: "~{container_registry}/sc_tools:1.0.0"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
