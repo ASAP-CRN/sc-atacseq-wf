@@ -241,6 +241,17 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
+	call export_final_artifacts {
+		input:
+			cohort_id = cohort_id,
+			mmc_adata_object = add_mapped_cell_types.mmc_adata_object,
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
 	call UploadFinalOutputs.upload_final_outputs as upload_preprocess_files {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
@@ -311,6 +322,10 @@ workflow cohort_analysis {
 		[
 			plot_groups_and_features.groups_umap_plot_png,
 			plot_groups_and_features.features_umap_plot_png
+		],
+		[
+			export_final_artifacts.final_adata_object,
+			export_final_artifacts.final_metadata_csv
 		]
 	]) #!StringCoercion
 
@@ -377,6 +392,9 @@ workflow cohort_analysis {
 		File groups_umap_plot_png = plot_groups_and_features.groups_umap_plot_png #!FileCoercion
 		File features_umap_plot_png = plot_groups_and_features.features_umap_plot_png #!FileCoercion
 
+		File final_adata_object = export_final_artifacts.final_adata_object #!FileCoercion
+		File final_metadata_csv = export_final_artifacts.final_metadata_csv #!FileCoercion
+
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
 	}
@@ -438,7 +456,6 @@ task merge_and_qc {
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
-		bootDiskSizeGb: 40
 		zones: zones
 	}
 }
@@ -473,7 +490,6 @@ task reduce_dimensions {
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
-		bootDiskSizeGb: 40
 		zones: zones
 	}
 }
@@ -526,7 +542,6 @@ task peak_calling {
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
-		bootDiskSizeGb: 40
 		zones: zones
 	}
 }
@@ -580,7 +595,6 @@ task benchmark_sc_integration {
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
-		bootDiskSizeGb: 40
 		zones: zones
 	}
 }
@@ -624,7 +638,6 @@ task make_gene_matrix {
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
-		bootDiskSizeGb: 40
 		zones: zones
 	}
 }
@@ -680,7 +693,6 @@ task process_gene_matrix {
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
-		bootDiskSizeGb: 40
 		zones: zones
 	}
 }
@@ -724,7 +736,6 @@ task impute_gene_matrix {
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
-		bootDiskSizeGb: 40
 		zones: zones
 	}
 }
@@ -768,7 +779,53 @@ task motif_enrichment {
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
-		bootDiskSizeGb: 40
+		zones: zones
+	}
+}
+
+task export_final_artifacts {
+	input {
+		String cohort_id
+		File mmc_adata_object
+
+		String raw_data_path
+		Array[Array[String]] workflow_info
+		String billing_project
+		String container_registry
+		String zones
+	}
+
+	Int mem_gb = ceil(size(mmc_adata_object, "GB") * 2 + 20)
+	Int disk_size = ceil(size(mmc_adata_object, "GB") * 2 + 50)
+
+	command <<<
+		set -euo pipefail
+
+		export_final_artifacts \
+			--cohort-id ~{cohort_id} \
+			--adata-input ~{mmc_adata_object} \
+			--adata-output ~{cohort_id}.final.h5ad
+
+		upload_outputs \
+			-b ~{billing_project} \
+			-d ~{raw_data_path} \
+			-i ~{write_tsv(workflow_info)} \
+			-o "~{cohort_id}.final.h5ad" \
+			-o "~{cohort_id}.final_metadata.csv"
+
+	>>>
+
+	output {
+		String final_adata_object = "~{raw_data_path}/~{cohort_id}.final.h5ad"
+		String final_metadata_csv = "~{raw_data_path}/~{cohort_id}.final_metadata.csv"
+	}
+
+	runtime {
+		docker: "~{container_registry}/sc_tools:1.0.0"
+		cpu: 2
+		memory: "~{mem_gb} GB"
+		disks: "local-disk ~{disk_size} HDD"
+		preemptible: 3
 		zones: zones
 	}
 }

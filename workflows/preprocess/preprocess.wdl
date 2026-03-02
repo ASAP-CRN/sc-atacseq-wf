@@ -353,12 +353,11 @@ task counts_to_adata {
 	}
 
 	runtime {
-		docker: "~{container_registry}/snapatac2:2.8.0"
+		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
 		memory: "32 GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
-		bootDiskSizeGb: 40
 		zones: zones
 	}
 }
