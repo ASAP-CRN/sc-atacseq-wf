@@ -206,6 +206,30 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
+	call motif_enrichment {
+		input:
+			cohort_id = cohort_id,
+			celltype_merged_peaks_adata_object = celltype_peak_calling.merged_peaks_adata_object, #!FileCoercion
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
+	call ScCohortAnalysis.plot_groups_and_features {
+		input:
+			cohort_id = cohort_id,
+			final_adata_object = add_mapped_cell_types.mmc_adata_object,
+			groups = groups,
+			features = features,
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
 	call UploadFinalOutputs.upload_final_outputs as upload_preprocess_files {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
@@ -267,6 +291,13 @@ workflow cohort_analysis {
 			celltype_peak_calling.merged_peaks_csv,
 			celltype_peak_calling.peaks_matrix_adata_object
 		],
+		[
+			motif_enrichment.motifs_csv
+		],
+		[
+			plot_groups_and_features.groups_umap_plot_png,
+			plot_groups_and_features.features_umap_plot_png
+		]
 	]) #!StringCoercion
 
 	call UploadFinalOutputs.upload_final_outputs as upload_cohort_analysis_files {
@@ -325,6 +356,11 @@ workflow cohort_analysis {
 		File celltype_merged_peaks_adata_object = celltype_peak_calling.merged_peaks_adata_object #!FileCoercion
 		File celltype_merged_peaks_csv = celltype_peak_calling.merged_peaks_csv #!FileCoercion
 		File celltype_peaks_matrix_adata_object = celltype_peak_calling.peaks_matrix_adata_object #!FileCoercion
+		File motifs_csv = motif_enrichment.motifs_csv #!FileCoercion
+
+		# Groups and features plots
+		File groups_umap_plot_png = plot_groups_and_features.groups_umap_plot_png #!FileCoercion
+		File features_umap_plot_png = plot_groups_and_features.features_umap_plot_png #!FileCoercion
 
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
@@ -621,6 +657,50 @@ task process_gene_matrix {
 		File processed_gene_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.processed_gene_matrix.h5ad"
 		String all_genes_csv = "~{raw_data_path}/~{cohort_id}.all_genes.csv"
 		String hvg_genes_csv = "~{raw_data_path}/~{cohort_id}.hvg_genes.csv"
+	}
+
+	runtime {
+		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		cpu: 2
+		memory: "~{mem_gb} GB"
+		disks: "local-disk ~{disk_size} HDD"
+		preemptible: 3
+		bootDiskSizeGb: 40
+		zones: zones
+	}
+}
+
+task motif_enrichment {
+	input {
+		String cohort_id
+		File celltype_merged_peaks_adata_object
+
+		String raw_data_path
+		Array[Array[String]] workflow_info
+		String billing_project
+		String container_registry
+		String zones
+	}
+
+	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 20)
+	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 50)
+
+	command <<<
+		set -euo pipefail
+
+		find_motif_enrichment \
+			--adata-input ~{celltype_merged_peaks_adata_object} \
+			--output-prefix ~{cohort_id}
+
+		upload_outputs \
+			-b ~{billing_project} \
+			-d ~{raw_data_path} \
+			-i ~{write_tsv(workflow_info)} \
+			-o "~{cohort_id}.motifs.csv"
+	>>>
+
+	output {
+		String motifs_csv = "~{raw_data_path}/~{cohort_id}.motifs.csv"
 	}
 
 	runtime {
