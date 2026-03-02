@@ -157,7 +157,7 @@ workflow cohort_analysis {
 	call ScCohortAnalysis.map_cell_types {
 		input:
 			cohort_id = cohort_id,
-			filtered_adata_object = make_gene_matrix.gene_matrix_adata_object,
+			filtered_adata_object = make_gene_matrix.gene_matrix_adata_object, #!FileCoercion
 			allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
@@ -169,7 +169,7 @@ workflow cohort_analysis {
 	call process_gene_matrix {
 		input:
 			cohort_id = cohort_id,
-			gene_matrix_adata_object = make_gene_matrix.gene_matrix_adata_object,
+			gene_matrix_adata_object = make_gene_matrix.gene_matrix_adata_object, #!FileCoercion
 			batch_key = batch_key,
 			n_top_genes = n_top_genes,
 			n_comps = n_comps,
@@ -238,7 +238,16 @@ workflow cohort_analysis {
 			make_gene_matrix.gene_matrix_adata_object
 		],
 		[
-			process_gene_matrix.processed_gene_matrix_adata_object
+			map_cell_types.mmc_extended_results_json,
+			map_cell_types.mmc_results_csv,
+			map_cell_types.mmc_log_txt
+		],
+		[
+			process_gene_matrix.all_genes_csv,
+			process_gene_matrix.hvg_genes_csv
+		],
+		[
+			add_mapped_cell_types.mmc_results_parquet
 		]
 	]) #!StringCoercion
 
