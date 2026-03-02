@@ -228,7 +228,7 @@ workflow cohort_analysis {
 	call ScCohortAnalysis.plot_groups_and_features {
 		input:
 			cohort_id = cohort_id,
-			final_adata_object = add_mapped_cell_types.mmc_adata_object,
+			final_adata_object = celltype_peak_calling.merged_peaks_adata_object, #!FileCoercion
 			groups = groups,
 			features = features,
 			raw_data_path = raw_data_path,
@@ -241,7 +241,7 @@ workflow cohort_analysis {
 	call export_final_artifacts {
 		input:
 			cohort_id = cohort_id,
-			mmc_adata_object = add_mapped_cell_types.mmc_adata_object,
+			celltype_merged_peaks_adata_object = celltype_peak_calling.merged_peaks_adata_object, #!FileCoercion
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -391,6 +391,33 @@ workflow cohort_analysis {
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
 	}
+
+	meta {
+		description: "Run team-level and/or cross-team cohort analysis on the 10x Genomics Chromium Epi ATAC data by filtering, normalization, dimensionality reduction, sample integration, clustering, peak calling, and differential chromatin analysis."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		project_sample_ids: {help: "Associated team ID, sample ID, and dataset DOI URL; used to generate a sample list."}
+		preprocessed_adata_objects: {help: "An array of preprocessed AnnData objects to run cohort analysis on."}
+		preprocessing_output_file_paths: {help: "Selected preprocessed output files to upload to the staging bucket alongside selected cohort analysis output files."}
+		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
+		n_top_genes: {help: "Number of highly-variable genes to keep. [3000]"}
+		n_comps: {help: "Number of principal components to compute. [30]"}
+		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'team', 'dataset', 'batch_id', 'leiden']"}
+		features: {help: "Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability']"}
+		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
+		workflow_version: {help: "Workflow version; stored in the file-level manifest and final manifest with all saved files."}
+		workflow_release: {help: "GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		run_timestamp: {help: "UTC timestamp; stored in the file-level manifest and final manifest with all saved files."}
+		raw_data_path_prefix: {help: "Raw data bucket path prefix; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis`)."}
+		staging_data_buckets: {help: "Array of staging data buckets to upload intermediate files to (i.e., DEV or UAT buckets depending on internal QC status)."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task merge_and_qc {
@@ -451,6 +478,20 @@ task merge_and_qc {
 		preemptible: 3
 		zones: zones
 	}
+
+	meta {
+		description: "Merge sample-level AnnData objects to a single cohort-level AnnData object and QC based on covariates including matrices, features, and doublets."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		preprocessed_adata_objects: {help: "An array of preprocessed AnnData objects to run cohort analysis on."}
+		raw_data_path: {help: "Raw data bucket path for merged adata and QC plots outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task reduce_dimensions {
@@ -484,6 +525,17 @@ task reduce_dimensions {
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
 		zones: zones
+	}
+
+	meta {
+		description: "Perform spectral decomposition and UMAP embedding on the bin-level chromatin accessibility matrix for dimensionality reduction."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		merged_adata_object: {help: "Merged AnnData object."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
 
@@ -536,6 +588,22 @@ task peak_calling {
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
 		zones: zones
+	}
+
+	meta {
+		description: "Calls peaks using MACS3 based on a group (e.g., Leiden clusters or cell types), merges peaks across groups, and generates a cell-by-peak matrix."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		integrated_adata_object: {help: "Batch corrected and integrated AnnData object."}
+		integration_method: {help: "Single cell integration method."}
+		macs3_groupby: {help: "The cell grouping before peak calling."}
+		raw_data_path: {help: "Raw data bucket path for peak calling outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
 
@@ -590,6 +658,22 @@ task benchmark_sc_integration {
 		preemptible: 3
 		zones: zones
 	}
+
+	meta {
+		description: "Benchmarks Harmony and PeakVI batch correction methods against an unintegrated baseline using scib-metrics and generates a summary report and results table."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		harmony_merged_peaks_adata_object: {help: "Batch corrected, integrated, clustered, merged peaks AnnData object."}
+		peakvi_merged_peaks_adata_object: {help: "Batch corrected, integrated, clustered, merged peaks AnnData object."}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		raw_data_path: {help: "Raw data bucket path for benchmarking outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task make_gene_matrix {
@@ -623,6 +707,17 @@ task make_gene_matrix {
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
 		zones: zones
+	}
+
+	meta {
+		description: "Generates a cell-by-gene matrix by counting the TN5 insertions in each gene’s regulatory domain and using the hg38 genome annotation, filters lowly detected genes, and transfers the UMAP embedding."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		harmony_merged_peaks_adata_object: {help: "Batch corrected, integrated, clustered, merged peaks AnnData object."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
 
@@ -679,6 +774,23 @@ task process_gene_matrix {
 		preemptible: 3
 		zones: zones
 	}
+
+	meta {
+		description: "Normalizes the cell-by-gene matrix, selects highly variable genes (HVGs) using Pearson residuals, and performs PCA."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		gene_matrix_adata_object: {help: "Gene matrix AnnData object."}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		n_top_genes: {help: "Number of HVG genes to keep. [3000]"}
+		n_comps: {help: "Number of principal components to compute. [30]"}
+		raw_data_path: {help: "Raw data bucket path for processed gene matrix outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task impute_gene_matrix {
@@ -721,6 +833,20 @@ task impute_gene_matrix {
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
 		zones: zones
+	}
+
+	meta {
+		description: "Applies MAGIC imputation to smooth the cell-by-gene matrix, recovering gene expression structure by diffusing signal across similar cells."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		processed_gene_matrix_adata_object: {help: "Processed gene matrix AnnData object."}
+		raw_data_path: {help: "Raw data bucket path for imputed gene matrix output; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
 
@@ -765,12 +891,26 @@ task motif_enrichment {
 		preemptible: 3
 		zones: zones
 	}
+
+	meta {
+		description: "Identifies cell type–specific marker peaks and performs TF motif enrichment analysis."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		celltype_merged_peaks_adata_object: {help: "Batch corrected, integrated, clustered, merged peaks, cell type annotated AnnData object."}
+		raw_data_path: {help: "Raw data bucket path for motifs output; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task export_final_artifacts {
 	input {
 		String cohort_id
-		File mmc_adata_object
+		File celltype_merged_peaks_adata_object
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -779,15 +919,15 @@ task export_final_artifacts {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(mmc_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(mmc_adata_object, "GB") * 2 + 50)
+	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 20)
+	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 50)
 
 	command <<<
 		set -euo pipefail
 
 		export_final_artifacts \
 			--cohort-id ~{cohort_id} \
-			--adata-input ~{mmc_adata_object} \
+			--adata-input ~{celltype_merged_peaks_adata_object} \
 			--adata-output ~{cohort_id}.final.h5ad
 
 		upload_outputs \
@@ -811,5 +951,19 @@ task export_final_artifacts {
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
 		zones: zones
+	}
+
+	meta {
+		description: "Exports final AnnData object and grab the metadata."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		celltype_merged_peaks_adata_object: {help: "Batch corrected, integrated, clustered, merged peaks, cell type annotated AnnData object acting as the final AnnData object."}
+		raw_data_path: {help: "Raw data bucket path for final outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
