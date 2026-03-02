@@ -5,7 +5,7 @@ import snapatac2 as snap
 
 
 def add_metadata(
-    adata: snap.AnnData, sample_id: str, batch: str, team_id: str, dataset_id: str
+    adata: snap.AnnData, team_id: str, dataset_id: str, sample_id: str, batch: str
 ):
     print("Adding metadata to sample-level AnnData object")
     adata.obs["sample"] = sample_id
@@ -26,10 +26,10 @@ def main(args):
     )
     adata = add_metadata(
         adata,
-        args.sample_id,
-        args.batch,
+        args.team_id,
         args.dataset_id,
-        args.team_id
+        args.sample_id,
+        args.batch
     )
     adata.write(
         filename=args.adata_output,
@@ -50,20 +50,6 @@ if __name__ == "__main__":
         help="The Cell Ranger ATAC fragments.tsv.gz output that is the barcoded and aligned fragment file"
     )
     parser.add_argument(
-        "-s",
-        "--sample-id",
-        type=str,
-        required=True,
-        help="Sample ID"
-    )
-    parser.add_argument(
-        "-b",
-        "--batch",
-        type=str,
-        required=True,
-        help="Batch from which the sample/dataset originated"
-    )
-    parser.add_argument(
         "-t",
         "--team-id",
         type=str,
@@ -76,6 +62,20 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Dataset ID"
+    )
+    parser.add_argument(
+        "-s",
+        "--sample-id",
+        type=str,
+        required=True,
+        help="Sample ID"
+    )
+    parser.add_argument(
+        "-b",
+        "--batch",
+        type=str,
+        required=True,
+        help="Batch from which the sample/dataset originated"
     )
     parser.add_argument(
         "-o",

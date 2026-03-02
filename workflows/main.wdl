@@ -1,6 +1,6 @@
 version 1.0
 
-# Harmonized human PMDBS brain sc/sn ATACseq workflow entrypoint
+# Harmonized human PMDBS brain sc/sn ATAC-seq workflow entrypoint
 
 import "structs.wdl"
 import "../wf-common/wdl/tasks/get_workflow_metadata.wdl" as GetWorkflowMetadata
@@ -280,5 +280,27 @@ workflow sc_atacseq_analysis {
 		File? cohort_final_metadata_csv = cross_team_cohort_analysis.final_metadata_csv
 
 		Array[File]? cohort_manifests = cross_team_cohort_analysis.cohort_analysis_manifest_tsvs
+	}
+
+	meta {
+		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) brain sc/sn ATAC-seq workflow"
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files during cross-team cohort analysis."}
+		projects: {help: "The project ID, set of samples and their associated reads and metadata, output bucket locations, sc data type, and whether or not to run project-level cohort analysis."}
+		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
+		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
+		n_top_genes: {help: "Number of HVG genes to keep. [3000]"}
+		n_comps: {help: "Number of principal components to compute. [30]"}
+		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'team', 'dataset', 'batch_id', 'leiden']"}
+		features: {help: "Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability']"}
+		run_cross_team_cohort_analysis: {help: "Whether to run downstream harmonization steps on all samples across projects. If set to false, only preprocessing steps (cellranger and generating the initial adata object(s)) will run for samples. [false]"}
+		cohort_raw_data_bucket: {help: "Bucket to upload cross-team cohort intermediate files to."}
+		cohort_staging_data_buckets: {help: "Set of buckets to stage cross-team cohort analysis outputs in."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }

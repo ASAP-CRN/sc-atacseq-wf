@@ -36,7 +36,7 @@ workflow preprocess {
 	String adata_raw_data_path = "~{workflow_raw_data_path_prefix}/counts_to_adata/~{adata_task_version}"
 
 	scatter (sample_object in samples) {
-		String cellranger_atac_count_output = "~{cellranger_atac_raw_data_path}/~{sample_object.sample_id}.raw_feature_bc_matrix.h5"
+		String cellranger_atac_count_output = "~{cellranger_atac_raw_data_path}/~{sample_object.sample_id}.raw_peak_bc_matrix.h5"
 		String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.sample_id}.cleaned_unfiltered.h5ad"
 	}
 
@@ -140,6 +140,27 @@ workflow preprocess {
 		# AnnData counts
 		Array[File] initial_adata_object = preprocessed_adata_object_output #!FileCoercion
 	}
+
+	meta {
+		description: "Preprocess the 10x Genomics Chromium Epi ATAC data by running cellranger atac count and converting counts to AnnData object."
+	}
+
+	parameter_meta {
+		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
+		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
+		dataset_doi_url: {help: "Generated Zenodo DOI URL referencing the dataset."}
+		samples: {help: "An array of Sample struct, set of samples and their associated reads and metadata information."}
+		multimodal_sc_data: {help: "Whether or not the sc/sn RNAseq is from multimodal data."}
+		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
+		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
+		workflow_version: {help: "Workflow version; stored in the file-level manifest and final manifest with all saved files."}
+		workflow_release: {help: "GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		run_timestamp: {help: "UTC timestamp; stored in the file-level manifest and final manifest with all saved files."}
+		raw_data_path_prefix: {help: "Raw data bucket path prefix; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess`)."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task check_output_files_exist {
@@ -184,6 +205,17 @@ task check_output_files_exist {
 		disks: "local-disk 20 HDD"
 		preemptible: 3
 		zones: zones
+	}
+
+	meta {
+		description: "Checks for existing preprocessing files per sample and skips certain preprocessing steps if they exist."
+	}
+
+	parameter_meta {
+		cellranger_atac_count_output_files: {help: "Cell Ranger count output file to detect (`<sample>.raw_peak_bc_matrix.h5`)."}
+		initial_adata_object_output_files: {help: "Converted AnnData object output file to detect (`<sample>.cleaned_unfiltered.h5ad`)."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
 
@@ -309,15 +341,33 @@ task cellranger_atac_count {
 		bootDiskSizeGb: 40
 		zones: zones
 	}
+
+	meta {
+		description: "Processes raw sequencing data from 10x Epi ATAC experiments to generate chromatin accessibility and transcription factor (TF) activity matrices."
+	}
+
+	parameter_meta {
+		sample_id: {help: "Generated ASAP sample ID; used to name output files."}
+		fastq_R1s: {help: "Sample's read 1 FASTQ file."}
+		fastq_R2s: {help: "Sample's read 2 FASTQ file."}
+		fastq_I1s: {help: "Optional FASTQ index 1."}
+		fastq_I2s: {help: "Optional FASTQ index 2."}
+		multimodal_sc_data: {help: "Whether or not the sc/sn RNAseq is from multimodal data."}
+		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
+		raw_data_path: {help: "Raw data bucket path for cellranger-atac count outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/cellranger_atac/<cellranger_atac_task_version>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task counts_to_adata {
 	input {
-		String sample_id
-		String batch
-
 		String team_id
 		String dataset_id
+		String sample_id
+		String batch
 
 		File cellranger_atac_fragments
 
@@ -334,11 +384,11 @@ task counts_to_adata {
 		set -euo pipefail
 
 		counts_to_adata \
-			--ellranger-atac-fragments ~{cellranger_atac_fragments} \
-			--sample-id ~{sample_id} \
-			--batch ~{batch} \
+			--cellranger-atac-fragments ~{cellranger_atac_fragments} \
 			--team ~{team_id} \
 			--dataset ~{dataset_id} \
+			--sample-id ~{sample_id} \
+			--batch ~{batch} \
 			--adata-output ~{sample_id}.cleaned_unfiltered.h5ad
 
 		upload_outputs \
@@ -359,5 +409,22 @@ task counts_to_adata {
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
 		zones: zones
+	}
+
+	meta {
+		description: "Convert Cell Ranger ATAC counts to AnnData objects using SnapATAC2."
+	}
+
+	parameter_meta {
+		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
+		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
+		sample_id: {help: "Generated ASAP sample ID; stored in the AnnData objects and used to name output files."}
+		batch: {help: "The sample's batch; stored in the AnnData objects."}
+		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
+		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
