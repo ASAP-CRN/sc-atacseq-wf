@@ -193,6 +193,19 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
+	call peak_calling as celltype_peak_calling {
+		input:
+			cohort_id = cohort_id,
+			integrated_adata_object = add_mapped_cell_types.mmc_adata_object,
+			integration_method = "peakvi",
+			macs3_groupby = "cell_type",
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
 	call UploadFinalOutputs.upload_final_outputs as upload_preprocess_files {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
@@ -248,7 +261,12 @@ workflow cohort_analysis {
 		],
 		[
 			add_mapped_cell_types.mmc_results_parquet
-		]
+		],
+		[
+			celltype_peak_calling.merged_peaks_adata_object,
+			celltype_peak_calling.merged_peaks_csv,
+			celltype_peak_calling.peaks_matrix_adata_object
+		],
 	]) #!StringCoercion
 
 	call UploadFinalOutputs.upload_final_outputs as upload_cohort_analysis_files {
@@ -302,6 +320,11 @@ workflow cohort_analysis {
 		File mmc_log_txt = map_cell_types.mmc_log_txt #!FileCoercion
 		File mmc_adata_object = add_mapped_cell_types.mmc_adata_object
 		File mmc_results_parquet = add_mapped_cell_types.mmc_results_parquet #!FileCoercion
+
+		# Differential chromatin analysis
+		File celltype_merged_peaks_adata_object = celltype_peak_calling.merged_peaks_adata_object #!FileCoercion
+		File celltype_merged_peaks_csv = celltype_peak_calling.merged_peaks_csv #!FileCoercion
+		File celltype_peaks_matrix_adata_object = celltype_peak_calling.peaks_matrix_adata_object #!FileCoercion
 
 		Array[File] preprocess_manifest_tsvs = upload_preprocess_files.manifests #!FileCoercion
 		Array[File] cohort_analysis_manifest_tsvs = upload_cohort_analysis_files.manifests #!FileCoercion
