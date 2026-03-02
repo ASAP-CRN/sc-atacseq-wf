@@ -339,7 +339,7 @@ workflow cohort_analysis {
 		Array[File] qc_plots_png = merge_and_qc.qc_plots_png #!FileCoercion
 		File processed_bins_adata_object = reduce_dimensions.processed_bins_adata_object
 
-		# Harmony integratated adata objects and outputs
+		# Harmony integrated adata objects and outputs
 		File harmony_integrated_adata_object = harmony_integration.harmony_integrated_adata_object
 		File harmony_clustered_adata_object = harmony_integration.harmony_clustered_adata_object
 		File harmony_clustered_umap_png = harmony_integration.harmony_clustered_umap_png #!FileCoercion
@@ -347,7 +347,7 @@ workflow cohort_analysis {
 		File harmony_merged_peaks_csv = harmony_peak_calling.merged_peaks_csv #!FileCoercion
 		File harmony_peaks_matrix_adata_object = harmony_peak_calling.peaks_matrix_adata_object #!FileCoercion
 
-		# PeakVI integratated adata objects and outputs
+		# PeakVI integrated adata objects and outputs
 		File peakvi_integrated_adata_object = peakvi_integration.peakvi_integrated_adata_object
 		File peakvi_model_tar_gz = peakvi_integration.peakvi_model_tar_gz #!FileCoercion
 		File peakvi_clustered_adata_object = peakvi_integration.peakvi_clustered_adata_object
@@ -384,6 +384,7 @@ workflow cohort_analysis {
 		File groups_umap_plot_png = plot_groups_and_features.groups_umap_plot_png #!FileCoercion
 		File features_umap_plot_png = plot_groups_and_features.features_umap_plot_png #!FileCoercion
 
+		# Final artifacts
 		File final_adata_object = export_final_artifacts.final_adata_object #!FileCoercion
 		File final_metadata_csv = export_final_artifacts.final_metadata_csv #!FileCoercion
 
