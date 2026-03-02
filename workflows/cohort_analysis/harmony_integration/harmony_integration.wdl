@@ -38,7 +38,7 @@ workflow harmony_integration {
 
 	output {
 		File harmony_integrated_adata_object = integrate_harmony.harmony_integrated_adata_object
-		File harmony_clustered_adata_object = cluster_harmony.harmony_clustered_adata_object #!FileCoercion
+		File harmony_clustered_adata_object = cluster_harmony.harmony_clustered_adata_object
 		File harmony_clustered_umap_png = cluster_harmony.harmony_clustered_umap_png #!FileCoercion
 	}
 }
@@ -108,12 +108,11 @@ task cluster_harmony {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.harmony_clustered.h5ad" \
 			-o "~{cohort_id}.harmony_umap.png"
 	>>>
 
 	output {
-		String harmony_clustered_adata_object = "~{raw_data_path}/~{cohort_id}.harmony_clustered.h5ad"
+		File harmony_clustered_adata_object = "~{cohort_id}.harmony_clustered.h5ad"
 		String harmony_clustered_umap_png = "~{raw_data_path}/~{cohort_id}.harmony_umap.png"
 	}
 

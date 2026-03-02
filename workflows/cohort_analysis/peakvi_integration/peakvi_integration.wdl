@@ -45,7 +45,7 @@ workflow peakvi_integration {
 	output {
 		File peakvi_integrated_adata_object = integrate_peakvi.peakvi_integrated_adata_object
 		File peakvi_model_tar_gz = integrate_peakvi.peakvi_model_tar_gz #!FileCoercion
-		File peakvi_clustered_adata_object = cluster_peakvi.peakvi_clustered_adata_object #!FileCoercion
+		File peakvi_clustered_adata_object = cluster_peakvi.peakvi_clustered_adata_object
 		File peakvi_clustered_umap_png = cluster_peakvi.peakvi_clustered_umap_png #!FileCoercion
 	}
 }
@@ -137,12 +137,11 @@ task cluster_peakvi {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.peakvi_clustered.h5ad" \
 			-o "plots/~{cohort_id}.peakvi_umap.png"
 	>>>
 
 	output {
-		String peakvi_clustered_adata_object = "~{raw_data_path}/~{cohort_id}.peakvi_clustered.h5ad"
+		File peakvi_clustered_adata_object = "~{cohort_id}.peakvi_clustered.h5ad"
 		String peakvi_clustered_umap_png = "~{raw_data_path}/~{cohort_id}.peakvi_umap.png"
 	}
 

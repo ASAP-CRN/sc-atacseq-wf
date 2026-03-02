@@ -147,9 +147,6 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			harmony_merged_peaks_adata_object = harmony_peak_calling.merged_peaks_adata_object, #!FileCoercion
-			raw_data_path = raw_data_path,
-			workflow_info = workflow_info,
-			billing_project = billing_project,
 			container_registry = container_registry,
 			zones = zones
 	}
@@ -271,12 +268,10 @@ workflow cohort_analysis {
 		],
 		merge_and_qc.qc_plots_png,
 		[
-			harmony_integration.harmony_clustered_adata_object,
 			harmony_integration.harmony_clustered_umap_png
 		],
 		[
 			peakvi_integration.peakvi_model_tar_gz,
-			peakvi_integration.peakvi_clustered_adata_object,
 			peakvi_integration.peakvi_clustered_umap_png
 		],
 		[
@@ -292,9 +287,6 @@ workflow cohort_analysis {
 		[
 			benchmark_sc_integration.scib_report_results_csv,
 			benchmark_sc_integration.scib_report_results_svg
-		],
-		[
-			make_gene_matrix.gene_matrix_adata_object
 		],
 		[
 			map_cell_types.mmc_extended_results_json,
@@ -349,7 +341,7 @@ workflow cohort_analysis {
 
 		# Harmony integratated adata objects and outputs
 		File harmony_integrated_adata_object = harmony_integration.harmony_integrated_adata_object
-		File harmony_clustered_adata_object = harmony_integration.harmony_clustered_adata_object #!FileCoercion
+		File harmony_clustered_adata_object = harmony_integration.harmony_clustered_adata_object
 		File harmony_clustered_umap_png = harmony_integration.harmony_clustered_umap_png #!FileCoercion
 		File harmony_merged_peaks_adata_object = harmony_peak_calling.merged_peaks_adata_object #!FileCoercion
 		File harmony_merged_peaks_csv = harmony_peak_calling.merged_peaks_csv #!FileCoercion
@@ -358,7 +350,7 @@ workflow cohort_analysis {
 		# PeakVI integratated adata objects and outputs
 		File peakvi_integrated_adata_object = peakvi_integration.peakvi_integrated_adata_object
 		File peakvi_model_tar_gz = peakvi_integration.peakvi_model_tar_gz #!FileCoercion
-		File peakvi_clustered_adata_object = peakvi_integration.peakvi_clustered_adata_object #!FileCoercion
+		File peakvi_clustered_adata_object = peakvi_integration.peakvi_clustered_adata_object
 		File peakvi_clustered_umap_png = peakvi_integration.peakvi_clustered_umap_png #!FileCoercion
 		File peakvi_merged_peaks_adata_object = peakvi_peak_calling.merged_peaks_adata_object #!FileCoercion
 		File peakvi_merged_peaks_csv = peakvi_peak_calling.merged_peaks_csv #!FileCoercion
@@ -369,7 +361,7 @@ workflow cohort_analysis {
 		File scib_report_results_svg = benchmark_sc_integration.scib_report_results_svg #!FileCoercion
 
 		# Gene matrix adata object
-		File gene_matrix_adata_object = make_gene_matrix.gene_matrix_adata_object #!FileCoercion
+		File gene_matrix_adata_object = make_gene_matrix.gene_matrix_adata_object
 		File processed_gene_matrix_adata_object = process_gene_matrix.processed_gene_matrix_adata_object
 		File all_genes_csv = process_gene_matrix.all_genes_csv #!FileCoercion
 		File hvg_genes_csv = process_gene_matrix.hvg_genes_csv #!FileCoercion
@@ -604,9 +596,6 @@ task make_gene_matrix {
 		String cohort_id
 		File harmony_merged_peaks_adata_object
 
-		String raw_data_path
-		Array[Array[String]] workflow_info
-		String billing_project
 		String container_registry
 		String zones
 	}
@@ -620,16 +609,10 @@ task make_gene_matrix {
 		generate_gene_matrix \
 			--adata-input ~{harmony_merged_peaks_adata_object} \
 			--output-prefix ~{cohort_id}
-
-		upload_outputs \
-			-b ~{billing_project} \
-			-d ~{raw_data_path} \
-			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.gene_matrix.h5ad"
 	>>>
 
 	output {
-		String gene_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.gene_matrix.h5ad"
+		File gene_matrix_adata_object = "~{cohort_id}.gene_matrix.h5ad"
 	}
 
 	runtime {
