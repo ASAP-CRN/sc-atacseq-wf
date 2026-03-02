@@ -180,6 +180,17 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
+	call impute_gene_matrix {
+		input:
+			cohort_id = cohort_id,
+			processed_gene_matrix_adata_object = process_gene_matrix.processed_gene_matrix_adata_object,
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
 	call ScCohortAnalysis.add_mapped_cell_types {
 		input:
 			cohort_id = cohort_id,
@@ -284,6 +295,9 @@ workflow cohort_analysis {
 			process_gene_matrix.hvg_genes_csv
 		],
 		[
+			impute_gene_matrix.imputed_gene_matrix_adata_object
+		],
+		[
 			add_mapped_cell_types.mmc_results_parquet
 		],
 		[
@@ -344,6 +358,7 @@ workflow cohort_analysis {
 		File processed_gene_matrix_adata_object = process_gene_matrix.processed_gene_matrix_adata_object
 		File all_genes_csv = process_gene_matrix.all_genes_csv #!FileCoercion
 		File hvg_genes_csv = process_gene_matrix.hvg_genes_csv #!FileCoercion
+		File imputed_gene_matrix_adata_object = impute_gene_matrix.imputed_gene_matrix_adata_object #!FileCoercion
 
 		# MMC from sc RNA-seq pipeline
 		File mmc_extended_results_json = map_cell_types.mmc_extended_results_json #!FileCoercion
@@ -657,6 +672,50 @@ task process_gene_matrix {
 		File processed_gene_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.processed_gene_matrix.h5ad"
 		String all_genes_csv = "~{raw_data_path}/~{cohort_id}.all_genes.csv"
 		String hvg_genes_csv = "~{raw_data_path}/~{cohort_id}.hvg_genes.csv"
+	}
+
+	runtime {
+		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		cpu: 2
+		memory: "~{mem_gb} GB"
+		disks: "local-disk ~{disk_size} HDD"
+		preemptible: 3
+		bootDiskSizeGb: 40
+		zones: zones
+	}
+}
+
+task impute_gene_matrix {
+	input {
+		String cohort_id
+		File processed_gene_matrix_adata_object
+
+		String raw_data_path
+		Array[Array[String]] workflow_info
+		String billing_project
+		String container_registry
+		String zones
+	}
+
+	Int mem_gb = ceil(size(processed_gene_matrix_adata_object, "GB") * 2 + 20)
+	Int disk_size = ceil(size(processed_gene_matrix_adata_object, "GB") * 2 + 50)
+
+	command <<<
+		set -euo pipefail
+
+		impute_gene_matrix \
+			--adata-input ~{processed_gene_matrix_adata_object} \
+			--output-prefix "~{cohort_id}.gene_matrix.magic_imputed.h5ad"
+
+		upload_outputs \
+			-b ~{billing_project} \
+			-d ~{raw_data_path} \
+			-i ~{write_tsv(workflow_info)} \
+			-o "~{cohort_id}.gene_matrix.magic_imputed.h5ad"
+	>>>
+
+	output {
+		String imputed_gene_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.gene_matrix.magic_imputed.h5ad"
 	}
 
 	runtime {
