@@ -103,6 +103,21 @@ task integrate_peakvi {
 		preemptible: 3
 		zones: zones
 	}
+
+	meta {
+		description: "Constructs a k-nearest neighbor graph on the PeakVI latent embedding and applies Leiden community detection to cluster cells."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		processed_bins_adata_object: {help: "Processed AnnData object after dimensionality reduction."}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task cluster_peakvi {
@@ -151,5 +166,19 @@ task cluster_peakvi {
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
 		zones: zones
+	}
+
+	meta {
+		description: "Constructs a k-nearest neighbor graph on the PeakVI latent embedding and applies Leiden community detection to cluster cells."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		peakvi_integrated_adata_object: {help: "PeakVI-integrated AnnData object."}
+		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }

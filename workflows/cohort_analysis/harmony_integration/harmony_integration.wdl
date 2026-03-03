@@ -78,6 +78,18 @@ task integrate_harmony {
 		preemptible: 3
 		zones: zones
 	}
+
+	meta {
+		description: "Runs Harmony batch correction on the spectral embedding to align cells across batches, producing a corrected low-dimensional representation ('X_spectral_harmony')."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		processed_bins_adata_object: {help: "Processed AnnData object after dimensionality reduction."}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task cluster_harmony {
@@ -122,5 +134,18 @@ task cluster_harmony {
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
 		zones: zones
+	}
+
+	meta {
+		description: "Constructs a k-nearest neighbor graph on the Harmony-corrected spectral embedding and applies Leiden community detection to cluster cells."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		harmony_integrated_adata_object: {help: "Harmony-integrated AnnData object."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
