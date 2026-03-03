@@ -151,18 +151,6 @@ workflow cohort_analysis {
 			zones = zones
 	}
 
-	call ScCohortAnalysis.map_cell_types {
-		input:
-			cohort_id = cohort_id,
-			filtered_adata_object = make_gene_matrix.gene_matrix_adata_object, #!FileCoercion
-			allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
-			raw_data_path = raw_data_path,
-			workflow_info = workflow_info,
-			billing_project = billing_project,
-			container_registry = container_registry,
-			zones = zones
-	}
-
 	call process_gene_matrix {
 		input:
 			cohort_id = cohort_id,
@@ -181,6 +169,18 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			processed_gene_matrix_adata_object = process_gene_matrix.processed_gene_matrix_adata_object,
+			raw_data_path = raw_data_path,
+			workflow_info = workflow_info,
+			billing_project = billing_project,
+			container_registry = container_registry,
+			zones = zones
+	}
+
+	call ScCohortAnalysis.map_cell_types {
+		input:
+			cohort_id = cohort_id,
+			filtered_adata_object = make_gene_matrix.gene_matrix_adata_object, #!FileCoercion
+			allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -289,16 +289,16 @@ workflow cohort_analysis {
 			benchmark_sc_integration.scib_report_results_svg
 		],
 		[
-			map_cell_types.mmc_extended_results_json,
-			map_cell_types.mmc_results_csv,
-			map_cell_types.mmc_log_txt
-		],
-		[
 			process_gene_matrix.all_genes_csv,
 			process_gene_matrix.hvg_genes_csv
 		],
 		[
 			impute_gene_matrix.imputed_gene_matrix_adata_object
+		],
+		[
+			map_cell_types.mmc_extended_results_json,
+			map_cell_types.mmc_results_csv,
+			map_cell_types.mmc_log_txt
 		],
 		[
 			add_mapped_cell_types.mmc_results_parquet

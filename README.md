@@ -16,7 +16,7 @@ Common workflows, tasks, utility scripts, and docker images reused across harmon
 
 # Workflows
 
-Worfklows are defined in [the `workflows` directory](workflows). The python scripts which process the data at each stage can be found [the docker/sc_atac_tools/scripts directory](docker/sc_atac_tools/scripts). #TODO
+Worfklows are defined in [the `workflows` directory](workflows). The python scripts which process the data at each stage can be found [the docker/sc_atac_tools/scripts directory](docker/sc_atac_tools/scripts) and [the docker/scvi_tools/scripts directory](docker/scvi_tools/scripts).
 
 ![Workflow diagram](workflows/workflow_diagram.svg "Workflow diagram")
 
@@ -29,7 +29,7 @@ The workflow is broken up into two main chunks:
 1. [Preprocessing](#preprocessing)
 2. [Cohort analysis](#cohort-analysis)
 
-> Note: The details of the cohort analysis are described in the [sc_atac_tools docker README](docker/sc_atac_tools/scripts/README.md). #TODO
+> Note: The details of the cohort analysis are described in the [sc_atac_tools docker README](docker/sc_atac_tools/scripts/README.md).
 
 ## Preprocessing
 
