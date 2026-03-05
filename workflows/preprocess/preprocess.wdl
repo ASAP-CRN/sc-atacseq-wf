@@ -75,6 +75,7 @@ workflow preprocess {
 					sample_id = sample.sample_id,
 					fastq_R1s = sample.fastq_R1s,
 					fastq_R2s = sample.fastq_R2s,
+					fastq_R3s = sample.fastq_R3s,
 					fastq_I1s = sample.fastq_I1s,
 					fastq_I2s = sample.fastq_I2s,
 					multimodal_sc_data = multimodal_sc_data,
@@ -224,6 +225,7 @@ task cellranger_atac_count {
 
 		Array[File] fastq_R1s
 		Array[File] fastq_R2s
+		Array[File] fastq_R3s
 		Array[File] fastq_I1s
 		Array[File] fastq_I2s
 
@@ -241,7 +243,7 @@ task cellranger_atac_count {
 
 	Int threads = 16
 	Int mem_gb = 48
-	Int disk_size = ceil((size(cellranger_atac_reference_data, "GB") + size(flatten([fastq_R1s, fastq_R2s, fastq_I1s, fastq_I2s]), "GB")) * 4 + 50)
+	Int disk_size = ceil((size(cellranger_atac_reference_data, "GB") + size(flatten([fastq_R1s, fastq_R2s, fastq_R3s, fastq_I1s, fastq_I2s]), "GB")) * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -268,6 +270,7 @@ task cellranger_atac_count {
 		done < <(cat \
 			~{write_lines(fastq_R1s)} \
 			~{write_lines(fastq_R2s)} \
+			~{write_lines(fastq_R3s)} \
 			~{write_lines(fastq_I1s)} \
 			~{write_lines(fastq_I2s)})
 
@@ -349,6 +352,7 @@ task cellranger_atac_count {
 		sample_id: {help: "Generated ASAP sample ID; used to name output files."}
 		fastq_R1s: {help: "Sample's read 1 FASTQ file."}
 		fastq_R2s: {help: "Sample's read 2 FASTQ file."}
+		fastq_R3s: {help: "Sample's read 3 FASTQ file."}
 		fastq_I1s: {help: "Optional FASTQ index 1."}
 		fastq_I2s: {help: "Optional FASTQ index 2."}
 		multimodal_sc_data: {help: "Whether or not the sc/sn RNAseq is from multimodal data."}

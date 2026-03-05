@@ -1,6 +1,6 @@
 {
   "sc_atacseq_analysis.cohort_id": "String",
-  "sc_atacseq_analysis.projects": "Array[WomCompositeType {\n team_id -> String\ndataset_id -> String\nsamples -> Array[WomCompositeType {\n fastq_I1s -> Array[File]\nsample_id -> String\nfastq_R1s -> Array[File]+\nbatch -> String?\nfastq_I2s -> Array[File]\nfastq_R2s -> Array[File]+ \n}]\nrun_project_cohort_analysis -> Boolean\ndataset_doi_url -> String\nraw_data_bucket -> String\nstaging_data_buckets -> Array[String]\nmultimodal_sc_data -> Boolean \n}]",
+  "sc_atacseq_analysis.projects": "Array[WomCompositeType {\n team_id -> String\ndataset_id -> String\nsamples -> Array[WomCompositeType {\n fastq_I1s -> Array[File]\nsample_id -> String\nfastq_R1s -> Array[File]+\nbatch -> String?\nfastq_I2s -> Array[File]\nfastq_R3s -> Array[File]+\nfastq_R2s -> Array[File]+ \n}]\nrun_project_cohort_analysis -> Boolean\ndataset_doi_url -> String\nraw_data_bucket -> String\nstaging_data_buckets -> Array[String]\nmultimodal_sc_data -> Boolean \n}]",
   "sc_atacseq_analysis.cellranger_atac_reference_data": "File",
   "sc_atacseq_analysis.n_top_genes": "Int (optional, default = 3000)",
   "sc_atacseq_analysis.n_comps": "Int (optional, default = 30)",

@@ -84,6 +84,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | String? | batch | The sample's batch. |
 | File | fastq_R1 | Path to the sample's read 1 FASTQ file. |
 | File | fastq_R2 | Path to the sample's read 2 FASTQ file. |
+| File | fastq_R3 | Path to the sample's read 3 FASTQ file. |
 | File? | fastq_I1 | Optional fastq index 1. |
 | File? | fastq_I2 | Optional fastq index 2. |
 
