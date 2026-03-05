@@ -41,17 +41,25 @@
     - Generates Harmony-integrated UMAP
     - Calls peaks per cluster for use in downstream gene matrix construction
 
+- _Peak calling_: [`call_peaks`](./sc_atac_tools/call_peaks)
+    - Calls peaks per cluster via `snap.tl.macs3` (groupby `leiden`)
+    - Constructs a peak-by-cell count matrix via `snap.pp.make_peak_matrix`
+
 
 ### _PeakVI integration option_
 
--_integrate PeakVI_: [`integrate_peakvi`](./scvi_tools/integrate_peakvi)
+- _Integrate PeakVI_: [`integrate_peakvi`](./scvi_tools/integrate_peakvi)
     - Trains a `PeakVI` model on `layers["tile_counts"]` with batch correction
     - Stores the latent representation in `obsm` for downstream clustering and UMAP
     - Saves the trained PeakVI model to disk
 
-- _cluster PeakVI_: [`cluster_peakvi`](./scvi_tools/cluster_peakvi)
+- _Cluster PeakVI_: [`cluster_peakvi`](./scvi_tools/cluster_peakvi)
     - Builds KNN graph on the PeakVI latent space and runs leiden clustering (`resolution=0.2`)
     - Generates UMAP colored by PeakVI clusters (`clusters_peakvi`)
+
+- _Peak calling_: [`call_peaks`](./sc_atac_tools/call_peaks)
+    - Calls peaks per cluster via `snap.tl.macs3` (groupby `leiden`)
+    - Constructs a peak-by-cell count matrix via `snap.pp.make_peak_matrix`
 
 
 ### _Benchmark sc integration tools_
@@ -84,7 +92,7 @@
 
 ## _ANNOTATION_
 
- _Map my cells_: [`mmc`](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/sc_tools/scripts/main/mmc)
+- _Map my cells_: [`mmc`](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/sc_tools/scripts/main/mmc)
     - Runs Allen Brain Map's [MapMyCells](https://portal.brain-map.org/atlases-and-data/bkp/mapmycells) on the **raw** gene activity matrix against SEA-AD Human taxonomy
     - Must be run on raw (un-normalized) gene counts — before `process_genes`
 
@@ -92,10 +100,10 @@
     - Assigns `cell_type` to high-fidelity MMC mappings (correlation > 0.5, bootstrap probability > 0.5); all else labeled `"unknown"`
     - Annotates AnnData and exports full cell type assignments
 
-> **Note**: `mmc`, `integrate_scvi`, and `transcriptional_phenotype` are shared scripts from [`sc-rnaseq-wf`](https://github.com/ASAP-CRN/sc-rnaseq-wf). The gene activity matrix acts as a proxy for RNA expression by counting the TN5 insertions in each gene’s regulatory domain to enable cell type annotation.
+> **Note**: `mmc`, `transcriptional_phenotype`, and `` are shared scripts from [`sc-rnaseq-wf`](https://github.com/ASAP-CRN/sc-rnaseq-wf). The gene activity matrix acts as a proxy for RNA expression by counting the TN5 insertions in each gene’s regulatory domain to enable cell type annotation.
 
 
-## _PEAK ANALYSIS_
+## _DIFFERENTIAL CHROMATIN ANALYSIS_
 
 - _Peak calling_: [`call_peaks`](./sc_atac_tools/call_peaks)
     - Calls peaks per cell type via `snap.tl.macs3` (groupby `cell_type`)
