@@ -81,18 +81,18 @@ task integrate_peakvi {
 			--output-peakvi-dir "~{cohort_id}_peakvi_model"
 
 		# Model name cannot be changed because scvi models serialization expects a path containing a model.pt object
-		tar -czvf "~{cohort_id}.scvi_model.tar.gz" "~{cohort_id}_scvi_model"
+		tar -czvf "~{cohort_id}.peakvi_model.tar.gz" "~{cohort_id}_peakvi_model"
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.scvi_model.tar.gz"
+			-o "~{cohort_id}.peakvi_model.tar.gz"
 	>>>
 
 	output {
 		File peakvi_integrated_adata_object = "~{cohort_id}.peakvi_integrated.h5ad"
-		String peakvi_model_tar_gz = "~{raw_data_path}/~{cohort_id}.scvi_model.tar.gz"
+		String peakvi_model_tar_gz = "~{raw_data_path}/~{cohort_id}.peakvi_model.tar.gz"
 	}
 
 	runtime {

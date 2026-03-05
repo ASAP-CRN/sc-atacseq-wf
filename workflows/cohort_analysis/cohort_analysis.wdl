@@ -570,15 +570,15 @@ task peak_calling {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.~{integration_method}.merged_peaks.h5ad" \
-			-o "~{cohort_id}.~{integration_method}.merged_peaks.csv" \
-			-o "~{cohort_id}.~{integration_method}.peaks_matrix.h5ad"
+			-o "~{cohort_id}.~{integration_method}.~{macs3_groupby}.merged_peaks.h5ad" \
+			-o "~{cohort_id}.~{integration_method}.~{macs3_groupby}.merged_peaks.csv" \
+			-o "~{cohort_id}.~{integration_method}.~{macs3_groupby}.peaks_matrix.h5ad"
 	>>>
 
 	output {
-		String merged_peaks_adata_object = "~{raw_data_path}/~{cohort_id}.merged_peaks.h5ad"
-		String merged_peaks_csv = "~{raw_data_path}/~{cohort_id}.merged_peaks.csv"
-		String peaks_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.peaks_matrix.h5ad"
+		String merged_peaks_adata_object = "~{raw_data_path}/~{cohort_id}.~{integration_method}.~{macs3_groupby}.merged_peaks.h5ad"
+		String merged_peaks_csv = "~{raw_data_path}/~{cohort_id}.~{integration_method}.~{macs3_groupby}.merged_peaks.csv"
+		String peaks_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.~{integration_method}.~{macs3_groupby}.peaks_matrix.h5ad"
 	}
 
 	runtime {

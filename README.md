@@ -29,7 +29,7 @@ The workflow is broken up into two main chunks:
 1. [Preprocessing](#preprocessing)
 2. [Cohort analysis](#cohort-analysis)
 
-> Note: The details of the cohort analysis are described in the [sc_atac_tools docker README](docker/sc_atac_tools/scripts/README.md).
+> Note: The details of the cohort analysis are described in the [docker dir README](docker/README.md).
 
 ## Preprocessing
 
@@ -48,7 +48,14 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | String | cohort_id | Name of the cohort; used to name output files during cross-team cohort analysis. |
 | Array[[Project](#project)] | projects | The project ID, set of samples and their associated reads and metadata, output bucket locations, and whether or not to run project-level cohort analysis. |
 | File | cellranger_atac_reference_data | Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads#reference-downloads. |
-| | | |
+| File? | allen_brain_mmc_precomputed_stats_h5 | A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy).  |
+| Int? | n_top_genes | Number of HVG genes to keep. [3000] |
+| Int? | n_comps | Number of principal components to compute. [30] |
+| String? | peakvi_latent_key | Latent key to save the PeakVI latent to. ['X_peakVI'] |
+| String? | batch_key | Key in AnnData object for batch information. ['batch_id'] |
+| Array[String]? | groups | Groups to produce umap plots for. ['sample', 'batch', 'team', 'dataset', 'batch_id', 'leiden'] |
+| Array[String]? | features | Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability'] |
+| Boolean? | run_cross_team_cohort_analysis | Whether to run downstream harmonization steps on all samples across projects. If set to false, only preprocessing steps (cellranger and generating the initial adata object(s)) will run for samples. [false] |
 | String | cohort_raw_data_bucket | Bucket to upload cross-team cohort intermediate files to. |
 | Array[String] | cohort_staging_data_buckets | Buckets to upload cross-team cohort analysis outputs to. |
 | String | container_registry | Container registry where workflow Docker images are hosted. |
@@ -64,6 +71,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | String | dataset_id | Unique identifier for dataset; used for metadata. |
 | String | dataset_doi_url | Generated Zenodo DOI URL referencing the dataset. |
 | Array[[Sample](#sample)] | samples | The set of samples associated with this project. |
+| Boolean | multimodal_sc_data | Whether or not the sc/sn ATAC-seq is from multimodal data. |
 | Boolean | run_project_cohort_analysis | Whether or not to run cohort analysis within the project. |
 | String | raw_data_bucket | Raw data bucket; intermediate output files that are not final workflow outputs are stored here. |
 | String | staging_data_bucket | Staging data bucket; final project-level outputs are stored here. |
@@ -148,13 +156,77 @@ Data may be synced using [the `promote_staging_data` script](#promoting-staging-
 asap-dev-{cohort,team-xxyy}-{source}-{dataset}
 └── ${workflow_name}
     ├── cohort_analysis
-    │   ├── ${cohort_id}.. # TODO
+    │   ├── ${cohort_id}.sample_list.tsv
+    │   ├── ${cohort_id}.merged_filtered.h5ad
+    │   ├── ${cohort_id}.initial_metadata.csv
+    │   ├── ${cohort_id}.frag_size_distr.png
+    │   ├── ${cohort_id}.tsse.png
+    │   ├── ${cohort_id}.harmony_umap.png
+    │   ├── ${cohort_id}.peakvi_model.tar.gz
+    │   ├── ${cohort_id}.peakvi_umap.png
+    │   ├── ${cohort_id}.harmony.leiden.merged_peaks.h5ad
+    │   ├── ${cohort_id}.harmony.leiden.merged_peaks.csv
+    │   ├── ${cohort_id}.harmony.leiden.peaks_matrix.h5ad
+    │   ├── ${cohort_id}.peakvi.leiden.merged_peaks.h5ad
+    │   ├── ${cohort_id}.peakvi.leiden.merged_peaks.csv
+    │   ├── ${cohort_id}.peakvi.leiden.peaks_matrix.h5ad
+    │   ├── ${cohort_id}.scib_report.csv
+    │   ├── ${cohort_id}.scib_results.svg
+    │   ├── ${cohort_id}.all_genes.csv
+    │   ├── ${cohort_id}.hvg_genes.csv
+    │   ├── ${cohort_id}.gene_matrix.magic_imputed.h5ad
+    │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.extended_results.json
+    │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.results.csv
+    │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.log.txt
+    │   ├── ${cohort_id}.mmc_results.parquet
+    │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.h5ad
+    │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.csv
+    │   ├── ${cohort_id}.peakvi.cell_type.peaks_matrix.h5ad
+    │   ├── ${cohort_id}.motifs.csv
+    │   ├── ${cohort_id}.features.umap.png
+    │   ├── ${cohort_id}.groups.umap.png
+    │   ├── ${cohort_id}.final.h5ad
+    │   ├── ${cohort_id}.final_metadata.csv
     │   └── MANIFEST.tsv
     └── preprocess
-        ├── ${sampleA_id}.. # TODO
+        ├── ${sampleA_id}.cellranger_atac_outputs.tar.gz
+        ├── ${sampleA_id}.singlecell.csv
+        ├── ${sampleA_id}.peaks.bed
+        ├── ${sampleA_id}.cut_sites.bigwig
+        ├── ${sampleA_id}.raw_peak_bc_matrix.h5
+        ├── ${sampleA_id}.filtered_peak_bc_matrix.h5
+        ├── ${sampleA_id}.filtered_tf_bc_matrix.h5
+        ├── ${sampleA_id}.fragments.tsv.gz
+        ├── ${sampleA_id}.summary.csv
+        ├── ${sampleA_id}.peak_annotation.tsv
+        ├── ${sampleA_id}.peak_motif_mapping.bed
+        ├── ${sampleA_id}.cleaned_unfiltered.h5ad
+        ├── ${sampleB_id}.cellranger_atac_outputs.tar.gz
+        ├── ${sampleB_id}.singlecell.csv
+        ├── ${sampleB_id}.peaks.bed
+        ├── ${sampleB_id}.cut_sites.bigwig
+        ├── ${sampleB_id}.raw_peak_bc_matrix.h5
+        ├── ${sampleB_id}.filtered_peak_bc_matrix.h5
+        ├── ${sampleB_id}.filtered_tf_bc_matrix.h5
+        ├── ${sampleB_id}.fragments.tsv.gz
+        ├── ${sampleB_id}.summary.csv
+        ├── ${sampleB_id}.peak_annotation.tsv
+        ├── ${sampleB_id}.peak_motif_mapping.bed
+        ├── ${sampleB_id}.cleaned_unfiltered.h5ad
         ├── MANIFEST.tsv
         ├── ...
-        ├── ${sampleN_id}.. # TODO
+        ├── ${sampleN_id}.cellranger_atac_outputs.tar.gz
+        ├── ${sampleN_id}.singlecell.csv
+        ├── ${sampleN_id}.peaks.bed
+        ├── ${sampleN_id}.cut_sites.bigwig
+        ├── ${sampleN_id}.raw_peak_bc_matrix.h5
+        ├── ${sampleN_id}.filtered_peak_bc_matrix.h5
+        ├── ${sampleN_id}.filtered_tf_bc_matrix.h5
+        ├── ${sampleN_id}.fragments.tsv.gz
+        ├── ${sampleN_id}.summary.csv
+        ├── ${sampleN_id}.peak_annotation.tsv
+        ├── ${sampleN_id}.peak_motif_mapping.bed
+        ├── ${sampleN_id}.cleaned_unfiltered.h5ad
         └── MANIFEST.tsv
 ```
 
@@ -208,6 +280,12 @@ docker
 │   ├── requirements.txt
 │   └── scripts
 │       └── ...
+├── scvi_tools
+│   ├── build.env
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   └── scripts
+│       └── ...
 └── cellranger_atac
     ├── build.env
     └── Dockerfile
@@ -243,15 +321,16 @@ Docker images can be build using the [`build_docker_images`](https://github.com/
 
 | Image | Major tool versions | Links |
 | :- | :- | :- |
-| cellranger_atac | <ul><li>[cellranger_atac v2.2.0](https://www.10xgenomics.com/support/software/cell-ranger-atac/latest/release-notes/release-notes#2025-April)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/cellranger_atac) |
-| #TODO sc_atac_tools | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li><li>[torch 2.6.0](https://github.com/pytorch/pytorch/releases/tag/v2.6.0)</li></ul> Python libraries: <ul><li>[scvi-tools 1.3.2](https://github.com/scverse/scvi-tools/releases/tag/1.3.2)</li><li>argparse 1.4.0</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>muon 0.1.7</li><li>tables 3.10.1</li><li>scrublet 0.2.3</li><li>[scikit-learn 1.7.0](https://github.com/scikit-learn/scikit-learn/releases/tag/1.7.0)</li><li>[harmonypy 0.0.10](https://github.com/slowkow/harmonypy/releases/tag/v0.0.10)</li><li>[scib-metrics 0.5.6](https://github.com/YosefLab/scib-metrics/releases/tag/v0.5.6)</li><li>[cell_type_mapper 1.5.3](https://github.com/AllenInstitute/cell_type_mapper/releases/tag/v1.5.3)</li></ul>| [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/sc_atac_tools) |
+| cellranger_atac | <ul><li>[cellranger-atac v2.2.0](https://www.10xgenomics.com/support/software/cell-ranger-atac/latest/release-notes/release-notes#2025-April)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/cellranger_atac) |
+| sc_atac_tools | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li></ul> Python libraries: <ul><li>argparse 1.4.0</li><li>[snapatac2 2.8.0](https://github.com/kaizhang/SnapATAC2/releases/tag/v2.8.0)</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>[harmonypy 0.2.0](https://github.com/slowkow/harmonypy/releases/tag/v0.2.0)</li><li>[magic-impute 3.0.0](https://github.com/KrishnaswamyLab/MAGIC/releases/tag/v3.0.0)</li><li>kaleido 0.2.1</li><li>ipython 8.38.0</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/sc_atac_tools) |
+| scvi_tools | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li><li>[cuda 12.8.1](https://developer.nvidia.com/cuda-12-8-1-download-archive)</li></ul> Python libraries: <ul><li>argparse 1.4.0</li><li>[scvi-tools 1.4.1](https://github.com/scverse/scvi-tools/releases/tag/1.4.1)</li><li>[torch 2.10.0](https://github.com/pytorch/pytorch/releases/tag/v2.10.0)</li><li>[jax 0.9.0](https://github.com/jax-ml/jax/releases/tag/jax-v0.9.0)</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>[scib-metrics 0.5.7](https://github.com/YosefLab/scib-metrics/releases/tag/v0.5.7)</li><li>pyarrow 23.0.0</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/scvi_tools) |
 | util | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/wf-common/tree/main/docker/util) |
 
 # wdl-ci
 
 [`wdl-ci`](https://github.com/DNAstack/wdl-ci) provides tools to validate and test workflows and tasks written in [Workflow Description Language (WDL)](https://github.com/openwdl/wdl). `wdl-ci` in this repository is set up to run on pull request.
 
-In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-ci.config.json) and compare current outputs and validated outputs based on changed tasks/workflows to ensure outputs are still valid by meeting the critera in the specified tests. For example, if the Cell Ranger task in our workflow was changed, then this task would be submitted and that output would be considered the "current output". When inspecting the raw counts generated by Cell Ranger, there is a test specified in the [wdl-ci.config.json](./wdl-ci.config.json) called, "check_hdf5". The test will compare the "current output" and "validated output" (provided in the [wdl-ci.config.json](./wdl-ci.config.json)) to make sure that the raw_feature_bc_matrix.h5 file is still a valid HDF5 file.
+In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-ci.config.json) and compare current outputs and validated outputs based on changed tasks/workflows to ensure outputs are still valid by meeting the critera in the specified tests. For example, if the Cell Ranger ATAC task in our workflow was changed, then this task would be submitted and that output would be considered the "current output". When inspecting the raw counts generated by Cell Ranger, there is a test specified in the [wdl-ci.config.json](./wdl-ci.config.json) called, "check_hdf5". The test will compare the "current output" and "validated output" (provided in the [wdl-ci.config.json](./wdl-ci.config.json)) to make sure that the raw_peak_bc_matrix.h5 file is still a valid HDF5 file.
 
 
 # Notes
@@ -263,3 +342,11 @@ In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-
 | Genome | Cell Ranger ARC reference | Link |
 | :- | :- | :- |
 | Human GRCh38 | 2024-A | https://www.10xgenomics.com/support/software/cell-ranger-arc/downloads#reference-downloads |
+
+### Allen Brain Institute's MapMyCells references
+
+[Overview of MapMyCells](https://brain-map.org/bkp/analyze/mapmycells) with available taxonomies.
+
+| Taxonomy | Description | Link |
+| :- | :- | :- |
+| 10x Human MTG SEA-AD taxonomy (CCN20230505) | A high-resolution transcriptomic atlas of cell types from middle temporal gyrus from the SEA-AD aged human cohort that spans the spectrum of Alzheimer's disease. Source file used is `precomputed_stats.20231120.sea_ad.MTG.h5`. | https://allen-brain-cell-atlas.s3-us-west-2.amazonaws.com/mapmycells/SEAAD/20240831/ |
