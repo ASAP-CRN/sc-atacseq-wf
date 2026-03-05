@@ -214,7 +214,6 @@ task check_output_files_exist {
 	parameter_meta {
 		cellranger_atac_count_output_files: {help: "Cell Ranger count output file to detect (`<sample>.raw_peak_bc_matrix.h5`)."}
 		initial_adata_object_output_files: {help: "Converted AnnData object output file to detect (`<sample>.cleaned_unfiltered.h5ad`)."}
-		container_registry: {help: "Container registry where workflow Docker images are hosted."}
 		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
 	}
 }
