@@ -447,21 +447,21 @@ task merge_and_qc {
 		merge_and_qc \
 			--adata-objects-fofn adata_samples_paths.tsv \
 			--plot-prefix ~{cohort_id} \
-			--adata-output ~{cohort_id}.merged_cleaned_unfiltered.h5ad \
+			--adata-output ~{cohort_id}.merged_filtered.h5ad \
 			--output-metadata ~{cohort_id}.initial_metadata.csv
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.merged_cleaned_unfiltered.h5ad" \
+			-o "~{cohort_id}.merged_filtered.h5ad" \
 			-o "~{cohort_id}.initial_metadata.csv" \
 			-o "~{cohort_id}.frag_size_distr.png" \
 			-o "~{cohort_id}.tsse.png"
 	>>>
 
 	output {
-		String merged_adata_object = "~{raw_data_path}/~{cohort_id}.merged_cleaned_unfiltered.h5ad"
+		String merged_adata_object = "~{raw_data_path}/~{cohort_id}.merged_filtered.h5ad"
 		String qc_initial_metadata_csv = "~{raw_data_path}/~{cohort_id}.initial_metadata.csv"
 
 		Array[String] qc_plots_png = [
