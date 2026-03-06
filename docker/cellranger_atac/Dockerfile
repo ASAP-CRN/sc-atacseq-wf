@@ -39,6 +39,5 @@ RUN wget -O cellranger-atac-${CELLRANGER_ATAC_VERSION}.tar.gz \
 
 RUN ln -s /opt/cellranger-atac-${CELLRANGER_ATAC_VERSION}/cellranger-atac /usr/local/bin/
 
-COPY --from=scripts /opt/scripts /opt/scripts
 COPY scripts /opt/scripts
 ENV PATH "${PATH}:/opt/scripts"
