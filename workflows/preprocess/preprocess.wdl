@@ -279,7 +279,7 @@ task cellranger_atac_count {
 		/usr/bin/time \
 		cellranger-atac count \
 			--id=~{sample_id} \
-			--transcriptome="$(pwd)/cellranger_atac_refdata" \
+			--reference="$(pwd)/cellranger_atac_refdata" \
 			--fastqs="$(pwd)/fastqs" \
 			--localcores ~{threads} \
 			--localmem ~{mem_gb - 4} \
