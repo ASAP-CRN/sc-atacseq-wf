@@ -33,6 +33,7 @@ workflow cohort_analysis {
 
 		String workflow_name
 		String workflow_version
+		String release_version
 		String workflow_release
 		String run_timestamp
 		String raw_data_path_prefix
@@ -253,7 +254,8 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = "~{workflow_name}/preprocess",
+			staging_data_path = "~{workflow_name}/release/~{release_version}/preprocess",
+			workflow_version = workflow_version,
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -325,7 +327,8 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = cohort_analysis_final_output_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = "~{workflow_name}/~{sub_workflow_name}",
+			staging_data_path = "~{workflow_name}/release/~{release_version}/~{sub_workflow_name}",
+			workflow_version = workflow_version,
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -410,6 +413,7 @@ workflow cohort_analysis {
 		features: {help: "Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability']"}
 		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
 		workflow_version: {help: "Workflow version; stored in the file-level manifest and final manifest with all saved files."}
+		release_version: {help: "Release version; usually identical to workflow version, used to organize outputs and for the GitHub release."}
 		workflow_release: {help: "GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		run_timestamp: {help: "UTC timestamp; stored in the file-level manifest and final manifest with all saved files."}
 		raw_data_path_prefix: {help: "Raw data bucket path prefix; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis`)."}

@@ -131,9 +131,9 @@ The raw data bucket will contain *some* artifacts generated as part of workflow 
 In the workflow, task outputs are either specified as `String` (final outputs, which will be copied in order to live in raw data buckets and staging buckets) or `File` (intermediate outputs that are periodically cleaned up, which will live in the cromwell-output bucket). This was implemented to reduce storage costs.
 
 ```bash
-asap-raw-{cohort,team-xxyy}-{source}-{dataset}
-└── ${workflow_name}
-    └── workflow_execution
+asap-raw-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
+└── workflow_execution
+    └── ${workflow_name}
         ├── cohort_analysis
         │   └──${cohort_analysis_workflow_version}
         │       └── ${workflow_run_timestamp}
@@ -149,86 +149,92 @@ asap-raw-{cohort,team-xxyy}-{source}-{dataset}
 
 ### Staging data (intermediate workflow objects and final workflow outputs for the latest run of the workflow)
 
-Following QC by researchers, the objects in the dev or uat bucket are synced into the curated data buckets, maintaining the same file structure. Curated data buckets are named `asap-curated-{cohort,team-xxyy}-{source}-{dataset}`.
+Following QC by researchers, the objects in the dev or uat bucket are synced into the curated data buckets, maintaining the same file structure. Curated data buckets are named `asap-curated-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}` and `dataset_id` = `{cohort,team-xxyy}-{source}-{modality_flavour}-{context}`.
 
 Data may be synced using [the `promote_staging_data` script](#promoting-staging-data).
 
 ```bash
-asap-dev-{cohort,team-xxyy}-{source}-{dataset}
+asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
 └── ${workflow_name}
-    ├── cohort_analysis
-    │   ├── ${cohort_id}.sample_list.tsv
-    │   ├── ${cohort_id}.merged_filtered.h5ad
-    │   ├── ${cohort_id}.initial_metadata.csv
-    │   ├── ${cohort_id}.frag_size_distr.png
-    │   ├── ${cohort_id}.tsse.png
-    │   ├── ${cohort_id}.harmony_umap.png
-    │   ├── ${cohort_id}.peakvi_model.tar.gz
-    │   ├── ${cohort_id}.peakvi_umap.png
-    │   ├── ${cohort_id}.harmony.leiden.merged_peaks.h5ad
-    │   ├── ${cohort_id}.harmony.leiden.merged_peaks.csv
-    │   ├── ${cohort_id}.harmony.leiden.peaks_matrix.h5ad
-    │   ├── ${cohort_id}.peakvi.leiden.merged_peaks.h5ad
-    │   ├── ${cohort_id}.peakvi.leiden.merged_peaks.csv
-    │   ├── ${cohort_id}.peakvi.leiden.peaks_matrix.h5ad
-    │   ├── ${cohort_id}.scib_report.csv
-    │   ├── ${cohort_id}.scib_results.svg
-    │   ├── ${cohort_id}.all_genes.csv
-    │   ├── ${cohort_id}.hvg_genes.csv
-    │   ├── ${cohort_id}.gene_matrix.magic_imputed.h5ad
-    │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.extended_results.json
-    │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.results.csv
-    │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.log.txt
-    │   ├── ${cohort_id}.mmc_results.parquet
-    │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.h5ad
-    │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.csv
-    │   ├── ${cohort_id}.peakvi.cell_type.peaks_matrix.h5ad
-    │   ├── ${cohort_id}.motifs.csv
-    │   ├── ${cohort_id}.features.umap.png
-    │   ├── ${cohort_id}.groups.umap.png
-    │   ├── ${cohort_id}.final.h5ad
-    │   ├── ${cohort_id}.final_metadata.csv
-    │   └── MANIFEST.tsv
-    └── preprocess
-        ├── ${sampleA_id}.cellranger_atac_outputs.tar.gz
-        ├── ${sampleA_id}.singlecell.csv
-        ├── ${sampleA_id}.peaks.bed
-        ├── ${sampleA_id}.cut_sites.bigwig
-        ├── ${sampleA_id}.raw_peak_bc_matrix.h5
-        ├── ${sampleA_id}.filtered_peak_bc_matrix.h5
-        ├── ${sampleA_id}.filtered_tf_bc_matrix.h5
-        ├── ${sampleA_id}.fragments.tsv.gz
-        ├── ${sampleA_id}.summary.csv
-        ├── ${sampleA_id}.peak_annotation.tsv
-        ├── ${sampleA_id}.peak_motif_mapping.bed
-        ├── ${sampleA_id}.cleaned_unfiltered.h5ad
-        ├── ${sampleB_id}.cellranger_atac_outputs.tar.gz
-        ├── ${sampleB_id}.singlecell.csv
-        ├── ${sampleB_id}.peaks.bed
-        ├── ${sampleB_id}.cut_sites.bigwig
-        ├── ${sampleB_id}.raw_peak_bc_matrix.h5
-        ├── ${sampleB_id}.filtered_peak_bc_matrix.h5
-        ├── ${sampleB_id}.filtered_tf_bc_matrix.h5
-        ├── ${sampleB_id}.fragments.tsv.gz
-        ├── ${sampleB_id}.summary.csv
-        ├── ${sampleB_id}.peak_annotation.tsv
-        ├── ${sampleB_id}.peak_motif_mapping.bed
-        ├── ${sampleB_id}.cleaned_unfiltered.h5ad
-        ├── MANIFEST.tsv
-        ├── ...
-        ├── ${sampleN_id}.cellranger_atac_outputs.tar.gz
-        ├── ${sampleN_id}.singlecell.csv
-        ├── ${sampleN_id}.peaks.bed
-        ├── ${sampleN_id}.cut_sites.bigwig
-        ├── ${sampleN_id}.raw_peak_bc_matrix.h5
-        ├── ${sampleN_id}.filtered_peak_bc_matrix.h5
-        ├── ${sampleN_id}.filtered_tf_bc_matrix.h5
-        ├── ${sampleN_id}.fragments.tsv.gz
-        ├── ${sampleN_id}.summary.csv
-        ├── ${sampleN_id}.peak_annotation.tsv
-        ├── ${sampleN_id}.peak_motif_mapping.bed
-        ├── ${sampleN_id}.cleaned_unfiltered.h5ad
-        └── MANIFEST.tsv
+    └── release
+        └── ${release_version}
+            ├── cohort_analysis
+            │   ├── ${cohort_id}.sample_list.tsv
+            │   ├── ${cohort_id}.merged_filtered.h5ad
+            │   ├── ${cohort_id}.initial_metadata.csv
+            │   ├── ${cohort_id}.frag_size_distr.png
+            │   ├── ${cohort_id}.tsse.png
+            │   ├── ${cohort_id}.harmony_umap.png
+            │   ├── ${cohort_id}.peakvi_model.tar.gz
+            │   ├── ${cohort_id}.peakvi_umap.png
+            │   ├── ${cohort_id}.harmony.leiden.merged_peaks.h5ad
+            │   ├── ${cohort_id}.harmony.leiden.merged_peaks.csv
+            │   ├── ${cohort_id}.harmony.leiden.peaks_matrix.h5ad
+            │   ├── ${cohort_id}.peakvi.leiden.merged_peaks.h5ad
+            │   ├── ${cohort_id}.peakvi.leiden.merged_peaks.csv
+            │   ├── ${cohort_id}.peakvi.leiden.peaks_matrix.h5ad
+            │   ├── ${cohort_id}.scib_report.csv
+            │   ├── ${cohort_id}.scib_results.svg
+            │   ├── ${cohort_id}.all_genes.csv
+            │   ├── ${cohort_id}.hvg_genes.csv
+            │   ├── ${cohort_id}.gene_matrix.magic_imputed.h5ad
+            │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.extended_results.json
+            │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.results.csv
+            │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.log.txt
+            │   ├── ${cohort_id}.mmc_results.parquet
+            │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.h5ad
+            │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.csv
+            │   ├── ${cohort_id}.peakvi.cell_type.peaks_matrix.h5ad
+            │   ├── ${cohort_id}.motifs.csv
+            │   ├── ${cohort_id}.features.umap.png
+            │   ├── ${cohort_id}.groups.umap.png
+            │   ├── ${cohort_id}.final.h5ad
+            │   ├── ${cohort_id}.final_metadata.csv
+            │   └── MANIFEST.tsv
+            ├── preprocess
+            │   ├── ${sampleA_id}.cellranger_atac_outputs.tar.gz
+            │   ├── ${sampleA_id}.singlecell.csv
+            │   ├── ${sampleA_id}.peaks.bed
+            │   ├── ${sampleA_id}.cut_sites.bigwig
+            │   ├── ${sampleA_id}.raw_peak_bc_matrix.h5
+            │   ├── ${sampleA_id}.filtered_peak_bc_matrix.h5
+            │   ├── ${sampleA_id}.filtered_tf_bc_matrix.h5
+            │   ├── ${sampleA_id}.fragments.tsv.gz
+            │   ├── ${sampleA_id}.summary.csv
+            │   ├── ${sampleA_id}.peak_annotation.tsv
+            │   ├── ${sampleA_id}.peak_motif_mapping.bed
+            │   ├── ${sampleA_id}.cleaned_unfiltered.h5ad
+            │   ├── ${sampleB_id}.cellranger_atac_outputs.tar.gz
+            │   ├── ${sampleB_id}.singlecell.csv
+            │   ├── ${sampleB_id}.peaks.bed
+            │   ├── ${sampleB_id}.cut_sites.bigwig
+            │   ├── ${sampleB_id}.raw_peak_bc_matrix.h5
+            │   ├── ${sampleB_id}.filtered_peak_bc_matrix.h5
+            │   ├── ${sampleB_id}.filtered_tf_bc_matrix.h5
+            │   ├── ${sampleB_id}.fragments.tsv.gz
+            │   ├── ${sampleB_id}.summary.csv
+            │   ├── ${sampleB_id}.peak_annotation.tsv
+            │   ├── ${sampleB_id}.peak_motif_mapping.bed
+            │   ├── ${sampleB_id}.cleaned_unfiltered.h5ad
+            │   ├── ...
+            │   ├── ${sampleN_id}.cellranger_atac_outputs.tar.gz
+            │   ├── ${sampleN_id}.singlecell.csv
+            │   ├── ${sampleN_id}.peaks.bed
+            │   ├── ${sampleN_id}.cut_sites.bigwig
+            │   ├── ${sampleN_id}.raw_peak_bc_matrix.h5
+            │   ├── ${sampleN_id}.filtered_peak_bc_matrix.h5
+            │   ├── ${sampleN_id}.filtered_tf_bc_matrix.h5
+            │   ├── ${sampleN_id}.fragments.tsv.gz
+            │   ├── ${sampleN_id}.summary.csv
+            │   ├── ${sampleN_id}.peak_annotation.tsv
+            │   ├── ${sampleN_id}.peak_motif_mapping.bed
+            │   ├── ${sampleN_id}.cleaned_unfiltered.h5ad
+            │   └── MANIFEST.tsv
+            ├── workflow_version # plain text file
+            └── workflow_metadata
+                └── ${timestamp}
+                    ├── MANIFEST.tsv # combined
+                    └── data_promotion_report.md
 ```
 
 ## Promoting staging data
@@ -289,7 +295,9 @@ docker
 │       └── ...
 └── cellranger_atac
     ├── build.env
-    └── Dockerfile
+    ├── Dockerfile
+    └── scripts
+        └── ...
 ```
 
 ## The `build.env` file
