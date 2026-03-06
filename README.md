@@ -67,9 +67,9 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 | Type | Name | Description |
 | :- | :- | :- |
-| String | team_id | Unique identifier for team; used for naming output files. |
-| String | dataset_id | Unique identifier for dataset; used for metadata. |
-| String | dataset_doi_url | Generated Zenodo DOI URL referencing the dataset. |
+| String | asap_team_id | ASAP-generated unique identifier for team; used for naming output files. |
+| String | asap_dataset_id | ASAP-generated unique identifier for dataset; used for metadata. |
+| String | asap_dataset_doi_url | ASAP-generated Zenodo DOI URL referencing the dataset. |
 | Array[[Sample](#sample)] | samples | The set of samples associated with this project. |
 | Boolean | multimodal_sc_data | Whether or not the sc/sn ATAC-seq is from multimodal data. |
 | Boolean | run_project_cohort_analysis | Whether or not to run cohort analysis within the project. |
@@ -80,7 +80,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 | Type | Name | Description |
 | :- | :- | :- |
-| String | sample_id | Unique identifier for the sample within the project. |
+| String | asap_sample_id | ASAP-generated unique identifier for the sample within the project. |
 | String? | batch | The sample's batch. |
 | File | fastq_R1 | Path to the sample's read 1 FASTQ file. |
 | File | fastq_R2 | Path to the sample's read 2 FASTQ file. |
@@ -90,7 +90,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 ## Generating the inputs JSON
 
-The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The [`generate_inputs` utility script](https://github.com/ASAP-CRN/wf-common/blob/main/util/generate_inputs) may be used to automatically generate the inputs JSON (`inputs.{staging_env}.{source}-{cohort_dataset}.{date}.json`) and a sample list TSV (`{team_id}.{source}-{cohort_dataset}.sample_list.{date}.tsv`); same as the one generated in [the write_cohort_sample_list task](https://github.com/ASAP-CRN/wf-common/wdl/tasks/write_cohort_sample_list.wdl)). The script requires the libraries outlined in [the requirements.txt file](https://github.com/ASAP-CRN/wf-common/util/requirements.txt) and the following inputs:
+The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The [`generate_inputs` utility script](https://github.com/ASAP-CRN/wf-common/blob/main/util/generate_inputs) may be used to automatically generate the inputs JSON (`inputs.{staging_env}.{cohort_dataset_id}.{date}.json`) and a sample list TSV (`{team_id}.{cohort_dataset_id}.sample_list.{date}.tsv`); same as the one generated in [the write_cohort_sample_list task](https://github.com/ASAP-CRN/wf-common/wdl/tasks/write_cohort_sample_list.wdl)). The script requires the libraries outlined in [the requirements.txt file](https://github.com/ASAP-CRN/wf-common/util/requirements.txt) and the following inputs:
 
 - `project-tsv`: One or more project TSVs with one row per sample and columns team_id, sample_id, batch, fastq_path. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
     - `team_id`: A unique identifier for the team from which the sample(s) arose
@@ -102,7 +102,7 @@ The inputs JSON may be generated manually, however when running a large number o
 - `inputs-template`: The inputs template JSON file into which the `projects` information derived from the `project-tsv` will be inserted. Must have a key ending in `*.projects`. Other default values filled out in the inputs template will be written to the output inputs.json file.
 - `run-project-cohort-analysis`: Optionally run project-level cohort analysis for provided projects. This value will apply to all projects. [false]
 - `workflow_name`: WDL workflow name.
-- `cohort-dataset`: Dataset name in cohort bucket name (e.g. 'sc-atacseq').
+- `cohort-dataset-id`: Dataset ID in cohort bucket name (e.g. 'cohort-pmdbs-sc-atacseq').
 
 Example usage:
 
@@ -112,7 +112,7 @@ Example usage:
     --inputs-template workflows/inputs.json \
     --run-project-cohort-analysis \
     --workflow-name sc_atacseq_analysis \
-    --cohort-dataset sc-atacseq
+    --cohort-dataset-id cohort-pmdbs-sc-atacseq
 ```
 
 # Outputs

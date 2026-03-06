@@ -36,8 +36,8 @@ workflow preprocess {
 	String adata_raw_data_path = "~{workflow_raw_data_path_prefix}/counts_to_adata/~{adata_task_version}"
 
 	scatter (sample_object in samples) {
-		String cellranger_atac_count_output = "~{cellranger_atac_raw_data_path}/~{sample_object.sample_id}.raw_peak_bc_matrix.h5"
-		String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.sample_id}.cleaned_unfiltered.h5ad"
+		String cellranger_atac_count_output = "~{cellranger_atac_raw_data_path}/~{sample_object.asap_sample_id}.raw_peak_bc_matrix.h5"
+		String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.asap_sample_id}.cleaned_unfiltered.h5ad"
 	}
 
 	# For each sample, outputs an array of true/false: [cellranger_atac_counts_complete, initial_adata_object_complete]
@@ -52,27 +52,27 @@ workflow preprocess {
 	scatter (index in range(length(samples))) {
 		Sample sample = samples[index]
 
-		Array[String] project_sample_id = [team_id, sample.sample_id, dataset_doi_url]
+		Array[String] project_sample_id = [team_id, sample.asap_sample_id, dataset_doi_url]
 
 		String cellranger_atac_count_complete = check_output_files_exist.sample_preprocessing_complete[index][0]
 		String initial_adata_object_complete = check_output_files_exist.sample_preprocessing_complete[index][1]
 
-		String cellranger_atac_outputs_tar_gz = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.cellranger_atac_outputs.tar.gz"
-		String cellranger_atac_singlecell_csv = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.singlecell.csv"
-		String cellranger_atac_peaks_bed = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.peaks.bed"
-		String cellranger_atac_cut_sites_bigwig = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.cut_sites.bigwig"
-		String cellranger_atac_raw_peaks = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.raw_peak_bc_matrix.h5"
-		String cellranger_atac_filtered_peaks = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.filtered_peak_bc_matrix.h5"
-		String cellranger_atac_filtered_tf = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.filtered_tf_bc_matrix.h5"
-		String cellranger_atac_fragments_tsv_gz = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.fragments.tsv.gz"
-		String cellranger_atac_summary_csv = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.summary.csv"
-		String cellranger_atac_peak_annotation_tsv = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.peak_annotation.tsv"
-		String cellranger_atac_peak_motif_mapping_bed = "~{cellranger_atac_raw_data_path}/~{sample.sample_id}.peak_motif_mapping.bed"
+		String cellranger_atac_outputs_tar_gz = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.cellranger_atac_outputs.tar.gz"
+		String cellranger_atac_singlecell_csv = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.singlecell.csv"
+		String cellranger_atac_peaks_bed = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.peaks.bed"
+		String cellranger_atac_cut_sites_bigwig = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.cut_sites.bigwig"
+		String cellranger_atac_raw_peaks = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.raw_peak_bc_matrix.h5"
+		String cellranger_atac_filtered_peaks = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.filtered_peak_bc_matrix.h5"
+		String cellranger_atac_filtered_tf = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.filtered_tf_bc_matrix.h5"
+		String cellranger_atac_fragments_tsv_gz = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.fragments.tsv.gz"
+		String cellranger_atac_summary_csv = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.summary.csv"
+		String cellranger_atac_peak_annotation_tsv = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.peak_annotation.tsv"
+		String cellranger_atac_peak_motif_mapping_bed = "~{cellranger_atac_raw_data_path}/~{sample.asap_sample_id}.peak_motif_mapping.bed"
 
 		if (cellranger_atac_count_complete == "false") {
 			call cellranger_atac_count {
 				input:
-					sample_id = sample.sample_id,
+					sample_id = sample.asap_sample_id,
 					fastq_R1s = sample.fastq_R1s,
 					fastq_R2s = sample.fastq_R2s,
 					fastq_R3s = sample.fastq_R3s,
@@ -100,12 +100,12 @@ workflow preprocess {
 		File peak_annotation_tsv_output = select_first([cellranger_atac_count.peak_annotation_tsv, cellranger_atac_peak_annotation_tsv]) #!FileCoercion
 		File peak_motif_mapping_bed_output = select_first([cellranger_atac_count.peak_motif_mapping_bed, cellranger_atac_peak_motif_mapping_bed]) #!FileCoercion
 
-		String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.sample_id}.cleaned_unfiltered.h5ad"
+		String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.asap_sample_id}.cleaned_unfiltered.h5ad"
 
 		if (initial_adata_object_complete == "false") {
 			call counts_to_adata {
 				input:
-					sample_id = sample.sample_id,
+					sample_id = sample.asap_sample_id,
 					batch = select_first([sample.batch]),
 					team_id = team_id,
 					dataset_id = dataset_id,
