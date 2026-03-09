@@ -73,6 +73,7 @@ task integrate_peakvi {
 
 		mkdir peakvi_dir
 
+		/usr/bin/time -v \
 		integrate_peakvi \
 			--adata-input ~{processed_bins_adata_object} \
 			--batch-key ~{batch_key} \
@@ -141,6 +142,7 @@ task cluster_peakvi {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		cluster_peakvi \
 			--adata-input ~{peakvi_integrated_adata_object} \
 			--latent-key ~{peakvi_latent_key} \

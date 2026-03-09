@@ -60,6 +60,7 @@ task integrate_harmony {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		integrate_harmony \
 			--adata-input ~{processed_bins_adata_object} \
 			--batch-key ~{batch_key} \
@@ -111,6 +112,7 @@ task cluster_harmony {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		cluster_harmony \
 			--adata-input ~{harmony_integrated_adata_object} \
 			--plot-prefix ~{cohort_id} \

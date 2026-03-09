@@ -436,7 +436,7 @@ task merge_and_qc {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(preprocessed_adata_objects, "GB") * 3 + 20)
+	Int mem_gb = ceil(size(preprocessed_adata_objects, "GB") * 3 + 40)
 	Int disk_size = ceil(size(preprocessed_adata_objects, "GB") * 3 + 50)
 
 	command <<<
@@ -448,7 +448,8 @@ task merge_and_qc {
 			echo -e "${sample}\t${adata_path}" >> adata_samples_paths.tsv
 		done < ~{write_lines(preprocessed_adata_objects)}
 
-		merge_and_qc \
+		/usr/bin/time -v \
+			merge_and_qc \
 			--adata-objects-fofn adata_samples_paths.tsv \
 			--plot-prefix ~{cohort_id} \
 			--adata-output ~{cohort_id}.merged_filtered.h5ad \
@@ -635,6 +636,7 @@ task benchmark_sc_integration {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		benchmark_sc_integration \
 			--adata-harmony-input ~{harmony_merged_peaks_adata_object} \
 			--adata-peakvi-input ~{peakvi_merged_peaks_adata_object} \
