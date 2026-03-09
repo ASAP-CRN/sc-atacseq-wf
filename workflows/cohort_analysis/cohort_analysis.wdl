@@ -436,7 +436,7 @@ task merge_and_qc {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(preprocessed_adata_objects, "GB") * 3 + 40)
+	Int mem_gb = ceil(size(preprocessed_adata_objects, "GB") * 3 + 80)
 	Int disk_size = ceil(size(preprocessed_adata_objects, "GB") * 3 + 50)
 
 	command <<<
