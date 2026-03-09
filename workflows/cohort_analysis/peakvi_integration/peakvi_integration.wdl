@@ -100,6 +100,7 @@ task integrate_peakvi {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
+		bootDiskSizeGb: 30
 		preemptible: 3
 		zones: zones
 	}
@@ -164,6 +165,7 @@ task cluster_peakvi {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
+		bootDiskSizeGb: 30
 		preemptible: 3
 		zones: zones
 	}

@@ -410,6 +410,7 @@ task counts_to_adata {
 		cpu: 4
 		memory: "32 GB"
 		disks: "local-disk ~{disk_size} HDD"
+		bootDiskSizeGb: 30
 		preemptible: 3
 		zones: zones
 	}

@@ -75,6 +75,7 @@ task integrate_harmony {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
+		bootDiskSizeGb: 30
 		preemptible: 3
 		zones: zones
 	}
@@ -132,6 +133,7 @@ task cluster_harmony {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
+		bootDiskSizeGb: 30
 		preemptible: 3
 		zones: zones
 	}
