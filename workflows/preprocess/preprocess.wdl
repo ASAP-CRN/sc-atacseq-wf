@@ -308,6 +308,7 @@ task cellranger_atac_count {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
+			-o "~{sample_id}.cellranger_atac_outputs.tar.gz" \
 			-o "~{sample_id}.singlecell.csv" \
 			-o "~{sample_id}.peaks.bed" \
 			-o "~{sample_id}.cut_sites.bigwig" \
