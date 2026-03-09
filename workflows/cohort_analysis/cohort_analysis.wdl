@@ -480,8 +480,8 @@ task merge_and_qc {
 		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -529,8 +529,8 @@ task reduce_dimensions {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -593,8 +593,8 @@ task peak_calling {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -664,8 +664,8 @@ task benchmark_sc_integration {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -715,8 +715,8 @@ task make_gene_matrix {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -782,8 +782,8 @@ task process_gene_matrix {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -843,8 +843,8 @@ task impute_gene_matrix {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -901,8 +901,8 @@ task motif_enrichment {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -963,8 +963,8 @@ task export_final_artifacts {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 

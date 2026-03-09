@@ -41,6 +41,21 @@ workflow harmony_integration {
 		File harmony_clustered_adata_object = cluster_harmony.harmony_clustered_adata_object
 		File harmony_clustered_umap_png = cluster_harmony.harmony_clustered_umap_png #!FileCoercion
 	}
+
+	meta {
+		description: "Integrates samples by applying Harmony batch correction to the spectral embedding and clusters cells using Leiden community detection, producing a corrected AnnData object and UMAP plot."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		processed_bins_adata_object: {help: "Processed AnnData object after dimensionality reduction."}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		raw_data_path: {help: "Raw data bucket path for merged adata and QC plots outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task integrate_harmony {
@@ -76,8 +91,8 @@ task integrate_harmony {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -135,8 +150,8 @@ task cluster_harmony {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -147,6 +162,7 @@ task cluster_harmony {
 	parameter_meta {
 		cohort_id: {help: "Name of the cohort; used to name output files."}
 		harmony_integrated_adata_object: {help: "Harmony-integrated AnnData object."}
+		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}
 		container_registry: {help: "Container registry where workflow Docker images are hosted."}

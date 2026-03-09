@@ -48,6 +48,22 @@ workflow peakvi_integration {
 		File peakvi_clustered_adata_object = cluster_peakvi.peakvi_clustered_adata_object
 		File peakvi_clustered_umap_png = cluster_peakvi.peakvi_clustered_umap_png #!FileCoercion
 	}
+
+	meta {
+		description: "Integrates samples by training a PeakVI variational autoencoder for batch correction and clusters cells using Leiden community detection, producing an integrated AnnData object, PeakVI model, and UMAP plot."
+	}
+
+	parameter_meta {
+		cohort_id: {help: "Name of the cohort; used to name output files."}
+		processed_bins_adata_object: {help: "Processed AnnData object after dimensionality reduction."}
+		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		raw_data_path: {help: "Raw data bucket path for merged adata and QC plots outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
 }
 
 task integrate_peakvi {
@@ -101,13 +117,13 @@ task integrate_peakvi {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
 	meta {
-		description: "Constructs a k-nearest neighbor graph on the PeakVI latent embedding and applies Leiden community detection to cluster cells."
+		description: "Trains a PeakVI variational autoencoder to learn a batch-corrected latent representation of chromatin accessibility data and exports the trained PeakVI model."
 	}
 
 	parameter_meta {
@@ -115,6 +131,7 @@ task integrate_peakvi {
 		processed_bins_adata_object: {help: "Processed AnnData object after dimensionality reduction."}
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}
 		container_registry: {help: "Container registry where workflow Docker images are hosted."}
@@ -167,8 +184,8 @@ task cluster_peakvi {
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		bootDiskSizeGb: 30
 		preemptible: 3
+		bootDiskSizeGb: 30
 		zones: zones
 	}
 
@@ -180,6 +197,7 @@ task cluster_peakvi {
 		cohort_id: {help: "Name of the cohort; used to name output files."}
 		peakvi_integrated_adata_object: {help: "PeakVI-integrated AnnData object."}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}
 		container_registry: {help: "Container registry where workflow Docker images are hosted."}
