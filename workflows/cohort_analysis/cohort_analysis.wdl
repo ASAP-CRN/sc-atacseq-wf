@@ -484,7 +484,7 @@ task merge_and_qc {
 	}
 
 	meta {
-		description: "Merge sample-level AnnData objects to a single cohort-level AnnData object and QC based on covariates including matrices, features, and doublets."
+		description: "Merges sample-level AnnData objects to a single cohort-level AnnData object and QC based on covariates including matrices, features, and doublets."
 	}
 
 	parameter_meta {
@@ -532,7 +532,7 @@ task reduce_dimensions {
 	}
 
 	meta {
-		description: "Perform spectral decomposition and UMAP embedding on the bin-level chromatin accessibility matrix for dimensionality reduction."
+		description: "Performs spectral decomposition and UMAP embedding on the bin-level chromatin accessibility matrix for dimensionality reduction."
 	}
 
 	parameter_meta {

@@ -415,7 +415,7 @@ task counts_to_adata {
 	}
 
 	meta {
-		description: "Converts Cell Ranger ATAC counts to AnnData objects using SnapATAC2."
+		description: "Converts Cell Ranger ATAC counts into AnnData objects using SnapATAC2."
 	}
 
 	parameter_meta {
