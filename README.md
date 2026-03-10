@@ -264,7 +264,7 @@ The script defaults to a dry run, printing out the files that would be copied or
 ```
 -h  Display this message and exit
 -l  List available teams
--w  Workflow name used as a directory in bucket (e.g. 'pmdbs_atac_rnaseq')
+-w  Workflow name used as a directory in bucket (e.g. 'pmdbs_sc_atacseq')
 -v  Release version (e.g. v4.0.0)
 -p  Promote data. If this option is not selected, data that would be copied or deleted is printed out, but files are not actually changed (dry run)
 ```
