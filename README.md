@@ -143,7 +143,7 @@ In the workflow, task outputs are either specified as `String` (final outputs, w
 ```bash
 asap-raw-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
 └── workflow_execution
-    └── ${workflow_name}
+    └── pmdbs_sc_atacseq
         ├── cohort_analysis
         │   └──${cohort_analysis_workflow_version}
         │       └── ${workflow_run_timestamp}
@@ -165,7 +165,7 @@ Data may be synced using [the `promote_staging_data` script](#promoting-staging-
 
 ```bash
 asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
-└── ${workflow_name}
+└── pmdbs_sc_atacseq
     └── release
         └── ${crn_release_version}
             ├── cohort_analysis
