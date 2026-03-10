@@ -41,8 +41,8 @@ workflow sc_atacseq_analysis {
 	String workflow_execution_path = "workflow_execution"
 	String workflow_name = "pmdbs_sc_atacseq"
 	String workflow_version = "v1.0.0"
-	String release_version = "v1.0.0"
-	String workflow_release = "https://github.com/ASAP-CRN/sc-atacseq-wf/releases/tag/sc_atacseq_analysis-~{release_version}"
+	String workflow_release = "https://github.com/ASAP-CRN/sc-atacseq-wf/releases/tag/sc_atacseq_analysis-~{workflow_version}"
+	String crn_release_version = "v5.0.0"
 
 	call GetWorkflowMetadata.get_workflow_metadata {
 		input:
@@ -101,8 +101,8 @@ workflow sc_atacseq_analysis {
 					features = features,
 					workflow_name = workflow_name,
 					workflow_version = workflow_version,
-					release_version = release_version,
 					workflow_release = workflow_release,
+					crn_release_version = crn_release_version,
 					run_timestamp = get_workflow_metadata.timestamp,
 					raw_data_path_prefix = project_raw_data_path_prefix,
 					staging_data_buckets = project.staging_data_buckets,
@@ -131,8 +131,8 @@ workflow sc_atacseq_analysis {
 				features = features,
 				workflow_name = workflow_name,
 				workflow_version = workflow_version,
-				release_version = release_version,
 				workflow_release = workflow_release,
+				crn_release_version = crn_release_version,
 				run_timestamp = get_workflow_metadata.timestamp,
 				raw_data_path_prefix = cohort_raw_data_path_prefix,
 				staging_data_buckets = cohort_staging_data_buckets,
