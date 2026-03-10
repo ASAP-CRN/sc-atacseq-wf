@@ -517,7 +517,7 @@ task reduce_dimensions {
 
 		process_bins \
 			--adata-input ~{merged_adata_object} \
-			--adata-output ~{cohort_id}.bins_processed.h5ad
+			--adata-output ~{cohort_id}.processed_bins.h5ad
 	>>>
 
 	output {
