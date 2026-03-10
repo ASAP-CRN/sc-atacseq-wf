@@ -48,7 +48,7 @@ def main(args):
     adata.layers["gene_counts"] = adata.X[:]
 
     adata_norm_gene_matrix = normalize(adata)
-    adata_processed_gene_matrix, full_features, hvg_features = process_adata(adata_norm_gene_matrix, args.batch_key, args.n_top_genes, args.n_comps)
+    adata_processed_gene_matrix, full_features, hvg_features = hvg(adata_norm_gene_matrix, args.batch_key, args.n_top_genes, args.n_comps)
 
     adata_processed_gene_matrix.write_h5ad(
         filename=args.adata_output,

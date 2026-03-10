@@ -81,7 +81,7 @@ task integrate_peakvi {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(processed_bins_adata_object, "GB") * 2 + 20)
+	Int mem_gb = ceil(size(processed_bins_adata_object, "GB") * 2 + 150)
 	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 2 + 50)
 
 	command <<<
@@ -114,7 +114,7 @@ task integrate_peakvi {
 
 	runtime {
 		docker: "~{container_registry}/scvi_tools:1.0.0"
-		cpu: 2
+		cpu: 8
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
