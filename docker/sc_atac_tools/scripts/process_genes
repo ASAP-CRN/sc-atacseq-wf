@@ -95,7 +95,7 @@ if __name__ == "__main__":
         help="Number of HVG genes to keep [3000]"
     )
     parser.add_argument(
-        "-c"
+        "-c",
         "--n-comps",
         type=int,
         required=True,
