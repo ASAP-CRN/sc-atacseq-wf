@@ -23,7 +23,7 @@ def hvg(
         batch_key=batch_key,
         flavor="pearson_residuals",
         check_values=True,
-        layer="counts",
+        layer="gene_counts",
         subset=False,
         inplace=False,
     )
