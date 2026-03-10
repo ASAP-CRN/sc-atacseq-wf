@@ -570,8 +570,8 @@ task peak_calling {
 		call_peaks \
 			--adata-input ~{integrated_adata_object} \
 			--macs3-groupby ~{macs3_groupby} \
-			--output-prefix ~{cohort_id}.~{integration_method} \
-			--adata-output ~{cohort_id}.~{integration_method}.merged_peaks.h5ad
+			--output-prefix ~{cohort_id}.~{integration_method}.~{macs3_groupby} \
+			--adata-output ~{cohort_id}.~{integration_method}.~{macs3_groupby}.merged_peaks.h5ad
 
 		upload_outputs \
 			-b ~{billing_project} \
