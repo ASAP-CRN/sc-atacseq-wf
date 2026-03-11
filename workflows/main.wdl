@@ -286,7 +286,7 @@ workflow sc_atacseq_analysis {
 	}
 
 	meta {
-		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) brain sc/sn ATAC-seq workflow"
+		description: "Harmonized human postmortem-derived brain sequencing (PMDBS) brain sc/sn ATAC-seq workflow."
 	}
 
 	parameter_meta {
