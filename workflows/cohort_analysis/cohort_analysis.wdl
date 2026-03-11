@@ -772,7 +772,7 @@ task process_gene_matrix {
 	>>>
 
 	output {
-		File processed_gene_matrix_adata_object = "~{raw_data_path}/~{cohort_id}.processed_gene_matrix.h5ad"
+		File processed_gene_matrix_adata_object = "~{cohort_id}.processed_gene_matrix.h5ad"
 		String all_genes_csv = "~{raw_data_path}/~{cohort_id}.all_genes.csv"
 		String hvg_genes_csv = "~{raw_data_path}/~{cohort_id}.hvg_genes.csv"
 	}
