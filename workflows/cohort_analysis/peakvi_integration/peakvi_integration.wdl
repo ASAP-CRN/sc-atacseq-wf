@@ -81,7 +81,7 @@ task integrate_peakvi {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(processed_bins_adata_object, "GB") * 2 + 150)
+	Int mem_gb = ceil(size(processed_bins_adata_object, "GB") * 2 + 50)
 	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 2 + 50)
 
 	command <<<
