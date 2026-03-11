@@ -195,7 +195,7 @@ workflow cohort_analysis {
 			normalized_adata_object = process_gene_matrix.processed_gene_matrix_adata_object,
 			mmc_results_csv = map_cell_types.mmc_results_csv, #!FileCoercion
 			raw_data_path = raw_data_path,
-			workflow_name = workflow_name,
+			workflow_name = "pmdbs_sc_rnaseq",
 			workflow_info = workflow_info,
 			billing_project = billing_project,
 			container_registry = container_registry,
