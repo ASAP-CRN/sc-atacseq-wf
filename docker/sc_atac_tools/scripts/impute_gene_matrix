@@ -15,7 +15,7 @@ def magic_imputation(
 
 def main(args):
     adata = snap.read(args.adata_input)
-    adata_magic_imputed = magic_imputation(adata_gene_matrix)
+    adata_magic_imputed = magic_imputation(adata)
 
     adata_magic_imputed_out = f"{args.output_prefix}.gene_matrix.magic_imputed.h5ad"
     adata_magic_imputed.write(
