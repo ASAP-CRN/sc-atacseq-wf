@@ -17,11 +17,10 @@ def main(args):
     adata = snap.read(args.adata_input, backed=None)
     adata_magic_imputed = magic_imputation(adata)
 
-    adata_magic_imputed_out = f"{args.output_prefix}.gene_matrix.magic_imputed.h5ad"
     adata_magic_imputed.write(
-        filename=adata_magic_imputed_out
+        filename=args.adata_output
     )
-    print(f"Wrote {adata_magic_imputed_out}")
+    print(f"Wrote {args.adata_output}")
 
 
 if __name__ == "__main__":
@@ -36,11 +35,11 @@ if __name__ == "__main__":
         help="AnnData object for a dataset"
     )
     parser.add_argument(
-        "-p",
-        "--output-prefix",
+        "-o",
+        "--adata-output",
         type=str,
         required=True,
-        help="Prefix used to name output files (i.e. gene matrix AnnData object)"
+        help="Output file name for saving the gene matrix AnnData object"
     )
 
     args = parser.parse_args()

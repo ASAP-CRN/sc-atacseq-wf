@@ -825,7 +825,7 @@ task impute_gene_matrix {
 
 		impute_gene_matrix \
 			--adata-input ~{processed_gene_matrix_adata_object} \
-			--output-prefix "~{cohort_id}.gene_matrix.magic_imputed.h5ad"
+			--adata-output "~{cohort_id}.gene_matrix.magic_imputed.h5ad"
 
 		upload_outputs \
 			-b ~{billing_project} \
@@ -959,7 +959,7 @@ task export_final_artifacts {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
