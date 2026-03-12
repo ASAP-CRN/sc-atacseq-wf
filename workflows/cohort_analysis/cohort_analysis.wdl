@@ -192,7 +192,7 @@ workflow cohort_analysis {
 	call ScCohortAnalysis.add_mapped_cell_types {
 		input:
 			cohort_id = cohort_id,
-			normalized_adata_object = process_gene_matrix.processed_gene_matrix_adata_object,
+			normalized_adata_object = harmony_peak_calling.merged_peaks_adata_object,
 			mmc_results_csv = map_cell_types.mmc_results_csv, #!FileCoercion
 			raw_data_path = raw_data_path,
 			workflow_name = "pmdbs_sc_rnaseq",
