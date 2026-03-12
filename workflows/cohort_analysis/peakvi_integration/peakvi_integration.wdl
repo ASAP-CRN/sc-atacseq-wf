@@ -165,13 +165,13 @@ task cluster_peakvi {
 			--latent-key ~{peakvi_latent_key} \
 			--adata-output ~{cohort_id}.peakvi_clustered.h5ad
 
-		mv "plots/umap.png" "plots/~{cohort_id}.peakvi_umap.png"
+		mv "figures/umap.png" "./~{cohort_id}.peakvi_umap.png"
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "plots/~{cohort_id}.peakvi_umap.png"
+			-o "~{cohort_id}.peakvi_umap.png"
 	>>>
 
 	output {
