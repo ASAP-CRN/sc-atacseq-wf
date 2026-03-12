@@ -9,7 +9,7 @@ def cluster(
     adata: sc.AnnData, latent_key: str
 ):
     print(f"Clustering...")
-    PEAKVI_CLUSTERS_KEY = "clusters_peakvi"
+    PEAKVI_CLUSTERS_KEY = "leiden"
     # Compute the k-nearest-neighbor graph that is used in both clustering and UMAP algorithms
     sc.pp.neighbors(adata, use_rep=latent_key)
     sc.tl.umap(adata, min_dist=0.2)
