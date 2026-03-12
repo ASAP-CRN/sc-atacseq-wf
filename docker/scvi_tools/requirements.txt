@@ -5,3 +5,4 @@ scanpy==1.11.3
 scib-metrics==0.5.7
 scvi-tools[cuda]==1.4.1
 torch==2.10.0
+leidenalg==0.11.0
