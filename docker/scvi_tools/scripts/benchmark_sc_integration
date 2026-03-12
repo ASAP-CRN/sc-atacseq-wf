@@ -8,7 +8,7 @@ from scib_metrics.benchmark import Benchmarker, BatchCorrection
 
 
 def get_artifact_metrics(
-    adata_harmony: AnnData, adata_peakvi: AnnData, batch_key: str, scib_report_dir: str
+    adata_harmony: sc.AnnData, adata_peakvi: sc.AnnData, batch_key: str, scib_report_dir: str
 ):
     adata_harmony.obsm["X_peakVI"] = adata_peakvi[adata_harmony.obs_names].obsm["X_peakVI"]
     adata = adata_harmony.copy()
@@ -49,7 +49,7 @@ def main(args):
     adata_peakvi = sc.read_h5ad(args.adata_peakvi_input)
     
     report_df = get_artifact_metrics(adata_harmony, adata_peakvi, args.batch_key, args.report_dir)
-    report_df.to_csv((args.report_dir / "scib_report.csv"), index=True)
+    report_df.to_csv(f"{args.report_dir}/scib_report.csv", index=True)
     print(f"Saved scib-metrics report in {args.report_dir}")
 
 
