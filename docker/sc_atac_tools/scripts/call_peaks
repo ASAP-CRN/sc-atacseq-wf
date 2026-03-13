@@ -19,7 +19,7 @@ def call_peaks(
     print(f"Merged peaks dim:")
     merged_peaks.shape
 
-    adata.uns["merged_peaks"] = merged_peaks
+    adata.uns["merged_peaks"] = merged_peaks.to_pandas()
 
     peaks_matrix = snap.pp.make_peak_matrix(adata, use_rep=merged_peaks['Peaks'])
 
@@ -27,7 +27,7 @@ def call_peaks(
 
 
 def main(args):
-    adata = snap.read(args.adata_input)
+    adata = snap.read(args.adata_input, backed=None)
     adata_peaks, merged_peaks_df, adata_peaks_matrix = call_peaks(adata, args.macs3_groupby)
 
     adata_peaks.write(
