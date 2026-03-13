@@ -211,7 +211,7 @@ workflow sc_atacseq_analysis {
 		Array[File?] project_celltype_merged_peaks_adata_object = project_cohort_analysis.celltype_merged_peaks_adata_object
 		Array[File?] project_celltype_merged_peaks_csv = project_cohort_analysis.celltype_merged_peaks_csv
 		Array[File?] project_celltype_peaks_matrix_adata_object = project_cohort_analysis.celltype_peaks_matrix_adata_object
-		Array[File?] project_motifs_csv = project_cohort_analysis.motifs_csv
+		Array[File?] project_motifs_parquet = project_cohort_analysis.motifs_parquet
 
 		# Groups and features plots
 		Array[File?] project_groups_umap_plot_png = project_cohort_analysis.groups_umap_plot_png
@@ -272,7 +272,7 @@ workflow sc_atacseq_analysis {
 		File? cohort_celltype_merged_peaks_adata_object = cross_team_cohort_analysis.celltype_merged_peaks_adata_object
 		File? cohort_celltype_merged_peaks_csv = cross_team_cohort_analysis.celltype_merged_peaks_csv
 		File? cohort_celltype_peaks_matrix_adata_object = cross_team_cohort_analysis.celltype_peaks_matrix_adata_object
-		File? cohort_motifs_csv = cross_team_cohort_analysis.motifs_csv
+		File? cohort_motifs_parquet = cross_team_cohort_analysis.motifs_parquet
 
 		# Groups and features plots
 		File? cohort_groups_umap_plot_png = cross_team_cohort_analysis.groups_umap_plot_png

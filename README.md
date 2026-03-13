@@ -196,7 +196,7 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.h5ad
             │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.csv
             │   ├── ${cohort_id}.peakvi.cell_type.peaks_matrix.h5ad
-            │   ├── ${cohort_id}.motifs.csv
+            │   ├── ${cohort_id}.motifs.parquet
             │   ├── ${cohort_id}.features.umap.png
             │   ├── ${cohort_id}.groups.umap.png
             │   ├── ${cohort_id}.final.h5ad

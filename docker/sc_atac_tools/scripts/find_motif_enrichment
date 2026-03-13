@@ -37,13 +37,13 @@ def find_motif_enrichment(
 
 def main(args):
     adata_peaks_matrix = snap.read(args.adata_input)
-    motifs_df = find_motif_enrichment(adata_peaks_matrix, args.output_prefix)
+    motifs_dict_pl = find_motif_enrichment(adata_peaks_matrix, args.output_prefix)
 
-    motifs_csv = f"{args.output_prefix}.motifs.csv"
-    motifs_df.write_csv(
-        motifs_csv
-    )
-    print(f"Wrote {motifs_csv}")
+    motifs_parquet = f"{args.output_prefix}.motifs.parquet"
+    pl.concat(
+        [df.with_columns(pl.lit(cell_type).alias("cell_type")) for cell_type, df in motifs_dict_pl.items()]
+    ).write_parquet(motifs_parquet)
+    print(f"Wrote {motifs_parquet}")
 
 
 if __name__ == "__main__":

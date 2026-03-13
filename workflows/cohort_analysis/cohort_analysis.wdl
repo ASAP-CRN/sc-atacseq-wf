@@ -206,7 +206,7 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			integrated_adata_object = add_mapped_cell_types.mmc_adata_object,
-			integration_method = "peakvi",
+			integration_method = "harmony",
 			macs3_groupby = "cell_type",
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
@@ -311,7 +311,7 @@ workflow cohort_analysis {
 			celltype_peak_calling.peaks_matrix_adata_object
 		],
 		[
-			motif_enrichment.motifs_csv
+			motif_enrichment.motifs_parquet
 		],
 		[
 			plot_groups_and_features.groups_umap_plot_png,
@@ -381,7 +381,7 @@ workflow cohort_analysis {
 		File celltype_merged_peaks_adata_object = celltype_peak_calling.merged_peaks_adata_object #!FileCoercion
 		File celltype_merged_peaks_csv = celltype_peak_calling.merged_peaks_csv #!FileCoercion
 		File celltype_peaks_matrix_adata_object = celltype_peak_calling.peaks_matrix_adata_object #!FileCoercion
-		File motifs_csv = motif_enrichment.motifs_csv #!FileCoercion
+		File motifs_parquet = motif_enrichment.motifs_parquet #!FileCoercion
 
 		# Groups and features plots
 		File groups_umap_plot_png = plot_groups_and_features.groups_umap_plot_png #!FileCoercion
@@ -875,12 +875,13 @@ task motif_enrichment {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 20)
+	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 40)
 	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 50)
 
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		find_motif_enrichment \
 			--adata-input ~{celltype_merged_peaks_adata_object} \
 			--output-prefix ~{cohort_id}
@@ -889,16 +890,16 @@ task motif_enrichment {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{cohort_id}.motifs.csv"
+			-o "~{cohort_id}.motifs.parquet"
 	>>>
 
 	output {
-		String motifs_csv = "~{raw_data_path}/~{cohort_id}.motifs.csv"
+		String motifs_parquet = "~{raw_data_path}/~{cohort_id}.motifs.parquet"
 	}
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 8
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
