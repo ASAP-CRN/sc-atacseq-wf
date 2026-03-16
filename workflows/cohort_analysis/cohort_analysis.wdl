@@ -636,6 +636,8 @@ task benchmark_sc_integration {
 	command <<<
 		set -euo pipefail
 
+		mkdir scib_report_dir
+
 		/usr/bin/time -v \
 		benchmark_sc_integration \
 			--adata-harmony-input ~{harmony_merged_peaks_adata_object} \
