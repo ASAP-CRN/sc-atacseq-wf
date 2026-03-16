@@ -660,7 +660,7 @@ task benchmark_sc_integration {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_tools:1.0.0"
+		docker: "~{container_registry}/scvi_tools:1.0.0"
 		cpu: 2
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
