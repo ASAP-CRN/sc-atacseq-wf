@@ -48,9 +48,9 @@ def main(args):
     adata_harmony = sc.read_h5ad(args.adata_harmony_input)
     adata_peakvi = sc.read_h5ad(args.adata_peakvi_input)
     
-    report_df = get_artifact_metrics(adata_harmony, adata_peakvi, args.batch_key, args.report_dir)
-    report_df.to_csv(f"{args.report_dir}/scib_report.csv", index=True)
-    print(f"Saved scib-metrics report in {args.report_dir}")
+    report_df = get_artifact_metrics(adata_harmony, adata_peakvi, args.batch_key, args.output_report_dir)
+    report_df.to_csv(f"{args.output_report_dir}/scib_report.csv", index=True)
+    print(f"Saved scib-metrics report in {args.output_report_dir}")
 
 
 if __name__ == "__main__":
