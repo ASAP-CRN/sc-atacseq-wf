@@ -75,7 +75,7 @@ if __name__ == "__main__":
         "--max-epochs",
         type=int,
         required=True,
-        help="The maximum number of full passes through the training data during PeakVI model training [500]",
+        help="The maximum number of full passes through the training data during PeakVI model training [300]",
     )
     parser.add_argument(
         "-o",
