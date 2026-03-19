@@ -7,7 +7,7 @@ import scvi
 
 
 def train_model(
-    adata: sc.AnnData, batch_key: str, latent_key: str
+    adata: sc.AnnData, batch_key: str, latent_key: str, max_epochs: int
 ):
     print(f"Training data with PeakVI...")
     scvi.model.PEAKVI.setup_anndata(
@@ -17,7 +17,7 @@ def train_model(
     )
 
     model = scvi.model.PEAKVI(adata)
-    model.train(max_epochs=300)
+    model.train(max_epochs=max_epochs)
 
     latent = model.get_latent_representation()
     adata.obsm[latent_key] = latent
@@ -33,7 +33,7 @@ def main(args):
     print(f"Using {scvi.settings.dl_num_workers} workers")
 
     adata = sc.read_h5ad(args.adata_input)
-    adata_peakvi, peakvi_model = train_model(adata, args.batch_key, args.latent_key)
+    adata_peakvi, peakvi_model = train_model(adata, args.batch_key, args.latent_key, args.max_epochs)
 
     peakvi_model.save(args.output_peakvi_dir, overwrite=True)
     print(f"Wrote PeakVI model to {args.output_peakvi_dir}")
@@ -69,6 +69,13 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="Latent key to save the PeakVI latent to",
+    )
+    parser.add_argument(
+        "-m",
+        "--max-epochs",
+        type=int,
+        required=True,
+        help="The maximum number of full passes through the training data during PeakVI model training [500]",
     )
     parser.add_argument(
         "-o",

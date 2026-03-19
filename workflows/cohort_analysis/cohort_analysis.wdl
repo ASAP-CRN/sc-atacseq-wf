@@ -25,8 +25,9 @@ workflow cohort_analysis {
 		Int n_comps
 
 		# Sample integration
-		String peakvi_latent_key
 		String batch_key
+		String peakvi_latent_key
+		Int peakvi_max_epochs
 
 		Array[String] groups
 		Array[String] features
@@ -98,6 +99,7 @@ workflow cohort_analysis {
 			processed_bins_adata_object = reduce_dimensions.processed_bins_adata_object,
 			batch_key = batch_key,
 			peakvi_latent_key = peakvi_latent_key,
+			peakvi_max_epochs = peakvi_max_epochs,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -192,7 +194,7 @@ workflow cohort_analysis {
 	call ScCohortAnalysis.add_mapped_cell_types {
 		input:
 			cohort_id = cohort_id,
-			normalized_adata_object = harmony_peak_calling.merged_peaks_adata_object,
+			normalized_adata_object = harmony_peak_calling.merged_peaks_adata_object, #!FileCoercion
 			mmc_results_csv = map_cell_types.mmc_results_csv, #!FileCoercion
 			raw_data_path = raw_data_path,
 			workflow_name = "pmdbs_sc_rnaseq",

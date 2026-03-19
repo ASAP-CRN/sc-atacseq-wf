@@ -23,8 +23,9 @@ workflow sc_atacseq_analysis {
 		Int n_comps = 30
 
 		# Sample integration
-		String peakvi_latent_key = "X_peakVI"
 		String batch_key = "batch_id"
+		String peakvi_latent_key = "X_peakVI"
+		Int peakvi_max_epochs = 500
 
 		Array[String] groups = ["sample", "batch", "team", "dataset", "batch_id", "leiden"]
 		Array[String] features = ["n_fragment", "tsse", "frac_dup", "frac_mito", "doublet_score", "doublet_probability"]
@@ -95,8 +96,9 @@ workflow sc_atacseq_analysis {
 					allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
 					n_top_genes = n_top_genes,
 					n_comps = n_comps,
-					peakvi_latent_key = peakvi_latent_key,
 					batch_key = batch_key,
+					peakvi_latent_key = peakvi_latent_key,
+					peakvi_max_epochs = peakvi_max_epochs,
 					groups = groups,
 					features = features,
 					workflow_name = workflow_name,
@@ -125,8 +127,9 @@ workflow sc_atacseq_analysis {
 				allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
 				n_top_genes = n_top_genes,
 				n_comps = n_comps,
-				peakvi_latent_key = peakvi_latent_key,
 				batch_key = batch_key,
+				peakvi_latent_key = peakvi_latent_key,
+				peakvi_max_epochs = peakvi_max_epochs,
 				groups = groups,
 				features = features,
 				workflow_name = workflow_name,
@@ -296,8 +299,9 @@ workflow sc_atacseq_analysis {
 		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
 		n_top_genes: {help: "Number of HVG genes to keep. [3000]"}
 		n_comps: {help: "Number of principal components to compute. [30]"}
-		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [500]"}
 		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'team', 'dataset', 'batch_id', 'leiden']"}
 		features: {help: "Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability']"}
 		run_cross_team_cohort_analysis: {help: "Whether to run downstream harmonization steps on all samples across projects. If set to false, only preprocessing steps (cellranger and generating the initial adata object(s)) will run for samples. [false]"}

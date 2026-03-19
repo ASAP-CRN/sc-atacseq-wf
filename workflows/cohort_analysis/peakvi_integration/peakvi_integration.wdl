@@ -9,6 +9,7 @@ workflow peakvi_integration {
 
 		String batch_key
 		String peakvi_latent_key
+		Int peakvi_max_epochs
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -23,6 +24,7 @@ workflow peakvi_integration {
 			processed_bins_adata_object = processed_bins_adata_object,
 			batch_key = batch_key,
 			peakvi_latent_key = peakvi_latent_key,
+			peakvi_max_epochs = peakvi_max_epochs,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -73,6 +75,7 @@ task integrate_peakvi {
 
 		String batch_key
 		String peakvi_latent_key
+		Int peakvi_max_epochs
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -94,6 +97,7 @@ task integrate_peakvi {
 			--adata-input ~{processed_bins_adata_object} \
 			--batch-key ~{batch_key} \
 			--latent-key ~{peakvi_latent_key} \
+			--max-epochs ~{peakvi_max_epochs} \
 			--adata-output ~{cohort_id}.peakvi_integrated.h5ad \
 			--output-peakvi-dir "~{cohort_id}_peakvi_model"
 
