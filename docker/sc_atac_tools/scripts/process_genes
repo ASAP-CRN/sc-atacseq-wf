@@ -40,7 +40,7 @@ def hvg(
 
 
 def main(args):
-    # Set CPUs to use for parallel computing
+    # Use all available CPUs for parallel computing
     sc.settings.n_jobs = -1
 
     adata = sc.read_h5ad(args.adata_input)

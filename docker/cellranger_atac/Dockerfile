@@ -10,7 +10,7 @@ ARG IMAGE_TAG
 ENV IMAGE_TAG "${IMAGE_TAG}"
 
 RUN apt-get -qq update \
-	&& apt-get -qq install \
+	&& apt-get -qq install -y \
 		wget \
 		time \
 		xxd \
