@@ -58,8 +58,9 @@ workflow peakvi_integration {
 	parameter_meta {
 		cohort_id: {help: "Name of the cohort; used to name output files."}
 		processed_bins_adata_object: {help: "Processed AnnData object after dimensionality reduction."}
-		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
 		raw_data_path: {help: "Raw data bucket path for merged adata and QC plots outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}
@@ -135,6 +136,7 @@ task integrate_peakvi {
 		processed_bins_adata_object: {help: "Processed AnnData object after dimensionality reduction."}
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
 		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}

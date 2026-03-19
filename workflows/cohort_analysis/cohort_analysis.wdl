@@ -158,9 +158,9 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			gene_matrix_adata_object = make_gene_matrix.gene_matrix_adata_object, #!FileCoercion
-			batch_key = batch_key,
 			n_top_genes = n_top_genes,
 			n_comps = n_comps,
+			batch_key = batch_key,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -274,13 +274,13 @@ workflow cohort_analysis {
 			harmony_integration.harmony_clustered_umap_png
 		],
 		[
-			peakvi_integration.peakvi_model_tar_gz,
-			peakvi_integration.peakvi_clustered_umap_png
-		],
-		[
 			harmony_peak_calling.merged_peaks_adata_object,
 			harmony_peak_calling.merged_peaks_csv,
 			harmony_peak_calling.peaks_matrix_adata_object
+		],
+		[
+			peakvi_integration.peakvi_model_tar_gz,
+			peakvi_integration.peakvi_clustered_umap_png
 		],
 		[
 			peakvi_peak_calling.merged_peaks_adata_object,
@@ -407,8 +407,9 @@ workflow cohort_analysis {
 		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
 		n_top_genes: {help: "Number of highly-variable genes to keep. [3000]"}
 		n_comps: {help: "Number of principal components to compute. [30]"}
-		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
+		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
+		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
 		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'team', 'dataset', 'batch_id', 'leiden']"}
 		features: {help: "Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability']"}
 		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
@@ -739,9 +740,9 @@ task process_gene_matrix {
 		String cohort_id
 		File gene_matrix_adata_object
 
-		String batch_key
 		Int n_top_genes
 		Int n_comps
+		String batch_key
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -796,9 +797,9 @@ task process_gene_matrix {
 	parameter_meta {
 		cohort_id: {help: "Name of the cohort; used to name output files."}
 		gene_matrix_adata_object: {help: "Gene matrix AnnData object."}
-		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		n_top_genes: {help: "Number of HVG genes to keep. [3000]"}
 		n_comps: {help: "Number of principal components to compute. [30]"}
+		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		raw_data_path: {help: "Raw data bucket path for processed gene matrix outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}

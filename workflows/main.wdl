@@ -199,9 +199,9 @@ workflow sc_atacseq_analysis {
 		# Gene matrix adata object
 		Array[File?] project_gene_matrix_adata_object = project_cohort_analysis.gene_matrix_adata_object
 		Array[File?] project_processed_gene_matrix_adata_object = project_cohort_analysis.processed_gene_matrix_adata_object
-		Array[File?] project_peakvi_all_genes_csv = project_cohort_analysis.all_genes_csv
-		Array[File?] project_peakvi_hvg_genes_csv = project_cohort_analysis.hvg_genes_csv
-		Array[File?] project_peakvi_imputed_gene_matrix_adata_object = project_cohort_analysis.imputed_gene_matrix_adata_object
+		Array[File?] project_all_genes_csv = project_cohort_analysis.all_genes_csv
+		Array[File?] project_hvg_genes_csv = project_cohort_analysis.hvg_genes_csv
+		Array[File?] project_imputed_gene_matrix_adata_object = project_cohort_analysis.imputed_gene_matrix_adata_object
 
 		# MMC from sc RNA-seq pipeline
 		Array[File?] project_mmc_extended_results_json = project_cohort_analysis.mmc_extended_results_json
@@ -260,9 +260,9 @@ workflow sc_atacseq_analysis {
 		# Gene matrix adata object
 		File? cohort_gene_matrix_adata_object = cross_team_cohort_analysis.gene_matrix_adata_object
 		File? cohort_processed_gene_matrix_adata_object = cross_team_cohort_analysis.processed_gene_matrix_adata_object
-		File? cohort_peakvi_all_genes_csv = cross_team_cohort_analysis.all_genes_csv
-		File? cohort_peakvi_hvg_genes_csv = cross_team_cohort_analysis.hvg_genes_csv
-		File? cohort_peakvi_imputed_gene_matrix_adata_object = cross_team_cohort_analysis.imputed_gene_matrix_adata_object
+		File? cohort_all_genes_csv = cross_team_cohort_analysis.all_genes_csv
+		File? cohort_hvg_genes_csv = cross_team_cohort_analysis.hvg_genes_csv
+		File? cohort_imputed_gene_matrix_adata_object = cross_team_cohort_analysis.imputed_gene_matrix_adata_object
 
 		# MMC from sc RNA-seq pipeline
 		File? cohort_mmc_extended_results_json = cross_team_cohort_analysis.mmc_extended_results_json

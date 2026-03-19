@@ -16,7 +16,7 @@ def cluster(
     sc.tl.leiden(
         adata,
         key_added=PEAKVI_CLUSTERS_KEY,
-        resolution=0.2 # TODO
+        resolution=0.2
     )
 
     sc.pl.umap(
