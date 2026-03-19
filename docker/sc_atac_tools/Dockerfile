@@ -10,7 +10,7 @@ ENV IMAGE_TAG "${IMAGE_TAG}"
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get -qq update \
-	&& apt-get -qq install \
+	&& apt-get -qq install -y \
 		build-essential \
 		wget \
 		time \
