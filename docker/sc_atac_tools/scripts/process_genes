@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+
+import argparse
+import snapatac2 as snap
+import scanpy as sc
+
+
+def normalize(
+    adata: snap.AnnData
+):
+    sc.pp.normalize_total(adata)
+    sc.pp.log1p(adata)
+
+    return adata
+
+
+def hvg(
+    adata: snap.AnnData, batch_key: str, n_top_genes: str, n_comps: str
+):
+    hvgs_full = sc.experimental.pp.highly_variable_genes(
+        adata,
+        n_top_genes=n_top_genes,
+        batch_key=batch_key,
+        flavor="pearson_residuals",
+        check_values=True,
+        layer="gene_counts",
+        subset=False,
+        inplace=False,
+    )
+
+    full_features = adata.var.copy()
+
+    hvgs_full = hvgs_full.iloc[: n_top_genes].index.to_list()
+    adata = adata[:, adata.var.index.isin(hvgs_full)]
+
+    sc.pp.pca(adata, n_comps=n_comps)
+
+    hvg_features = adata.var.copy()
+    return adata, full_features, hvg_features
+
+
+def main(args):
+    # Use all available CPUs for parallel computing
+    sc.settings.n_jobs = -1
+
+    adata = sc.read_h5ad(args.adata_input)
+
+    adata.layers["gene_counts"] = adata.X[:]
+
+    adata_norm_gene_matrix = normalize(adata)
+    adata_processed_gene_matrix, full_features, hvg_features = hvg(adata_norm_gene_matrix, args.batch_key, args.n_top_genes, args.n_comps)
+
+    adata_processed_gene_matrix.write_h5ad(
+        filename=args.adata_output,
+        compression="gzip"
+    )
+    print(f"Wrote {args.adata_output}")
+
+    full_features.to_csv(
+        args.output_all_genes, 
+        index=True
+    )
+    print(f"Wrote {args.output_all_genes}")
+    
+    hvg_features.to_csv(
+        args.output_hvg_genes,
+        index=True
+    )
+    print(f"Wrote {args.output_hvg_genes}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Process and normalize in gene matrix AnnData object and identify features (HVG)"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset's gene matrix"
+    )
+    parser.add_argument(
+        "-b",
+        "--batch-key",
+        type=str,
+        required=True,
+        help="Key in AnnData object for batch information"
+    )
+    parser.add_argument(
+        "-n",
+        "--n-top-genes",
+        type=int,
+        required=True,
+        help="Number of HVG genes to keep [3000]"
+    )
+    parser.add_argument(
+        "-c",
+        "--n-comps",
+        type=int,
+        required=True,
+        help="Number of principal components to compute [30]"
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+    parser.add_argument(
+        "-g",
+        "--output-all-genes",
+        type=str,
+        required=True,
+        help="Output file to save feature metadata (full genes) as csv file"
+    )
+    parser.add_argument(
+        "-f",
+        "--output-hvg-genes",
+        type=str,
+        required=True,
+        help="Output file to save HVG metadata (full genes) as csv file"
+    )
+
+    args = parser.parse_args()
+
+    main(args)

@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+
+import argparse
+import scanpy as sc
+import pandas as pd
+import numpy as np
+from scib_metrics.benchmark import Benchmarker, BatchCorrection
+
+
+def get_artifact_metrics(
+    adata_harmony: sc.AnnData, adata_peakvi: sc.AnnData, batch_key: str, scib_report_dir: str
+):
+    adata_harmony.obsm["X_peakVI"] = adata_peakvi[adata_harmony.obs_names].obsm["X_peakVI"]
+    adata = adata_harmony.copy()
+    adata.obsm["Unintegrated"] = adata.obsm["X_spectral"]
+    adata.obs["dummy_label"] = "all_cells"
+
+    batchcorr = BatchCorrection(
+                    bras=False,
+                    ilisi_knn=True,
+                    kbet_per_label=False,
+                    graph_connectivity=True,
+                    pcr_comparison=False
+                )
+    bm = Benchmarker(
+        adata,
+        batch_key=batch_key,
+        label_key="dummy_label",
+        embedding_obsm_keys=["Unintegrated", "X_spectral_harmony", "X_peakVI"],
+        pre_integrated_embedding_obsm_key="X_spectral",
+        bio_conservation_metrics=None,
+        batch_correction_metrics=batchcorr,
+        n_jobs=-1
+    )
+    bm.prepare()
+    bm.benchmark()
+
+    bm.plot_results_table(min_max_scale=False, save_dir=scib_report_dir)
+    bm_df = bm.get_results(min_max_scale=False)
+
+    return bm_df
+
+
+def main(args):
+    # Use all available CPUs for parallel computing
+    sc.settings.n_jobs = -1
+
+    adata_harmony = sc.read_h5ad(args.adata_harmony_input)
+    adata_peakvi = sc.read_h5ad(args.adata_peakvi_input)
+    
+    report_df = get_artifact_metrics(adata_harmony, adata_peakvi, args.batch_key, args.output_report_dir)
+    report_df.to_csv(f"{args.output_report_dir}/scib_report.csv", index=True)
+    print(f"Saved scib-metrics report in {args.output_report_dir}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Benchmark single-cell integration methods using scib-metrics"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-harmony-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset after Harmony integration"
+    )
+    parser.add_argument(
+        "-i",
+        "--adata-peakvi-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset after PeakVI integration"
+    )
+    parser.add_argument(
+        "-b",
+        "--batch-key",
+        type=str,
+        required=True,
+        help="Key in AnnData object for batch information"
+    )
+    parser.add_argument(
+        "-o",
+        "--output-report-dir",
+        type=str,
+        required=True,
+        help="Output folder to save scib-metrics report",
+    )
+
+    args = parser.parse_args()
+
+    main(args)

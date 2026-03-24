@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+
+import argparse
+import polars as pl
+import snapatac2 as snap
+import scanpy as sc
+
+
+def find_motif_enrichment(
+    adata: snap.AnnData, plot_prefix: str
+):
+    # Note: This does not consider the variations across cell.
+    # Use a regression-based differential test to identify cell type–specific peaks.
+    marker_peaks = snap.tl.marker_regions(adata, groupby="cell_type", pvalue=0.01)
+
+    snap.pl.regions(adata, groupby="cell_type", peaks=marker_peaks, interactive=False)
+
+    motifs = snap.tl.motif_enrichment(
+        motifs=snap.datasets.cis_bp(unique=True),
+        regions=marker_peaks,
+        genome_fasta=snap.genome.hg38,
+    )
+
+    heatmap_out = f"{plot_prefix}.motif_enrichment_heatmap.png"
+    snap.pl.motif_enrichment(
+        motifs,
+        max_fdr=0.0001,
+        height=1600,
+        interactive=False,
+        show=False,
+        out_file=heatmap_out
+    )
+    print(f"Wrote {heatmap_out}")
+
+    return motifs
+
+
+def main(args):
+    adata_peaks_matrix = snap.read(args.adata_input)
+    motifs_dict_pl = find_motif_enrichment(adata_peaks_matrix, args.output_prefix)
+
+    motifs_parquet = f"{args.output_prefix}.motifs.parquet"
+    pl.concat(
+        [df.with_columns(pl.lit(cell_type).alias("cell_type")) for cell_type, df in motifs_dict_pl.items()]
+    ).write_parquet(motifs_parquet)
+    print(f"Wrote {motifs_parquet}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Identify marker regions for each cell type"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset's peak matrix"
+    )
+    parser.add_argument(
+        "-p",
+        "--output-prefix",
+        type=str,
+        required=True,
+        help="Prefix used to name output files (i.e. motif enrichment heatmap)"
+    )
+
+    args = parser.parse_args()
+
+    main(args)

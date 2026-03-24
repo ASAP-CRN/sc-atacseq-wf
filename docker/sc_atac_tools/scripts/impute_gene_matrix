@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+
+import argparse
+import snapatac2 as snap
+import scanpy as sc
+
+
+def magic_imputation(
+    adata: snap.AnnData
+):
+    sc.external.pp.magic(adata, solver="approximate")
+
+    return adata
+
+
+def main(args):
+    adata = snap.read(args.adata_input, backed=None)
+    adata_magic_imputed = magic_imputation(adata)
+
+    adata_magic_imputed.write(
+        filename=args.adata_output
+    )
+    print(f"Wrote {args.adata_output}")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Smooth and impute the sparse cell by gene activity matrix using MAGIC"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset"
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the gene matrix AnnData object"
+    )
+
+    args = parser.parse_args()
+
+    main(args)

@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+import argparse
+import snapatac2 as snap
+
+
+def reduce_dims(
+    adata: snap.AnnData
+):
+    print(f"Performing dimension reduction...")
+    snap.tl.spectral(adata)
+    snap.tl.umap(adata)
+
+    return adata
+
+
+def main(args):
+    adata = snap.read(args.adata_input)
+
+    adata.layers["tile_counts"] = adata.X[:]
+
+    adata_dr = reduce_dims(adata)
+
+    adata_dr.write(
+        filename=args.adata_output
+    )
+    print(f"Wrote {args.adata_output}")
+
+    if adata_dr.isbacked:
+        adata_dr.close()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Perform dimension reduction to represent single-cell chromatin profiles"
+    )
+    parser.add_argument(
+        "-a",
+        "--adata-input",
+        type=str,
+        required=True,
+        help="AnnData object for a dataset"
+    )
+    parser.add_argument(
+        "-o",
+        "--adata-output",
+        type=str,
+        required=True,
+        help="Output file name for saving the AnnData object"
+    )
+
+    args = parser.parse_args()
+
+    main(args)
