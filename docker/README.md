@@ -7,8 +7,9 @@
 - _Pre-preprocessing_: executed by WDL [`cellranger-atac count`](../workflows/preprocess/preprocess.wdl)
     - Aligns FASTQ files and generates fragment files per sample
 
-- _Counts to AnnData_: [`counts_to_adata`](./sc_atac_tools/scripts/counts_to_adata)
-    - Imports Cell Ranger ATAC fragment files via `snap.pp.import_fragments`
+- _Demultiplexing and converting counts to AnnData_: [`demux_counts_to_adata`](./sc_atac_tools/scripts/demux_counts_to_adata)
+    - Imports Cell Ranger ATAC pool-level fragment files via `snap.pp.import_fragments`
+    - Demultiplexes donor with Vireo assignment and produces sample-level AnnData objects
     - Performs initial per-sample tiling and stores as backed SnapATAC2 AnnData
 
 - _Merge and QC_: [`merge_and_qc`](./sc_atac_tools/scripts/merge_and_qc)
