@@ -1,21 +1,28 @@
 version 1.0
 
 struct Sample {
+	String asap_subject_id
 	String sample_id
 	String? batch
+}
+
+struct Pool {
+	String asap_pool_id
 
 	Array[File]+ fastq_R1s
 	Array[File]+ fastq_R2s
 	Array[File]+ fastq_R3s
 	Array[File] fastq_I1s
 	Array[File] fastq_I2s
+
+	Array[Sample] samples
 }
 
 struct Project {
 	String asap_team_id
 	String asap_dataset_id
 	String asap_dataset_doi_url
-	Array[Sample] samples
+	Array[Pool] pools
 
 	Boolean multimodal_sc_data
 

@@ -117,6 +117,20 @@ if __name__ == "__main__":
         )
     )
     parser.add_argument(
+        "-t",
+        "--team-id",
+        type=str,
+        required=True,
+        help="ASAP CRN team ID; stored in obs['team']."
+    )
+    parser.add_argument(
+        "-d",
+        "--dataset-id",
+        type=str,
+        required=True,
+        help="ASAP dataset ID; stored in obs['dataset']."
+    )
+    parser.add_argument(
         "-p",
         "--pool-id",
         type=str,
@@ -145,20 +159,6 @@ if __name__ == "__main__":
             "Sample ID (e.g. ASA_076B). "
             "Stored in obs['sample'] and used to name the output file."
         )
-    )
-    parser.add_argument(
-        "-t",
-        "--team-id",
-        type=str,
-        required=True,
-        help="ASAP CRN team ID; stored in obs['team']."
-    )
-    parser.add_argument(
-        "-d",
-        "--dataset-id",
-        type=str,
-        required=True,
-        help="ASAP dataset ID; stored in obs['dataset']."
     )
     parser.add_argument(
         "-b",
