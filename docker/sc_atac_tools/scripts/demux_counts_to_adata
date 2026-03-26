@@ -14,8 +14,8 @@ def get_donor_barcodes(vireo: pd.DataFrame, pool_id: str, subject_id: str) -> li
 
     Doublets and unassigned cells are excluded.
     """
-    vireo_pool_suffix = pool_id.replace('-ATAC', '').lower()  # MO007b-ATAC -> mo007b
-    
+    vireo_pool_suffix = pool_id.replace("-ATAC", "").lower()  # MO007b-ATAC -> mo007b
+
     real_cells = vireo[~vireo["donor_id"].isin(["doublet", "unassigned"])]
     donor_cells = real_cells[
         (real_cells["donor_id"] == subject_id) &
@@ -75,6 +75,13 @@ def main(args):
         sorted_by_barcode=False,
     )
     print(f"{args.sample_id}: {adata.n_obs} cells imported")
+
+    if adata.n_obs == 0:
+        raise ValueError(
+            f"No cells imported for subject '{args.subject_id}' in pool '{args.pool_id}'. "
+            f"Check that the Vireo assignment file contains barcodes for this pool "
+            f"(expected suffix: mo{args.pool_id[2:].lower()})."
+        )
 
     adata = add_metadata(
         adata,
