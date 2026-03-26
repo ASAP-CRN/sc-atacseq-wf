@@ -60,7 +60,6 @@ workflow sc_atacseq_analysis {
 				dataset_id = project.asap_dataset_id,
 				dataset_doi_url = project.asap_dataset_doi_url,
 				pools = project.pools,
-				multimodal_sc_data = project.multimodal_sc_data,
 				cellranger_atac_reference_data = cellranger_atac_reference_data,
 				vireo_assignment_csv = vireo_assignment_csv,
 				workflow_name = workflow_name,

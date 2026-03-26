@@ -11,7 +11,6 @@ workflow preprocess {
 		String dataset_doi_url
 		Array[Pool] pools
 
-		Boolean multimodal_sc_data
 		File cellranger_atac_reference_data
 		File vireo_assignment_csv
 
@@ -74,7 +73,7 @@ workflow preprocess {
 					fastq_R3s = pool.fastq_R3s,
 					fastq_I1s = pool.fastq_I1s,
 					fastq_I2s = pool.fastq_I2s,
-					multimodal_sc_data = multimodal_sc_data,
+					multimodal_data = pool.multimodal_data,
 					cellranger_atac_reference_data = cellranger_atac_reference_data,
 					raw_data_path = cellranger_atac_raw_data_path,
 					workflow_info = workflow_info,
@@ -168,8 +167,7 @@ workflow preprocess {
 		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
 		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
 		dataset_doi_url: {help: "Generated Zenodo DOI URL referencing the dataset."}
-		pools: {help: "Array of Pool structs, each containing FASTQs, vireo assignment, and the donors demultiplexed from that pool."}
-		multimodal_sc_data: {help: "Whether or not the sc/sn RNAseq is from multimodal data."}
+		pools: {help: "Array of Pool structs, each containing FASTQs, vireo assignment, the donors demultiplexed from that pool, and specifies if it's multimodal data."}
 		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
 		vireo_assignment_csv: {help: "Vireo donor assignment CSV with columns: full_barcode, donor_id. Covers all donors in the pool."}
 		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
@@ -236,7 +234,7 @@ task cellranger_atac_count {
 		Array[File] fastq_I1s
 		Array[File] fastq_I2s
 
-		Boolean multimodal_sc_data
+		Boolean multimodal_data
 		File cellranger_atac_reference_data
 
 		String raw_data_path
@@ -246,7 +244,7 @@ task cellranger_atac_count {
 		String zones
 	}
 
-	String cellranger_arc_chemistry_flag = if multimodal_sc_data then "--chemistry=ARC-v1" else ""
+	String cellranger_arc_chemistry_flag = if multimodal_data then "--chemistry=ARC-v1" else ""
 
 	Int threads = 16
 	Int mem_gb = 48
@@ -363,7 +361,7 @@ task cellranger_atac_count {
 		fastq_R3s: {help: "Sample's read 3 FASTQ file."}
 		fastq_I1s: {help: "Optional FASTQ index 1."}
 		fastq_I2s: {help: "Optional FASTQ index 2."}
-		multimodal_sc_data: {help: "Whether or not the sc/sn RNAseq is from multimodal data."}
+		multimodal_data: {help: "Whether or not the sc/sn ATAC-seq is from multimodal data."}
 		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
 		raw_data_path: {help: "Raw data bucket path for cellranger-atac count outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/cellranger_atac/<cellranger_atac_task_version>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}

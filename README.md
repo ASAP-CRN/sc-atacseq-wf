@@ -33,7 +33,7 @@ The workflow is broken up into two main chunks:
 
 ## Preprocessing
 
-Run once per sample; only rerun when the preprocessing workflow version is updated. Preprocessing outputs are stored in the originating team's raw and staging data buckets.
+Run once per pool; only rerun when the preprocessing workflow version is updated. Preprocessing outputs are stored in the originating team's raw and staging data buckets.
 
 ## Cohort analysis
 
@@ -48,7 +48,8 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | String | cohort_id | Name of the cohort; used to name output files during cross-team cohort analysis. |
 | Array[[Project](#project)] | projects | The project ID, set of samples and their associated reads and metadata, output bucket locations, and whether or not to run project-level cohort analysis. |
 | File | cellranger_atac_reference_data | Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads#reference-downloads. |
-| File? | allen_brain_mmc_precomputed_stats_h5 | A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy).  |
+| File | vireo_assignment_csv | Vireo donor assignment CSV with columns: full_barcode, donor_id. Covers all donors in the pool. |
+| File? | allen_brain_mmc_precomputed_stats_h5 | A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy). |
 | Int? | n_top_genes | Number of HVG genes to keep. [3000] |
 | Int? | n_comps | Number of principal components to compute. [30] |
 | String? | batch_key | Key in AnnData object for batch information. ['batch_id'] |
@@ -71,23 +72,31 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | String | asap_team_id | ASAP-generated unique identifier for team; used for naming output files. |
 | String | asap_dataset_id | ASAP-generated unique identifier for dataset; used for metadata. |
 | String | asap_dataset_doi_url | ASAP-generated Zenodo DOI URL referencing the dataset. |
-| Array[[Sample](#sample)] | samples | The set of samples associated with this project. |
-| Boolean | multimodal_sc_data | Whether or not the sc/sn ATAC-seq is from multimodal data. |
+| Array[[Pool](#pool)] | pools | The set of pools (multiplexed data) associated with this project. |
 | Boolean | run_project_cohort_analysis | Whether or not to run cohort analysis within the project. |
 | String | raw_data_bucket | Raw data bucket; intermediate output files that are not final workflow outputs are stored here. |
 | String | staging_data_bucket | Staging data bucket; final project-level outputs are stored here. |
+
+### Pool
+
+| Type | Name | Description |
+| :- | :- | :- |
+| String | asap_pool_id | ASAP-generated unique identifier for pool; used for naming output files. |
+| File | fastq_R1 | Path to the pooled samples' read 1 FASTQ file. |
+| File | fastq_R2 | Path to the pooled samples' read 2 FASTQ file. |
+| File | fastq_R3 | Path to the pooled samples' 3 FASTQ file. |
+| File? | fastq_I1 | Optional fastq index 1. |
+| File? | fastq_I2 | Optional fastq index 2. |
+| Array[[Sample](#sample)] | samples | The set of samples associated with this project. |
+| Boolean | multimodal_data | Whether or not the sc/sn ATAC-seq is from multimodal data. |
 
 ### Sample
 
 | Type | Name | Description |
 | :- | :- | :- |
+| String | asap_subject_id | ASAP-generated unique identifier for subject/donor; used for metadata. |
 | String | sample_id | ASAP-generated unique identifier combined with the replicate for the sample within the project. |
 | String? | batch | The sample's batch. |
-| File | fastq_R1 | Path to the sample's read 1 FASTQ file. |
-| File | fastq_R2 | Path to the sample's read 2 FASTQ file. |
-| File | fastq_R3 | Path to the sample's read 3 FASTQ file. |
-| File? | fastq_I1 | Optional fastq index 1. |
-| File? | fastq_I2 | Optional fastq index 2. |
 
 ## Generating the inputs JSON
 
@@ -96,6 +105,7 @@ The inputs JSON may be generated manually, however when running a large number o
 - `project-tsv`: One or more project TSVs with one row per sample and columns team_id, ASAP_dataset_id, ASAP_sample_id, batch, fastq_R1s, fastq_R2s, fastq_R3s, fastq_I1s, fastq_I2s, embargoed, source, modality_flavour, dataset_DOI_url, and SPATIAL columns if applicable: geomx_config, geomx_dsp_config, geomx_annotation_file, visium_cytassist, visium_probe_set, visium_slide_ref, and visium_capture_area. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
     - `team_id`: A unique identifier for the team from which the sample(s) arose.
     - `ASAP_dataset_id`: A generated unique identifier for the dataset from which the sample(s) arose.
+    - `ASAP_subject_id`: A generated unique identifier for the subject within the project.
     - `ASAP_sample_id`: A generated unique identifier for the sample within the project.
     - `batch`: The sample's batch.
     - `fastq_R1s`: The gs uri to read 1 of sample FASTQ.
@@ -204,42 +214,42 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${cohort_id}.final_metadata.csv
             │   └── MANIFEST.tsv
             ├── preprocess
-            │   ├── ${sampleA_id}.cellranger_atac_outputs.tar.gz
-            │   ├── ${sampleA_id}.singlecell.csv
-            │   ├── ${sampleA_id}.peaks.bed
-            │   ├── ${sampleA_id}.cut_sites.bigwig
-            │   ├── ${sampleA_id}.raw_peak_bc_matrix.h5
-            │   ├── ${sampleA_id}.filtered_peak_bc_matrix.h5
-            │   ├── ${sampleA_id}.filtered_tf_bc_matrix.h5
-            │   ├── ${sampleA_id}.fragments.tsv.gz
-            │   ├── ${sampleA_id}.summary.csv
-            │   ├── ${sampleA_id}.peak_annotation.tsv
-            │   ├── ${sampleA_id}.peak_motif_mapping.bed
+            │   ├── ${poolA_id}.cellranger_atac_outputs.tar.gz
+            │   ├── ${poolA_id}.singlecell.csv
+            │   ├── ${poolA_id}.peaks.bed
+            │   ├── ${poolA_id}.cut_sites.bigwig
+            │   ├── ${poolA_id}.raw_peak_bc_matrix.h5
+            │   ├── ${poolA_id}.filtered_peak_bc_matrix.h5
+            │   ├── ${poolA_id}.filtered_tf_bc_matrix.h5
+            │   ├── ${poolA_id}.fragments.tsv.gz
+            │   ├── ${poolA_id}.summary.csv
+            │   ├── ${poolA_id}.peak_annotation.tsv
+            │   ├── ${poolA_id}.peak_motif_mapping.bed
             │   ├── ${sampleA_id}.cleaned_unfiltered.h5ad
-            │   ├── ${sampleB_id}.cellranger_atac_outputs.tar.gz
-            │   ├── ${sampleB_id}.singlecell.csv
-            │   ├── ${sampleB_id}.peaks.bed
-            │   ├── ${sampleB_id}.cut_sites.bigwig
-            │   ├── ${sampleB_id}.raw_peak_bc_matrix.h5
-            │   ├── ${sampleB_id}.filtered_peak_bc_matrix.h5
-            │   ├── ${sampleB_id}.filtered_tf_bc_matrix.h5
-            │   ├── ${sampleB_id}.fragments.tsv.gz
-            │   ├── ${sampleB_id}.summary.csv
-            │   ├── ${sampleB_id}.peak_annotation.tsv
-            │   ├── ${sampleB_id}.peak_motif_mapping.bed
+            │   ├── ${poolB_id}.cellranger_atac_outputs.tar.gz
+            │   ├── ${poolB_id}.singlecell.csv
+            │   ├── ${poolB_id}.peaks.bed
+            │   ├── ${poolB_id}.cut_sites.bigwig
+            │   ├── ${poolB_id}.raw_peak_bc_matrix.h5
+            │   ├── ${poolB_id}.filtered_peak_bc_matrix.h5
+            │   ├── ${poolB_id}.filtered_tf_bc_matrix.h5
+            │   ├── ${poolB_id}.fragments.tsv.gz
+            │   ├── ${poolB_id}.summary.csv
+            │   ├── ${poolB_id}.peak_annotation.tsv
+            │   ├── ${poolB_id}.peak_motif_mapping.bed
             │   ├── ${sampleB_id}.cleaned_unfiltered.h5ad
             │   ├── ...
-            │   ├── ${sampleN_id}.cellranger_atac_outputs.tar.gz
-            │   ├── ${sampleN_id}.singlecell.csv
-            │   ├── ${sampleN_id}.peaks.bed
-            │   ├── ${sampleN_id}.cut_sites.bigwig
-            │   ├── ${sampleN_id}.raw_peak_bc_matrix.h5
-            │   ├── ${sampleN_id}.filtered_peak_bc_matrix.h5
-            │   ├── ${sampleN_id}.filtered_tf_bc_matrix.h5
-            │   ├── ${sampleN_id}.fragments.tsv.gz
-            │   ├── ${sampleN_id}.summary.csv
-            │   ├── ${sampleN_id}.peak_annotation.tsv
-            │   ├── ${sampleN_id}.peak_motif_mapping.bed
+            │   ├── ${poolN_id}.cellranger_atac_outputs.tar.gz
+            │   ├── ${poolN_id}.singlecell.csv
+            │   ├── ${poolN_id}.peaks.bed
+            │   ├── ${poolN_id}.cut_sites.bigwig
+            │   ├── ${poolN_id}.raw_peak_bc_matrix.h5
+            │   ├── ${poolN_id}.filtered_peak_bc_matrix.h5
+            │   ├── ${poolN_id}.filtered_tf_bc_matrix.h5
+            │   ├── ${poolN_id}.fragments.tsv.gz
+            │   ├── ${poolN_id}.summary.csv
+            │   ├── ${poolN_id}.peak_annotation.tsv
+            │   ├── ${poolN_id}.peak_motif_mapping.bed
             │   ├── ${sampleN_id}.cleaned_unfiltered.h5ad
             │   └── MANIFEST.tsv
             ├── workflow_version # plain text file

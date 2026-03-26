@@ -16,6 +16,8 @@ struct Pool {
 	Array[File] fastq_I2s
 
 	Array[Sample] samples
+
+	Boolean multimodal_data
 }
 
 struct Project {
@@ -23,8 +25,6 @@ struct Project {
 	String asap_dataset_id
 	String asap_dataset_doi_url
 	Array[Pool] pools
-
-	Boolean multimodal_sc_data
 
 	Boolean run_project_cohort_analysis
 
