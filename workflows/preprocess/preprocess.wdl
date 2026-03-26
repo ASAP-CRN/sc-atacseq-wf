@@ -399,9 +399,9 @@ task demux_counts_to_adata {
 
 		demux_counts_to_adata \
 			--cellranger-atac-fragments ~{cellranger_atac_fragments} \
-			--vireo-assignment-csv ~{vireo_assignment_csv} \
+			--vireo-assignment ~{vireo_assignment_csv} \
 			--team ~{team_id} \
-			--dataset ~{dataset_id} \
+			--dataset-id ~{dataset_id} \
 			--pool-id ~{pool_id} \
 			--subject-id ~{subject_id} \
 			--sample-id ~{sample_id} \

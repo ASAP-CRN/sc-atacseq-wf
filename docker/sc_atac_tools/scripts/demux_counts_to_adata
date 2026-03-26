@@ -73,7 +73,7 @@ def main(args):
 
     adata = add_metadata(
         adata,
-        team_id=args.team_id,
+        team_id=args.team,
         dataset_id=args.dataset_id,
         subject_id=args.subject_id,
         sample_id=args.sample_id,
@@ -91,9 +91,9 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=(
-            "Demultiplex a pool-level Cell Ranger ATAC fragment file by donor "
+            "Demultiplex a pool-level Cell Ranger ATAC fragment file by sample "
             "using Vireo assignments, producing one sample-level AnnData object "
-            "per donor per pool."
+            "per sample per pool."
         )
     )
     parser.add_argument(
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         required=True,
         help=(
             "Pool-level Cell Ranger ATAC fragments.tsv.gz. "
-            "Only barcodes assigned to --subject-id by Vireo will be loaded."
+            "Only barcodes assigned to --sample-id by Vireo will be loaded."
         )
     )
     parser.add_argument(
@@ -118,7 +118,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-t",
-        "--team-id",
+        "--team",
         type=str,
         required=True,
         help="ASAP CRN team ID; stored in obs['team']."
@@ -136,8 +136,7 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help=(
-            "Pool ID (multi_sample_id from MULTISAMPLE.csv, e.g. AT001a). "
-            "Stored in obs['pool'] and used to construct obs['batch_id']."
+            "ASAP pool ID; stored in obs['pool'] and used to construct obs['batch_id']."
         )
     )
     parser.add_argument(
@@ -146,8 +145,7 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help=(
-            "Subject/donor ID (e.g. ASA_076). Used to filter Vireo barcodes "
-            "to this donor's cells."
+            "ASAP subject ID; stored in obs['subject_id']."
         )
     )
     parser.add_argument(
@@ -156,8 +154,7 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help=(
-            "Sample ID (e.g. ASA_076B). "
-            "Stored in obs['sample'] and used to name the output file."
+            "ASAP sample ID; stored in obs['sample']."
         )
     )
     parser.add_argument(
@@ -165,7 +162,7 @@ if __name__ == "__main__":
         "--batch",
         type=str,
         required=True,
-        help="Batch number from MULTISAMPLE.csv; stored in obs['batch']."
+        help="Batch number; stored in obs['batch']."
     )
     parser.add_argument(
         "-o",
