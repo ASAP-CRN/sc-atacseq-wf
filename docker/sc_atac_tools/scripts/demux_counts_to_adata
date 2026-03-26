@@ -5,7 +5,7 @@ import pandas as pd
 import snapatac2 as snap
 
 
-def get_donor_barcodes(vireo: pd.DataFrame, subject_id: str) -> list[str]:
+def get_donor_barcodes(vireo: pd.DataFrame, pool_id: str, subject_id: str) -> list[str]:
     """Extract cell barcodes assigned to a specific donor from the Vireo assignment file.
 
     Strips the pool suffix from full_barcode (e.g. 'AAACAGCCACCTAAGC-mo002a')
@@ -14,8 +14,13 @@ def get_donor_barcodes(vireo: pd.DataFrame, subject_id: str) -> list[str]:
 
     Doublets and unassigned cells are excluded.
     """
+    vireo_pool_suffix = pool_id.replace('-ATAC', '').lower()  # MO007b-ATAC -> mo007b
+    
     real_cells = vireo[~vireo["donor_id"].isin(["doublet", "unassigned"])]
-    donor_cells = real_cells[real_cells["donor_id"] == subject_id]
+    donor_cells = real_cells[
+        (real_cells["donor_id"] == subject_id) &
+        (real_cells["full_barcode"].str.endswith(f"-{vireo_pool_suffix}"))
+    ]
 
     if donor_cells.empty:
         raise ValueError(
@@ -59,7 +64,7 @@ def main(args):
     vireo = pd.read_csv(args.vireo_assignment)
 
     # Get this donor's barcodes from vireo, stripped to match fragment file format
-    barcodes = get_donor_barcodes(vireo, args.subject_id)
+    barcodes = get_donor_barcodes(vireo, args.pool_id, args.subject_id)
 
     # Import fragments for this donor only, computing QC metrics:
     # n_fragment, frac_dup, frac_mito per cell
