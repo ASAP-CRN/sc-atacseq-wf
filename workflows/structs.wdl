@@ -7,7 +7,7 @@ struct Sample {
 }
 
 struct Pool {
-	String asap_pool_id
+	String pool_id
 
 	Array[File]+ fastq_R1s
 	Array[File]+ fastq_R2s

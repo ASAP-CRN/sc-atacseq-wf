@@ -98,7 +98,57 @@
         "merge_and_qc": {
           "key": "merge_and_qc",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "cohort_id": "${cohort_id}",
+                "preprocessed_adata_objects": [
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000105_s001_1.cleaned_unfiltered.h5ad",
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000108_s001_1.cleaned_unfiltered.h5ad",
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000026_s001_Rep1.cleaned_unfiltered.h5ad",
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000027_s001_Rep1.cleaned_unfiltered.h5ad",
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000001_s002_rep1.cleaned_unfiltered.h5ad",
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000001_s001_rep1.cleaned_unfiltered.h5ad",
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000003_s004_rep1.cleaned_unfiltered.h5ad",
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000128_s001_rep1.cleaned_unfiltered.h5ad"
+                ],
+                "raw_data_path": "${cohort_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "merged_adata_object": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.merged_cleaned_unfiltered.h5ad",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                },
+                "qc_initial_metadata_csv": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.initial_metadata.csv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_comma_separated",
+                    "count_columns"
+                  ]
+                },
+                "qc_plots_png": {
+                  "value": [
+                    "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.frag_size_distr.png",
+                    "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.tsse.png"
+                  ],
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "png_validator",
+                    "image_validator"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "reduce_dimensions": {
           "key": "reduce_dimensions",
@@ -409,9 +459,80 @@
       }
     }
   },
-  "engines": {},
+  "engines": {
+    "asap-cromwell": {
+      "key": "asap-cromwell",
+      "enabled": true,
+      "name": ""
+    }
+  },
   "test_params": {
-    "global_params": {},
-    "engine_params": {}
+    "global_params": {
+      "sample_id": "ASAP_PMDBS_001117_s001",
+      "cohort_id": "asap-cohort",
+      "asap_dataset_id": "DS_PMDBS_0035",
+      "asap_pool_id": "AT001c",
+      "asap_subject_id": "ASAP_PMDBS_001117",
+      "project_sample_ids": [
+        [
+          "team-voet",
+          "ASAP_PMDBS_001117_s001",
+          "https://doi.org/10.5281/zenodo.18988729"
+        ],
+        [
+          "team-voet",
+          "ASAP_PMDBS_001118_s001",
+          "https://doi.org/10.5281/zenodo.18988729"
+        ]
+      ],
+      "workflow_name": "pmdbs_sc_atacseq",
+      "workflow_version": "v1.0.0",
+      "workflow_release": "https://github.com/ASAP-CRN/sc-atacseq-wf/releases/tag/sc_atacseq_analysis-~{workflow_version}",
+      "workflow_info": [
+        [
+          "${run_timestamp}",
+          "${workflow_name}",
+          "${workflow_version}",
+          "${workflow_release}"
+        ]
+      ],
+      "cellranger_raw_data_path": "gs://asap-wdl-ci/workflow_execution/${workflow_name}/preprocess/cellranger_atac/1.0.0",
+      "adata_raw_data_path": "gs://asap-wdl-ci/workflow_execution/${workflow_name}/preprocess/demux_counts_to_adata/1.0.0",
+      "preprocess_workflow_name": "preprocess",
+      "cohort_raw_data_path": "gs://asap-wdl-ci/workflow_execution/${workflow_name}/${cohort_workflow_name}/${cohort_workflow_version}/${run_timestamp}",
+      "run_timestamp": "2026-04-06T00-00-00Z",
+      "cohort_workflow_name": "cohort_analysis",
+      "cohort_workflow_version": "1.0.0",
+      "n_top_genes": 3000,
+      "n_comps": 30,
+      "batch_key": "batch_id",
+      "peakvi_latent_key": "X_peakVI",
+      "peakvi_max_epochs": 300,
+      "groups": [
+        "sample",
+        "batch",
+        "team",
+        "dataset_id",
+        "batch_id",
+        "leiden"
+      ],
+      "features": [
+        "n_fragment",
+        "tsse",
+        "frac_dup",
+        "frac_mito",
+        "doublet_score",
+        "doublet_probability"
+      ],
+      "billing_project": "dnastack-asap-parkinsons",
+      "container_registry": "us-central1-docker.pkg.dev/dnastack-asap-parkinsons/workflow-images",
+      "zones": "us-central1-c us-central1-f"
+    },
+    "engine_params": {
+      "asap-cromwell": {
+        "input_file_path": "gs://asap-workflow-dev/workflow-resources",
+        "input_resources_file_path": "gs://asap-wdl-ci/${workflow_name}"
+      }
+    }
   }
 }
