@@ -372,6 +372,45 @@ In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-
 | :- | :- | :- |
 | Human GRCh38 | 2024-A | https://www.10xgenomics.com/support/software/cell-ranger-arc/downloads#reference-downloads |
 
+### Demultiplexing
+
+To use Team Voet researcher's `scatac_fragment_tools`, there are several inputs required:
+- Path to a text file mapping sample names to fragment files.
+- Path to a text file mapping samples to cell types and cell types to cell barcodes.
+- Filename with chromosome sizes (\*.chrom.sizes, \*.fa.fai).
+
+Links:
+- https://github.com/aertslab/scatac_fragment_tools/
+- https://aertslab.github.io/scatac_fragment_tools/split.html
+
+**Generating sample to fragment TSV**
+1. The Cell Ranger fragment files end with "-1", this needs to be changed to pool_id:
+
+```bash
+fix_fragment_file () {
+    local input_fragment_file="${1}";
+    local output_fragment_file="${2}";
+    local pool_id="${3}";
+    zcat ${input_fragment_file} | sed -e 's/-1$/-'"${pool_id}"'/' | bgzip -@4 -o "${output_fragment_file}" -
+    tabix -p bed "${sample_to_fragment.tsv}"
+}
+
+fix_fragment_file ${tenx_fragments_file} ${output_fragments_file_with_pool_id_added} ${pool_id}
+
+$ cat sample_to_fragment.tsv
+sample  path_to_fragment_file
+M0016c      M0016c.fragments.tsv.gz
+...
+```
+
+**Generating mapping of samples, cell types, and cell barcodes TSV**
+1. Researchers should provide a Vireo assignment file that contains demultiplexed pooled sc ATAC-seq data. Vireo assigns individual cells to specific donors without requiring pre-existing genotype references. It efficiently identifies singlets and doublets by modeling genetic variation.
+2. This can be further filtered to remove samples that are not available or are in other datasets. Example: `awk -F ',' 'BEGIN { print "sample\tcell_type\tcell_barcode" } { if ($2 ~ /^ASA/) { print $3 "\t" $2 "\t" $4 } }' vireo_assignment_10x.csv > vireo_assignment_10x_final.csv`
+
+**Generating chromosome sizes file**
+1. The Cell Ranger ARC reference is used in this pipeline, so untar `refdata-cellranger-arc-GRCh38-2024-A.tar.gz`
+2. Create the chromosome sizes file: `cut -f1,2 refdata-cellranger-arc-GRCh38-2024-A/fasta/genome.fa.fai > refdata-cellranger-arc-GRCh38-2024-A.chrom.sizes`
+
 ### Allen Brain Institute's MapMyCells references
 
 [Overview of MapMyCells](https://brain-map.org/bkp/analyze/mapmycells) with available taxonomies.

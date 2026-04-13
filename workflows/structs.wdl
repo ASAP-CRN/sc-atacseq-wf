@@ -1,6 +1,7 @@
 version 1.0
 
 struct Sample {
+	Array[String] source_subject_id
 	Array[String] asap_subject_id
 	Array[String] sample_id
 	Array[String]? batch

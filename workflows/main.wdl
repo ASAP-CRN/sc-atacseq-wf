@@ -14,6 +14,7 @@ workflow sc_atacseq_analysis {
 
 		# Preprocess
 		File cellranger_atac_reference_data
+		File cellranger_atac_reference_chrom_sizes
 		File vireo_assignment_csv
 
 		# Allen Institute's Map My Cells
@@ -61,6 +62,7 @@ workflow sc_atacseq_analysis {
 				dataset_doi_url = project.asap_dataset_doi_url,
 				pools = project.pools,
 				cellranger_atac_reference_data = cellranger_atac_reference_data,
+				cellranger_atac_reference_chrom_sizes = cellranger_atac_reference_chrom_sizes,
 				vireo_assignment_csv = vireo_assignment_csv,
 				workflow_name = workflow_name,
 				workflow_version = workflow_version,

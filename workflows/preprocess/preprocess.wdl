@@ -12,6 +12,7 @@ workflow preprocess {
 		Array[Pool] pools
 
 		File cellranger_atac_reference_data
+		File cellranger_atac_reference_chrom_sizes
 		File vireo_assignment_csv
 
 		String workflow_name
