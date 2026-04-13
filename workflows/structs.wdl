@@ -1,9 +1,9 @@
 version 1.0
 
 struct Sample {
-	String asap_subject_id
-	String sample_id
-	String? batch
+	Array[String] asap_subject_id
+	Array[String] sample_id
+	Array[String]? batch
 }
 
 struct Pool {
