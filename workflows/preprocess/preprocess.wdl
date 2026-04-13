@@ -275,6 +275,9 @@ task cellranger_atac_count {
 			~{write_lines(fastq_R3s)} \
 			~{write_lines(fastq_I1s)} \
 			~{write_lines(fastq_I2s)})
+		
+		# Get comma-sep sample names from fastqs for multiplexed runs
+		samples=$(ls fastqs | xargs -n1 basename | sed 's/_S[0-9]*_L[0-9]*_.*//' | sort -u | paste -sd,)
 
 		cellranger-atac --version
 
@@ -283,6 +286,7 @@ task cellranger_atac_count {
 			--id=~{pool_id} \
 			--reference="$(pwd)/cellranger_atac_refdata" \
 			--fastqs="$(pwd)/fastqs" \
+			--sample="${samples}" \
 			--localcores ~{threads} \
 			--localmem ~{mem_gb - 4} \
 			~{cellranger_arc_chemistry_flag}
