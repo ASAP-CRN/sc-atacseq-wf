@@ -33,8 +33,6 @@ def main(args):
     else:
         raise SystemExit(f"[FAILED]\nCould not infer all sample, lane, read, and extension for {fastq_basename}")
 
-    return fastq_basename
-
 
 if __name__ == "__main__":
     parser = ArgumentParser(
