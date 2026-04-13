@@ -372,6 +372,79 @@ task cellranger_atac_count {
 	}
 }
 
+task split_demux_fragments {
+	input {
+		String team_id
+		String dataset_id
+		String pool_id
+		String subject_id
+		String sample_id
+		String batch
+
+		File cellranger_atac_fragments
+		File cellranger_atac_reference_chrom_sizes
+		File sample_fragments_tsv
+		File cell_barcodes_tsv
+
+		String raw_data_path
+		Array[Array[String]] workflow_info
+		String billing_project
+		String container_registry
+		String zones
+	}
+
+	Int disk_size = ceil(size([cellranger_atac_fragments, cellranger_atac_reference_chrom_sizes, sample_fragments_tsv, cell_barcodes_tsv], "GB") * 2 + 20)
+
+	command <<<
+		set -euo pipefail
+
+		scatac_fragment_tools split \
+			--sample_fragments ~{sample_fragments_tsv} \
+			--cell_type_barcodes ~{cell_barcodes_tsv} \
+			--chrom ~{cellranger_atac_reference_chrom_sizes} \
+			--output ./
+
+		upload_outputs \
+			-b ~{billing_project} \
+			-d ~{raw_data_path} \
+			-i ~{write_tsv(workflow_info)} \
+			-o "~{sample_id}.cleaned_unfiltered.h5ad"
+	>>>
+
+	output {
+		Array[String] sample_split_fragments_tsv_gz = "~{raw_data_path}/~{sample_id}.cleaned_unfiltered.h5ad"
+	}
+
+	runtime {
+		docker: "~{container_registry}/scatac_fragment_tools:0.1.5"
+		cpu: 4
+		memory: "16 GB"
+		disks: "local-disk ~{disk_size} HDD"
+		preemptible: 3
+		zones: zones
+	}
+
+	meta {
+		description: "Split Cell Ranger fragment files to donor/sample-level fragment files with inputs containing demultiplexed samples generated with Vireo."
+	}
+
+	parameter_meta {
+		pool_id: {help: "Generated ASAP pool ID; stored in the AnnData objects."}
+		subject_id: {help: "Generated ASAP subject ID; stored in the AnnData objects."}
+		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
+		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
+		sample_id: {help: "Generated ASAP sample ID; stored in the AnnData objects and used to name output files."}
+		batch: {help: "The sample's batch; stored in the AnnData objects."}
+		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
+		vireo_assignment_csv: {help: "Vireo donor assignment CSV with columns: full_barcode, donor_id. Covers all donors in the pool."}
+		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}
+		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
+		billing_project: {help: "Billing project to charge GCP costs."}
+		container_registry: {help: "Container registry where workflow Docker images are hosted."}
+		zones: {help: "Space-delimited set of GCP zones to spin up compute in. ['us-central1-c us-central1-f']"}
+	}
+}
+
 task counts_to_adata {
 	input {
 		String team_id
@@ -429,7 +502,7 @@ task counts_to_adata {
 	}
 
 	meta {
-		description: "Converts Cell Ranger ATAC counts into AnnData objects using SnapATAC2."
+		description: "Converts demultiplexed sample-level Cell Ranger ATAC counts into AnnData objects using SnapATAC2."
 	}
 
 	parameter_meta {
