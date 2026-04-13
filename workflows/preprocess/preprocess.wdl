@@ -116,7 +116,7 @@ workflow preprocess {
 			String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.sample_id}.cleaned_unfiltered.h5ad"
 
 			if (initial_adata_object_complete == "false") {
-				call demux_counts_to_adata {
+				call counts_to_adata {
 					input:
 						team_id = team_id,
 						dataset_id = dataset_id,
@@ -134,7 +134,7 @@ workflow preprocess {
 				}
 			}
 
-			File preprocessed_adata_object_output = select_first([demux_counts_to_adata.initial_adata_object, preprocessed_adata_object]) #!FileCoercion
+			File preprocessed_adata_object_output = select_first([counts_to_adata.initial_adata_object, preprocessed_adata_object]) #!FileCoercion
 		}
 	}
 
@@ -371,7 +371,7 @@ task cellranger_atac_count {
 	}
 }
 
-task demux_counts_to_adata {
+task counts_to_adata {
 	input {
 		String team_id
 		String dataset_id
@@ -395,7 +395,7 @@ task demux_counts_to_adata {
 	command <<<
 		set -euo pipefail
 
-		demux_counts_to_adata \
+		counts_to_adata \
 			--cellranger-atac-fragments ~{cellranger_atac_fragments} \
 			--vireo-assignment ~{vireo_assignment_csv} \
 			--team ~{team_id} \
