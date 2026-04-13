@@ -13,7 +13,8 @@ workflow preprocess {
 
 		File cellranger_atac_reference_data
 		File cellranger_atac_reference_chrom_sizes
-		File vireo_assignment_csv
+		File sample_fragments_tsv
+		File cell_barcodes_tsv
 
 		String workflow_name
 		String workflow_version
@@ -122,6 +123,7 @@ workflow preprocess {
 						team_id = team_id,
 						dataset_id = dataset_id,
 						pool_id = pool.pool_id,
+						subject_id = sample.source_subject_id,
 						subject_id = sample.asap_subject_id,
 						sample_id = sample.sample_id,
 						batch = select_first([sample.batch]),
@@ -170,7 +172,9 @@ workflow preprocess {
 		dataset_doi_url: {help: "Generated Zenodo DOI URL referencing the dataset."}
 		pools: {help: "Array of Pool structs, each containing FASTQs, vireo assignment, the donors demultiplexed from that pool, and specifies if it's multimodal data."}
 		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
-		vireo_assignment_csv: {help: "Vireo donor assignment CSV with columns: full_barcode, donor_id. Covers all donors in the pool."}
+		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
+		sample_fragments_tsv: {help: "TSV mapping sample names to their corresponding fragment files, used by scatac_fragment_tools to identify which pool-level fragments to split."}
+		cell_barcodes_tsv: {help: "TSV mapping cell barcodes to sample identities, used by scatac_fragment_tools to assign fragments to individual samples during splitting."}
 		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
 		workflow_version: {help: "Workflow version; stored in the file-level manifest and final manifest with all saved files."}
 		workflow_release: {help: "GitHub release; stored in the file-level manifest and final manifest with all saved files."}
@@ -277,6 +281,7 @@ task cellranger_atac_count {
 			~{write_lines(fastq_I2s)})
 		
 		# Get comma-sep sample names from fastqs for multiplexed runs
+		# shellcheck disable=SC2011
 		samples=$(ls fastqs | xargs -n1 basename | sed 's/_S[0-9]*_L[0-9]*_.*//' | sort -u | paste -sd,)
 
 		cellranger-atac --version
@@ -374,13 +379,6 @@ task cellranger_atac_count {
 
 task split_demux_fragments {
 	input {
-		String team_id
-		String dataset_id
-		String pool_id
-		String subject_id
-		String sample_id
-		String batch
-
 		File cellranger_atac_fragments
 		File cellranger_atac_reference_chrom_sizes
 		File sample_fragments_tsv
@@ -398,21 +396,30 @@ task split_demux_fragments {
 	command <<<
 		set -euo pipefail
 
+		mkdir fragments_output
+
 		scatac_fragment_tools split \
 			--sample_fragments ~{sample_fragments_tsv} \
 			--cell_type_barcodes ~{cell_barcodes_tsv} \
 			--chrom ~{cellranger_atac_reference_chrom_sizes} \
-			--output ./
+			--output "$(pwd)/fragments_output"
+
+		upload_flags=""
+		for f in fragments_output/*; do
+			upload_flags="${upload_flags} -o ${f}"
+		done
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{sample_id}.cleaned_unfiltered.h5ad"
+			${upload_flags}
+
+		ls fragments_output | sed "s|^|~{raw_data_path}/|" > sample_fragment_filenames.txt
 	>>>
 
 	output {
-		Array[String] sample_split_fragments_tsv_gz = "~{raw_data_path}/~{sample_id}.cleaned_unfiltered.h5ad"
+		Array[String] sample_split_fragments_tsv_gz = read_lines("sample_fragment_filenames.txt")
 	}
 
 	runtime {
@@ -429,14 +436,10 @@ task split_demux_fragments {
 	}
 
 	parameter_meta {
-		pool_id: {help: "Generated ASAP pool ID; stored in the AnnData objects."}
-		subject_id: {help: "Generated ASAP subject ID; stored in the AnnData objects."}
-		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
-		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
-		sample_id: {help: "Generated ASAP sample ID; stored in the AnnData objects and used to name output files."}
-		batch: {help: "The sample's batch; stored in the AnnData objects."}
 		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
-		vireo_assignment_csv: {help: "Vireo donor assignment CSV with columns: full_barcode, donor_id. Covers all donors in the pool."}
+		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
+		sample_fragments_tsv: {help: "TSV mapping sample names to their corresponding fragment files, used by scatac_fragment_tools to identify which pool-level fragments to split."}
+		cell_barcodes_tsv: {help: "TSV mapping cell barcodes to sample identities, used by scatac_fragment_tools to assign fragments to individual samples during splitting."}
 		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}
@@ -450,12 +453,12 @@ task counts_to_adata {
 		String team_id
 		String dataset_id
 		String pool_id
+		String source_subject_id
 		String subject_id
 		String sample_id
 		String batch
 
-		File cellranger_atac_fragments
-		File vireo_assignment_csv
+		File sample_split_fragments_tsv_gz
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -464,17 +467,17 @@ task counts_to_adata {
 		String zones
 	}
 
-	Int disk_size = ceil(size(cellranger_atac_fragments, "GB") * 2 + 20)
+	Int disk_size = ceil(size(sample_split_fragments_tsv_gz, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
 
 		counts_to_adata \
-			--cellranger-atac-fragments ~{cellranger_atac_fragments} \
-			--vireo-assignment ~{vireo_assignment_csv} \
+			--cellranger-atac-fragments ~{sample_split_fragments_tsv_gz} \
 			--team ~{team_id} \
 			--dataset-id ~{dataset_id} \
 			--pool-id ~{pool_id} \
+			--source-subject-id ~{source_subject_id} \
 			--subject-id ~{subject_id} \
 			--sample-id ~{sample_id} \
 			--batch ~{batch} \
