@@ -265,7 +265,8 @@ task cellranger_atac_count {
 		while read -r fastq || [[ -n "${fastq}" ]]; do
 			if [[ -n "${fastq}" ]]; then
 				check_fastq_names --fastq "${fastq}"
-				ln -s "${fastq}" "fastqs/${fastq}"
+				fastq_basename=$(basename "${fastq}")
+				ln -s "${fastq}" "fastqs/${fastq_basename}"
 			fi
 		done < <(cat \
 			~{write_lines(fastq_R1s)} \
