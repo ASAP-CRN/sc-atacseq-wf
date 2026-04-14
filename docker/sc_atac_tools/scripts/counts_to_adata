@@ -8,14 +8,14 @@ def add_metadata(
     adata: snap.AnnData,
     team_id: str,
     dataset_id: str,
-    subject_id: str,
     source_subject_id: str,
+    subject_id: str,
     sample_id: str,
     pool_id: str,
     batch: str
 ):
     print("Adding metadata to demultiplexed sample-level AnnData object")
-    adata.obs["subject"] = source_subject_id
+    adata.obs["source_subject"] = source_subject_id
     adata.obs["subject"] = subject_id
     adata.obs["sample"] = sample_id
     adata.obs["pool"] = pool_id
@@ -30,7 +30,7 @@ def add_metadata(
 def main(args):
     # This computes basic QC metrics like the number of unique fragments per cell, fraction of duplicated reads and fraction of mitochondrial read 
     adata = snap.pp.import_fragments(
-        fragment_file=args.cellranger_atac_fragments,
+        fragment_file=args.cellranger_atac_sample_split_fragments,
         chrom_sizes=snap.genome.hg38,
         sorted_by_barcode=False
     )
@@ -38,8 +38,8 @@ def main(args):
         adata,
         args.team_id,
         args.dataset_id,
-        args.subject_id,
         args.source_subject_id,
+        args.subject_id,
         args.sample_id,
         args.pool_id,
         args.batch
@@ -53,14 +53,14 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Convert demultiplexed Cell Ranger ATAC counts to AnnData objects"
+        description="Convert demultiplexed sample-level Cell Ranger ATAC counts to AnnData objects"
     )
     parser.add_argument(
         "-f",
-        "--cellranger-atac-fragments",
+        "--cellranger-atac-sample-split-fragments",
         type=str,
         required=True,
-        help="The demultiplexed Cell Ranger ATAC fragments.tsv.gz output that is the barcoded and aligned fragment file"
+        help="The demultiplexed sample-level Cell Ranger ATAC fragments.tsv.gz output that is the barcoded and aligned fragment file"
     )
     parser.add_argument(
         "-t",
@@ -77,18 +77,18 @@ if __name__ == "__main__":
         help="ASAP dataset ID"
     )
     parser.add_argument(
-        "-s",
-        "--subject-id",
-        type=str,
-        required=True,
-        help="ASAP subject/donor ID"
-    )
-    parser.add_argument(
         "-a",
         "--source-subject-id",
         type=str,
         required=True,
         help="Source subject/donor ID"
+    )
+    parser.add_argument(
+        "-s",
+        "--subject-id",
+        type=str,
+        required=True,
+        help="ASAP subject/donor ID"
     )
     parser.add_argument(
         "-s",

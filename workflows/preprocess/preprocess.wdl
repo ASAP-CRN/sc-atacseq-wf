@@ -557,7 +557,7 @@ task counts_to_adata {
 		set -euo pipefail
 
 		counts_to_adata \
-			--cellranger-atac-fragments ~{sample_split_fragments_tsv_gz} \
+			--cellranger-atac-sample-split-fragments ~{sample_split_fragments_tsv_gz} \
 			--team ~{team_id} \
 			--dataset-id ~{dataset_id} \
 			--pool-id ~{pool_id} \
