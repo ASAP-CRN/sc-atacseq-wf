@@ -28,12 +28,14 @@ workflow preprocess {
 	# Task and subworkflow versions
 	String sub_workflow_name = "preprocess"
 	String cellranger_atac_task_version = "1.0.0"
+	String split_fragments_task_version = "1.0.0"
 	String adata_task_version = "1.0.0"
 
 	Array[Array[String]] workflow_info = [[run_timestamp, workflow_name, workflow_version, workflow_release]]
 
 	String workflow_raw_data_path_prefix = "~{raw_data_path_prefix}/~{sub_workflow_name}"
 	String cellranger_atac_raw_data_path = "~{workflow_raw_data_path_prefix}/cellranger_atac/~{cellranger_atac_task_version}"
+	String split_fragments_raw_data_path = "~{workflow_raw_data_path_prefix}/split_demux_fragments/~{split_fragments_task_version}"
 	String adata_raw_data_path = "~{workflow_raw_data_path_prefix}/counts_to_adata/~{adata_task_version}"
 
 	scatter (pool_object in pools) {
@@ -97,8 +99,40 @@ workflow preprocess {
 		File peak_motif_mapping_bed_output = select_first([cellranger_atac_count.peak_motif_mapping_bed, cellranger_atac_peak_motif_mapping_bed]) #!FileCoercion
 
 		scatter (sample_object in pool.samples) {
+			String split_fragments_output = "~{split_fragments_raw_data_path}/~{sample_object.sample_id}.fragments.tsv.gz"
 			String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.sample_id}.cleaned_unfiltered.h5ad"
+
+			String source_subject_id = sample_object.source_subject_id
+			String sample_id = sample_object.sample_id
 		}
+
+		call check_output_files_exist as check_split_fragment_outputs_exist {
+			input:
+				output_files = split_fragments_output,
+				billing_project = billing_project,
+				zones = zones
+		}
+
+		Boolean run_split_demux_fragments = if cellranger_atac_count_complete == "false" then true else !check_split_fragment_outputs_exist.all_exist
+
+		if (run_split_demux_fragments) {
+			call split_demux_fragments {
+				input:
+					pool_id = pool.pool_id,
+					source_subject_ids = source_subject_id,
+					sample_ids = sample_id,
+					cellranger_atac_fragments = fragments_tsv_gz_output,
+					cellranger_atac_reference_chrom_sizes = cellranger_atac_reference_chrom_sizes,
+					vireo_assignment_files = vireo_assignment_files,
+					raw_data_path = split_fragments_raw_data_path,
+					workflow_info = workflow_info,
+					billing_project = billing_project,
+					container_registry = container_registry,
+					zones = zones
+			}
+		}
+
+		Array[File] sample_split_fragments_tsv_gz_output = select_first([split_demux_fragments.sample_split_fragments_tsv_gz, split_fragments_output]) #!FileCoercion
 
 		call check_output_files_exist as check_adata_outputs_exist {
 			input:
@@ -111,23 +145,23 @@ workflow preprocess {
 			Sample sample = pool.samples[sample_index]
 
 			String initial_adata_object_complete = check_adata_outputs_exist.sample_preprocessing_complete[sample_index][0]
+			Boolean run_counts_to_adata = if run_split_demux_fragments then true else (initial_adata_object_complete == "false")
 
 			Array[String] project_sample_id = [team_id, sample.sample_id, dataset_doi_url]
 
 			String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.sample_id}.cleaned_unfiltered.h5ad"
 
-			if (initial_adata_object_complete == "false") {
+			if (run_counts_to_adata) {
 				call counts_to_adata {
 					input:
 						team_id = team_id,
 						dataset_id = dataset_id,
 						pool_id = pool.pool_id,
-						subject_id = sample.source_subject_id,
+						source_subject_id = sample.source_subject_id,
 						subject_id = sample.asap_subject_id,
 						sample_id = sample.sample_id,
 						batch = select_first([sample.batch]),
-						cellranger_atac_fragments = fragments_tsv_gz_output,
-						vireo_assignment_csv = vireo_assignment_csv,
+						sample_split_fragments_tsv_gz = sample_split_fragments_tsv_gz_output[sample_index],
 						raw_data_path = adata_raw_data_path,
 						workflow_info = workflow_info,
 						billing_project = billing_project,
@@ -156,6 +190,10 @@ workflow preprocess {
 		Array[File] summary_csv = summary_csv_output #!FileCoercion
 		Array[File] peak_annotation_tsv = peak_annotation_tsv_output #!FileCoercion
 		Array[File] peak_motif_mapping_bed = peak_motif_mapping_bed_output #!FileCoercion
+
+		# Sample-level fragment files
+		Array[Array[File]?] subject_split_fragments_tsv_gz = split_demux_fragments.subject_split_fragments_tsv_gz
+		Array[Array[File]] sample_split_fragments_tsv_gz = sample_split_fragments_tsv_gz_output #!FileCoercion
 
 		# AnnData counts
 		Array[File] initial_adata_object = flatten(preprocessed_adata_object_output) #!FileCoercion
@@ -195,17 +233,23 @@ task check_output_files_exist {
 	command <<<
 		set -euo pipefail
 
+		all_exist="true"
+
 		while read -r file || [[ -n "${file}" ]]; do
 			if gcloud storage ls --billing-project=~{billing_project} "${file}"; then
 				echo -e "true" >> sample_preprocessing_complete.tsv
 			else
 				echo -e "false" >> sample_preprocessing_complete.tsv
+				all_exist="false"
 			fi
 		done < ~{write_lines(output_files)}
+
+		echo "${all_exist}" > all_exist.txt
 	>>>
 
 	output {
 		Array[Array[String]] sample_preprocessing_complete = read_tsv("sample_preprocessing_complete.tsv")
+		Boolean all_exist = read_boolean("all_exist.txt")
 	}
 
 	runtime {
@@ -378,6 +422,8 @@ task cellranger_atac_count {
 task split_demux_fragments {
 	input {
 		String pool_id
+		Array[String] source_subject_ids
+		Array[String] sample_ids
 
 		File cellranger_atac_fragments
 		File cellranger_atac_reference_chrom_sizes
@@ -390,7 +436,7 @@ task split_demux_fragments {
 		String zones
 	}
 
-	Int disk_size = ceil(size([cellranger_atac_fragments, cellranger_atac_reference_chrom_sizes, sample_fragments_tsv, cell_barcodes_tsv], "GB") * 2 + 20)
+	Int disk_size = ceil(size([cellranger_atac_fragments, cellranger_atac_reference_chrom_sizes], "GB") + size(vireo_assignment_files, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -409,21 +455,39 @@ task split_demux_fragments {
 		for f in ~{sep=' ' vireo_assignment_files}; do
 			awk -F ',' -v pool="~{pool_id}" '$2 ~ /^ASA/ && $3 ~ pool { OFS="\t"; print $3, $2, $4 }' "${f}" >> cell_barcodes.tsv
 		done
+		
 		if [[ $(wc -l < cell_barcodes.tsv) -le 1 ]]; then
 			echo "[ERROR] No matching samples found in any vireo assignment file" >&2
 			exit 1
 		fi
 
 		mkdir fragments_output
+		mkdir renamed_fragments_output
 
 		scatac_fragment_tools split \
-			--sample_fragments ~{sample_fragments_tsv} \
-			--cell_type_barcodes ~{cell_barcodes_tsv} \
+			--sample_fragments "~{pool_id}.sample_to_fragment.tsv" \
+			--cell_type_barcodes cell_barcodes.tsv \
 			--chrom ~{cellranger_atac_reference_chrom_sizes} \
 			--output "$(pwd)/fragments_output"
 
+		paste \
+			~{write_lines(source_subject_ids)} \
+			~{write_lines(sample_ids)} \
+		> metadata.tsv
+
+		duplicates=$(cut -f2 metadata.tsv | sort | uniq -d)
+		if [[ -n "${duplicates}" ]]; then
+			echo "[ERROR] Duplicate sample_id found for pool ~{pool_id}: ${duplicates}" >&2
+			exit 1
+		fi
+
+		# Rename outputs with ASAP_sample_id + pool_id
+		while IFS=$'\t' read -r source_subject_id sample_id; do
+			ln "fragments_output/${source_subject_id}.fragments.tsv.gz" "renamed_fragments_output/${sample_id}.~{pool_id}.fragments.tsv.gz"
+		done < metadata.tsv
+
 		upload_flags=""
-		for f in fragments_output/*; do
+		for f in renamed_fragments_output/*; do
 			upload_flags="${upload_flags} -o ${f}"
 		done
 
@@ -431,12 +495,14 @@ task split_demux_fragments {
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			${upload_flags}
+			"${upload_flags}"
 
-		ls fragments_output | sed "s|^|~{raw_data_path}/|" > sample_fragment_filenames.txt
+		# shellcheck disable=SC2012
+		ls renamed_fragments_output | sed "s|^|~{raw_data_path}/|" > sample_fragment_filenames.txt
 	>>>
 
 	output {
+		Array[File] subject_split_fragments_tsv_gz = glob("fragments_output/*")
 		Array[String] sample_split_fragments_tsv_gz = read_lines("sample_fragment_filenames.txt")
 	}
 
@@ -534,7 +600,6 @@ task counts_to_adata {
 		sample_id: {help: "Generated ASAP sample ID; stored in the AnnData objects and used to name output files."}
 		batch: {help: "The sample's batch; stored in the AnnData objects."}
 		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
-		vireo_assignment_csv: {help: "Vireo donor assignment CSV with columns: full_barcode, donor_id. Covers all donors in the pool."}
 		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}

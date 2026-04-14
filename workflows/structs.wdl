@@ -1,10 +1,10 @@
 version 1.0
 
 struct Sample {
-	Array[String] source_subject_id
-	Array[String] asap_subject_id
-	Array[String] sample_id
-	Array[String]? batch
+	String source_subject_id
+	String asap_subject_id
+	String sample_id
+	String? batch
 }
 
 struct Pool {
