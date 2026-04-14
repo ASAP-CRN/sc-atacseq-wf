@@ -84,7 +84,7 @@ if __name__ == "__main__":
         help="Source subject/donor ID"
     )
     parser.add_argument(
-        "-s",
+        "-c",
         "--subject-id",
         type=str,
         required=True,
