@@ -13,8 +13,7 @@ workflow preprocess {
 
 		File cellranger_atac_reference_data
 		File cellranger_atac_reference_chrom_sizes
-		File sample_fragments_tsv
-		File cell_barcodes_tsv
+		Array[File] vireo_assignment_files
 
 		String workflow_name
 		String workflow_version
@@ -173,8 +172,7 @@ workflow preprocess {
 		pools: {help: "Array of Pool structs, each containing FASTQs, vireo assignment, the donors demultiplexed from that pool, and specifies if it's multimodal data."}
 		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
 		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
-		sample_fragments_tsv: {help: "TSV mapping sample names to their corresponding fragment files, used by scatac_fragment_tools to identify which pool-level fragments to split."}
-		cell_barcodes_tsv: {help: "TSV mapping cell barcodes to sample identities, used by scatac_fragment_tools to assign fragments to individual samples during splitting."}
+		vireo_assignment_files: {help: "Vireo donor assignment CSV with columns: donor_id, sample, raw_bc. Covers all donors in the pool."}
 		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
 		workflow_version: {help: "Workflow version; stored in the file-level manifest and final manifest with all saved files."}
 		workflow_release: {help: "GitHub release; stored in the file-level manifest and final manifest with all saved files."}
@@ -379,10 +377,11 @@ task cellranger_atac_count {
 
 task split_demux_fragments {
 	input {
+		String pool_id
+
 		File cellranger_atac_fragments
 		File cellranger_atac_reference_chrom_sizes
-		File sample_fragments_tsv
-		File cell_barcodes_tsv
+		Array[File] vireo_assignment_files
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -395,6 +394,25 @@ task split_demux_fragments {
 
 	command <<<
 		set -euo pipefail
+
+		# Fix fragment file
+		zcat ~{cellranger_atac_fragments} | sed 's/-1\t/-'"~{pool_id}"'\t/' | bgzip -c -@ 4 > "~{pool_id}.mod.fragments.tsv.gz"
+		tabix -p bed "~{pool_id}.mod.fragments.tsv.gz"
+
+		# Generate mapping of sample names (pool) to fragment files TSV
+		echo -e "sample\tpath_to_fragment_file" > "~{pool_id}.sample_to_fragment.tsv"
+		echo -e "~{pool_id}\t~{pool_id}.fragments.tsv.gz" >> "~{pool_id}.sample_to_fragment.tsv"
+
+		# Generate mapping of samples (pool), cell types (subject), and cell barcodes TSV
+		## Filter out 'doublet' and 'unassigned' cell types (subject)
+		echo -e "sample\tcell_type\tcell_barcode" > cell_barcodes.tsv
+		for f in ~{sep=' ' vireo_assignment_files}; do
+			awk -F ',' -v pool="~{pool_id}" '$2 ~ /^ASA/ && $3 ~ pool { OFS="\t"; print $3, $2, $4 }' "${f}" >> cell_barcodes.tsv
+		done
+		if [[ $(wc -l < cell_barcodes.tsv) -le 1 ]]; then
+			echo "[ERROR] No matching samples found in any vireo assignment file" >&2
+			exit 1
+		fi
 
 		mkdir fragments_output
 
@@ -436,10 +454,10 @@ task split_demux_fragments {
 	}
 
 	parameter_meta {
+		pool_id: {help: "Generated ASAP pool ID; used to name output files."}
 		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
 		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
-		sample_fragments_tsv: {help: "TSV mapping sample names to their corresponding fragment files, used by scatac_fragment_tools to identify which pool-level fragments to split."}
-		cell_barcodes_tsv: {help: "TSV mapping cell barcodes to sample identities, used by scatac_fragment_tools to assign fragments to individual samples during splitting."}
+		vireo_assignment_files: {help: "Vireo donor assignment CSV with columns: donor_id, sample, raw_bc. Covers all donors in the pool."}
 		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}

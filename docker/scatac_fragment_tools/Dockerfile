@@ -27,6 +27,7 @@ RUN apt-get -qq update \
 		libffi-dev \
 		liblzma-dev \
 		git \
+		tabix \
 	&& rm -rf /var/lib/apt/lists/*
 
 # gcloud sdk; needed to upload output files

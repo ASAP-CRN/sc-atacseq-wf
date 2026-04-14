@@ -15,8 +15,7 @@ workflow sc_atacseq_analysis {
 		# Preprocess
 		File cellranger_atac_reference_data
 		File cellranger_atac_reference_chrom_sizes
-		File sample_fragments_tsv
-		File cell_barcodes_tsv
+		Array[File] vireo_assignment_files
 
 		# Allen Institute's Map My Cells
 		File allen_brain_mmc_precomputed_stats_h5
@@ -64,7 +63,7 @@ workflow sc_atacseq_analysis {
 				pools = project.pools,
 				cellranger_atac_reference_data = cellranger_atac_reference_data,
 				cellranger_atac_reference_chrom_sizes = cellranger_atac_reference_chrom_sizes,
-				vireo_assignment_csv = vireo_assignment_csv,
+				vireo_assignment_files = vireo_assignment_files,
 				workflow_name = workflow_name,
 				workflow_version = workflow_version,
 				workflow_release = workflow_release,
