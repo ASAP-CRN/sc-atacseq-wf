@@ -124,7 +124,6 @@ workflow preprocess {
 					source_subject_ids = source_subject_id,
 					sample_ids = sample_id,
 					cellranger_atac_fragments = fragments_tsv_gz_output,
-					cellranger_atac_fragments_index = fragments_tsv_gz_tbi_output,
 					cellranger_atac_reference_chrom_sizes = cellranger_atac_reference_chrom_sizes,
 					vireo_assignment_files = vireo_assignment_files,
 					raw_data_path = split_fragments_raw_data_path,
@@ -433,7 +432,6 @@ task split_demux_fragments {
 		Array[String] sample_ids
 
 		File cellranger_atac_fragments
-		File cellranger_atac_fragments_index
 		File cellranger_atac_reference_chrom_sizes
 		Array[File] vireo_assignment_files
 
@@ -444,7 +442,7 @@ task split_demux_fragments {
 		String zones
 	}
 
-	Int disk_size = ceil(size([cellranger_atac_fragments, cellranger_atac_fragments_index, cellranger_atac_reference_chrom_sizes], "GB") + size(vireo_assignment_files, "GB") * 2 + 20)
+	Int disk_size = ceil(size([cellranger_atac_fragments, cellranger_atac_reference_chrom_sizes], "GB") + size(vireo_assignment_files, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
@@ -532,7 +530,6 @@ task split_demux_fragments {
 		source_subject_ids: {help: "An array of generated ASAP subject IDs; used for mapping."}
 		sample_ids: {help: "An array of generated ASAP sample ID; used for mapping."}
 		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
-		cellranger_atac_fragments_index: {help: "Index of Cell Ranger ATAC fragment file."}
 		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
 		vireo_assignment_files: {help: "Vireo donor assignment CSV with columns: donor_id, sample, raw_bc. Covers all donors in the pool."}
 		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}
