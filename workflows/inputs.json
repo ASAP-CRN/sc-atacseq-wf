@@ -16,5 +16,5 @@
   "sc_atacseq_analysis.cohort_raw_data_bucket": "String",
   "sc_atacseq_analysis.cohort_staging_data_buckets": "Array[String]",
   "sc_atacseq_analysis.container_registry": "String",
-  "sc_atacseq_analysis.zones": "String (optional, default = \"us-central1-c us-central1-f\")",
+  "sc_atacseq_analysis.zones": "String (optional, default = \"us-central1-c us-central1-f\")"
 }

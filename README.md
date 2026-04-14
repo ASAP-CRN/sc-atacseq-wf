@@ -35,6 +35,8 @@ The workflow is broken up into two main chunks:
 
 Run once per pool; only rerun when the preprocessing workflow version is updated. Preprocessing outputs are stored in the originating team's raw and staging data buckets.
 
+> **Note**: Pooled inputs are processed and split into donor/subject/sample-level with demultiplexing and other tools. Donor, subject, and samples are used interchangeably _**only in this version of the workflow**_ because one subject = one sample per pool.
+
 ## Cohort analysis
 
 Run once per team (all samples from a single team) if `project.run_project_cohort_analysis` is set to `true`, and once for the whole cohort (all samples from all teams). This can be rerun using different sample subsets; including additional samples requires this entire analysis to be rerun. Intermediate files from previous runs are not reused and are stored in timestamped directories.
