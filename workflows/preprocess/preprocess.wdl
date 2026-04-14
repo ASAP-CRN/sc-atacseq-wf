@@ -450,8 +450,8 @@ task split_demux_fragments {
 		set -euo pipefail
 
 		# Fix fragment file
-		zcat ~{cellranger_atac_fragments} | sed 's/-1\t/-'"~{pool_id}"'\t/' | bgzip -c -@ 4 > "~{pool_id}.mod.fragments.tsv.gz"
-		tabix -p bed "~{pool_id}.mod.fragments.tsv.gz"
+		zcat ~{cellranger_atac_fragments} | sed 's/-1\t/-'"~{pool_id}"'\t/' | bgzip -c -@ 4 > "~{pool_id}.fragments.tsv.gz"
+		tabix -p bed "~{pool_id}.fragments.tsv.gz"
 
 		# Generate mapping of sample names (pool) to fragment files TSV
 		echo -e "sample\tpath_to_fragment_file" > "~{pool_id}.sample_to_fragment.tsv"
