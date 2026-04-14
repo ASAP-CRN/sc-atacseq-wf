@@ -63,6 +63,7 @@ workflow preprocess {
 		String cellranger_atac_filtered_peaks = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.filtered_peak_bc_matrix.h5"
 		String cellranger_atac_filtered_tf = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.filtered_tf_bc_matrix.h5"
 		String cellranger_atac_fragments_tsv_gz = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.fragments.tsv.gz"
+		String cellranger_atac_fragments_tsv_gz_tbi = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.fragments.tsv.gz.tbi"
 		String cellranger_atac_summary_csv = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.summary.csv"
 		String cellranger_atac_peak_annotation_tsv = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.peak_annotation.tsv"
 		String cellranger_atac_peak_motif_mapping_bed = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.peak_motif_mapping.bed"
@@ -94,6 +95,7 @@ workflow preprocess {
 		File filtered_peaks_output = select_first([cellranger_atac_count.filtered_peaks, cellranger_atac_filtered_peaks]) #!FileCoercion
 		File filtered_tf_output = select_first([cellranger_atac_count.filtered_tf, cellranger_atac_filtered_tf]) #!FileCoercion
 		File fragments_tsv_gz_output = select_first([cellranger_atac_count.fragments_tsv_gz, cellranger_atac_fragments_tsv_gz]) #!FileCoercion
+		File fragments_tsv_gz_tbi_output = select_first([cellranger_atac_count.fragments_tsv_gz_tbi, cellranger_atac_fragments_tsv_gz_tbi]) #!FileCoercion
 		File summary_csv_output = select_first([cellranger_atac_count.summary_csv, cellranger_atac_summary_csv]) #!FileCoercion
 		File peak_annotation_tsv_output = select_first([cellranger_atac_count.peak_annotation_tsv, cellranger_atac_peak_annotation_tsv]) #!FileCoercion
 		File peak_motif_mapping_bed_output = select_first([cellranger_atac_count.peak_motif_mapping_bed, cellranger_atac_peak_motif_mapping_bed]) #!FileCoercion
@@ -122,6 +124,7 @@ workflow preprocess {
 					source_subject_ids = source_subject_id,
 					sample_ids = sample_id,
 					cellranger_atac_fragments = fragments_tsv_gz_output,
+					cellranger_atac_fragments_index = fragments_tsv_gz_tbi_output,
 					cellranger_atac_reference_chrom_sizes = cellranger_atac_reference_chrom_sizes,
 					vireo_assignment_files = vireo_assignment_files,
 					raw_data_path = split_fragments_raw_data_path,
@@ -187,6 +190,7 @@ workflow preprocess {
 		Array[File] filtered_peaks = filtered_peaks_output #!FileCoercion
 		Array[File] filtered_tf = filtered_tf_output #!FileCoercion
 		Array[File] fragments_tsv_gz = fragments_tsv_gz_output #!FileCoercion
+		Array[File] fragments_tsv_gz_tbi = fragments_tsv_gz_tbi_output #!FileCoercion
 		Array[File] summary_csv = summary_csv_output #!FileCoercion
 		Array[File] peak_annotation_tsv = peak_annotation_tsv_output #!FileCoercion
 		Array[File] peak_motif_mapping_bed = peak_motif_mapping_bed_output #!FileCoercion
@@ -348,7 +352,8 @@ task cellranger_atac_count {
 		mv ~{pool_id}/outs/cut_sites.bigwig ~{pool_id}.cut_sites.bigwig
 		mv ~{pool_id}/outs/raw_peak_bc_matrix.h5 ~{pool_id}.raw_peak_bc_matrix.h5
 		mv ~{pool_id}/outs/filtered_peak_bc_matrix.h5 ~{pool_id}.filtered_peak_bc_matrix.h5
-		mv ~{pool_id}/outs/filtered_tf_bc_matrix.h5 ~{pool_id}.filtered_tf_bc_matrix.h5
+		mv ~{pool_id}/outs/fragments.tsv.gz.tbi ~{pool_id}.fragments.tsv.gz.tbi
+		mv ~{pool_id}/outs/peak_motif_mapping.bed ~{pool_id}.peak_motif_mapping.bed
 		mv ~{pool_id}/outs/summary.csv ~{pool_id}.summary.csv
 		mv ~{pool_id}/outs/peak_annotation.tsv ~{pool_id}.peak_annotation.tsv
 		mv ~{pool_id}/outs/peak_motif_mapping.bed ~{pool_id}.peak_motif_mapping.bed
@@ -369,6 +374,7 @@ task cellranger_atac_count {
 			-o "~{pool_id}.filtered_peak_bc_matrix.h5" \
 			-o "~{pool_id}.filtered_tf_bc_matrix.h5" \
 			-o "~{pool_id}.fragments.tsv.gz" \
+			-o "~{pool_id}.fragments.tsv.gz.tbi" \
 			-o "~{pool_id}.summary.csv" \
 			-o "~{pool_id}.peak_annotation.tsv" \
 			-o "~{pool_id}.peak_motif_mapping.bed"
@@ -383,6 +389,7 @@ task cellranger_atac_count {
 		String filtered_peaks = "~{raw_data_path}/~{pool_id}.filtered_peak_bc_matrix.h5"
 		String filtered_tf = "~{raw_data_path}/~{pool_id}.filtered_tf_bc_matrix.h5"
 		String fragments_tsv_gz = "~{raw_data_path}/~{pool_id}.fragments.tsv.gz"
+		String fragments_tsv_gz_tbi = "~{raw_data_path}/~{pool_id}.fragments.tsv.gz.tbi"
 		String summary_csv = "~{raw_data_path}/~{pool_id}.summary.csv"
 		String peak_annotation_tsv = "~{raw_data_path}/~{pool_id}.peak_annotation.tsv"
 		String peak_motif_mapping_bed = "~{raw_data_path}/~{pool_id}.peak_motif_mapping.bed"
@@ -426,6 +433,7 @@ task split_demux_fragments {
 		Array[String] sample_ids
 
 		File cellranger_atac_fragments
+		File cellranger_atac_fragments_index
 		File cellranger_atac_reference_chrom_sizes
 		Array[File] vireo_assignment_files
 
@@ -524,6 +532,7 @@ task split_demux_fragments {
 		source_subject_ids: {help: "An array of generated ASAP subject IDs; used for mapping."}
 		sample_ids: {help: "An array of generated ASAP sample ID; used for mapping."}
 		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
+		cellranger_atac_fragments_index: {help: "Index of Cell Ranger ATAC fragment file."}
 		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
 		vireo_assignment_files: {help: "Vireo donor assignment CSV with columns: donor_id, sample, raw_bc. Covers all donors in the pool."}
 		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}

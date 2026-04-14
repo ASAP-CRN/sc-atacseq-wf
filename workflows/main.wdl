@@ -83,6 +83,7 @@ workflow sc_atacseq_analysis {
 			preprocess.filtered_peaks,
 			preprocess.filtered_tf,
 			preprocess.fragments_tsv_gz,
+			preprocess.fragments_tsv_gz_tbi,
 			preprocess.summary_csv,
 			preprocess.peak_annotation_tsv,
 			preprocess.peak_motif_mapping_bed,
@@ -162,6 +163,7 @@ workflow sc_atacseq_analysis {
 		Array[Array[File]] cellranger_atac_filtered_peaks = preprocess.filtered_peaks
 		Array[Array[File]] cellranger_atac_filtered_tf = preprocess.filtered_tf
 		Array[Array[File]] cellranger_atac_fragments_tsv_gz = preprocess.fragments_tsv_gz
+		Array[Array[File]] cellranger_atac_fragments_tsv_gz_tbi = preprocess.fragments_tsv_gz_tbi
 		Array[Array[File]] cellranger_atac_summary_csv = preprocess.summary_csv
 		Array[Array[File]] cellranger_atac_peak_annotation_tsv = preprocess.peak_annotation_tsv
 		Array[Array[File]] cellranger_atac_peak_motif_mapping_bed = preprocess.peak_motif_mapping_bed

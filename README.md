@@ -230,6 +230,7 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${poolA_id}.filtered_peak_bc_matrix.h5
             │   ├── ${poolA_id}.filtered_tf_bc_matrix.h5
             │   ├── ${poolA_id}.fragments.tsv.gz
+            │   ├── ${poolA_id}.fragments.tsv.gz.tbi
             │   ├── ${poolA_id}.summary.csv
             │   ├── ${poolA_id}.peak_annotation.tsv
             │   ├── ${poolA_id}.peak_motif_mapping.bed
@@ -243,6 +244,7 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${poolB_id}.filtered_peak_bc_matrix.h5
             │   ├── ${poolB_id}.filtered_tf_bc_matrix.h5
             │   ├── ${poolB_id}.fragments.tsv.gz
+            │   ├── ${poolB_id}.fragments.tsv.gz.tbi
             │   ├── ${poolB_id}.summary.csv
             │   ├── ${poolB_id}.peak_annotation.tsv
             │   ├── ${poolB_id}.peak_motif_mapping.bed
@@ -257,6 +259,7 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${poolN_id}.filtered_peak_bc_matrix.h5
             │   ├── ${poolN_id}.filtered_tf_bc_matrix.h5
             │   ├── ${poolN_id}.fragments.tsv.gz
+            │   ├── ${poolN_id}.fragments.tsv.gz.tbi
             │   ├── ${poolN_id}.summary.csv
             │   ├── ${poolN_id}.peak_annotation.tsv
             │   ├── ${poolN_id}.peak_motif_mapping.bed
