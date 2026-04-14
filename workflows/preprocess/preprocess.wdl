@@ -192,8 +192,8 @@ workflow preprocess {
 		Array[File] peak_motif_mapping_bed = peak_motif_mapping_bed_output #!FileCoercion
 
 		# Sample-level fragment files
-		Array[Array[File]?] subject_split_fragments_tsv_gz = split_demux_fragments.subject_split_fragments_tsv_gz
-		Array[Array[File]] sample_split_fragments_tsv_gz = sample_split_fragments_tsv_gz_output #!FileCoercion
+		Array[File] subject_split_fragments_tsv_gz = flatten(select_all(split_demux_fragments.subject_split_fragments_tsv_gz))
+		Array[File] sample_split_fragments_tsv_gz = flatten(sample_split_fragments_tsv_gz_output) #!FileCoercion
 
 		# AnnData counts
 		Array[File] initial_adata_object = flatten(preprocessed_adata_object_output) #!FileCoercion
@@ -521,6 +521,8 @@ task split_demux_fragments {
 
 	parameter_meta {
 		pool_id: {help: "Generated ASAP pool ID; used to name output files."}
+		source_subject_ids: {help: "An array of generated ASAP subject IDs; used for mapping."}
+		sample_ids: {help: "An array of generated ASAP sample ID; used for mapping."}
 		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
 		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
 		vireo_assignment_files: {help: "Vireo donor assignment CSV with columns: donor_id, sample, raw_bc. Covers all donors in the pool."}
@@ -593,13 +595,14 @@ task counts_to_adata {
 	}
 
 	parameter_meta {
-		pool_id: {help: "Generated ASAP pool ID; stored in the AnnData objects."}
-		subject_id: {help: "Generated ASAP subject ID; stored in the AnnData objects."}
 		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
 		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
+		pool_id: {help: "Generated ASAP pool ID; stored in the AnnData objects."}
+		source_subject_id: {help: "Source subject ID; stored in the AnnData objects."}
+		subject_id: {help: "Generated ASAP subject ID; stored in the AnnData objects."}
 		sample_id: {help: "Generated ASAP sample ID; stored in the AnnData objects and used to name output files."}
 		batch: {help: "The sample's batch; stored in the AnnData objects."}
-		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
+		sample_split_fragments_tsv_gz: {help: "A BED-like TSV file output by Cell Ranger ATAC for demultiplexed samples."}
 		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}

@@ -5,13 +5,14 @@
 
 ## _PREPROCESSING_
 - _Pre-preprocessing_: executed by WDL [`cellranger-atac count`](../workflows/preprocess/preprocess.wdl)
-    - Aligns FASTQ files and generates fragment files per sample
+    - Aligns FASTQ files and generates fragment files per pool
 
-- _Demultiplexing Cell Ranger fragment files_: 
-    - 
+- _Splitting demuxed sample Cell Ranger fragment files_: executed by WDL [`scatac_fragment_tools split`](../workflows/preprocess/preprocess.wdl)
+    - Prepares mapping inputs required to split the fragment files
+    - Splits pool-level fragment files into sample-level (one subject = one sample per pool)
 
 - _Converting counts to AnnData_: [`counts_to_adata`](./sc_atac_tools/scripts/counts_to_adata)
-    - Imports demultiplexed sample-level Cell Ranger ATAC fragment files via `snap.pp.import_fragments`
+    - Imports demuxed sample-level Cell Ranger ATAC fragment files via `snap.pp.import_fragments`
     - Performs initial per-sample tiling and stores as backed SnapATAC2 AnnData
 
 - _Merge and QC_: [`merge_and_qc`](./sc_atac_tools/scripts/merge_and_qc)
