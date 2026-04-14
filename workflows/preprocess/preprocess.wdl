@@ -444,7 +444,7 @@ task split_demux_fragments {
 		String zones
 	}
 
-	Int disk_size = ceil(size([cellranger_atac_fragments, cellranger_atac_reference_chrom_sizes], "GB") + size(vireo_assignment_files, "GB") * 2 + 20)
+	Int disk_size = ceil(size([cellranger_atac_fragments, cellranger_atac_fragments_index, cellranger_atac_reference_chrom_sizes], "GB") + size(vireo_assignment_files, "GB") * 2 + 20)
 
 	command <<<
 		set -euo pipefail
