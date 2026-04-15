@@ -351,8 +351,8 @@ task cellranger_atac_count {
 		mv ~{pool_id}/outs/cut_sites.bigwig ~{pool_id}.cut_sites.bigwig
 		mv ~{pool_id}/outs/raw_peak_bc_matrix.h5 ~{pool_id}.raw_peak_bc_matrix.h5
 		mv ~{pool_id}/outs/filtered_peak_bc_matrix.h5 ~{pool_id}.filtered_peak_bc_matrix.h5
+		mv ~{pool_id}/outs/filtered_tf_bc_matrix.h5 ~{pool_id}.filtered_tf_bc_matrix.h5
 		mv ~{pool_id}/outs/fragments.tsv.gz.tbi ~{pool_id}.fragments.tsv.gz.tbi
-		mv ~{pool_id}/outs/peak_motif_mapping.bed ~{pool_id}.peak_motif_mapping.bed
 		mv ~{pool_id}/outs/summary.csv ~{pool_id}.summary.csv
 		mv ~{pool_id}/outs/peak_annotation.tsv ~{pool_id}.peak_annotation.tsv
 		mv ~{pool_id}/outs/peak_motif_mapping.bed ~{pool_id}.peak_motif_mapping.bed
