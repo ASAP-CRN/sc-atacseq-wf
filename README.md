@@ -234,8 +234,8 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${poolA_id}.summary.csv
             │   ├── ${poolA_id}.peak_annotation.tsv
             │   ├── ${poolA_id}.peak_motif_mapping.bed
-            │   ├── ${sampleA_id}.fragments.tsv.gz
-            │   ├── ${sampleA_id}.cleaned_unfiltered.h5ad
+            │   ├── ${sampleA_id}.${poolA_id}.fragments.tsv.gz
+            │   ├── ${sampleA_id}.${poolA_id}.cleaned_unfiltered.h5ad
             │   ├── ${poolB_id}.cellranger_atac_outputs.tar.gz
             │   ├── ${poolB_id}.singlecell.csv
             │   ├── ${poolB_id}.peaks.bed
@@ -248,8 +248,8 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${poolB_id}.summary.csv
             │   ├── ${poolB_id}.peak_annotation.tsv
             │   ├── ${poolB_id}.peak_motif_mapping.bed
-            │   ├── ${sampleB_id}.fragments.tsv.gz
-            │   ├── ${sampleB_id}.cleaned_unfiltered.h5ad
+            │   ├── ${sampleB_id}.${poolB_id}.fragments.tsv.gz
+            │   ├── ${sampleB_id}.${poolB_id}.cleaned_unfiltered.h5ad
             │   ├── ...
             │   ├── ${poolN_id}.cellranger_atac_outputs.tar.gz
             │   ├── ${poolN_id}.singlecell.csv
@@ -263,8 +263,8 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${poolN_id}.summary.csv
             │   ├── ${poolN_id}.peak_annotation.tsv
             │   ├── ${poolN_id}.peak_motif_mapping.bed
-            │   ├── ${sampleN_id}.fragments.tsv.gz
-            │   ├── ${sampleN_id}.cleaned_unfiltered.h5ad
+            │   ├── ${sampleN_id}.${poolN_id}.fragments.tsv.gz
+            │   ├── ${sampleN_id}.${poolN_id}.cleaned_unfiltered.h5ad
             │   └── MANIFEST.tsv
             ├── workflow_version # plain text file
             └── workflow_metadata
