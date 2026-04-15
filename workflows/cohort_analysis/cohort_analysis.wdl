@@ -437,8 +437,8 @@ task merge_and_qc {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(preprocessed_adata_objects, "GB") * 3 + 150)
-	Int disk_size = ceil(size(preprocessed_adata_objects, "GB") * 3 + 50)
+	Int mem_gb = ceil(size(preprocessed_adata_objects, "GB") * 20 + 150)
+	Int disk_size = ceil(size(preprocessed_adata_objects, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
