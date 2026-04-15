@@ -505,11 +505,11 @@ task split_demux_fragments {
 			"${upload_args[@]}"
 
 		# shellcheck disable=SC2012
-		ls renamed_fragments_output | sed "s|^|~{raw_data_path}/|" > sample_fragment_filenames.txt
+		ls renamed_fragments_output | sed "s|^|~{raw_data_path}/|" | grep -v "meta.tsv$" > sample_fragment_filenames.txt
 	>>>
 
 	output {
-		Array[File] subject_split_fragments_tsv_gz = glob("fragments_output/*")
+		Array[File] subject_split_fragments_tsv_gz = glob("fragments_output/*.fragments.tsv.gz")
 		Array[String] sample_split_fragments_tsv_gz = read_lines("sample_fragment_filenames.txt")
 	}
 
