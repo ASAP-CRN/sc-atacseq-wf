@@ -448,7 +448,8 @@ task split_demux_fragments {
 		set -euo pipefail
 
 		# Fix fragment file
-		zcat ~{cellranger_atac_fragments} | sed 's/-1\t/-'"~{pool_id}"'\t/' | bgzip -c -@ 4 > "~{pool_id}.fragments.tsv.gz"
+		zcat ~{cellranger_atac_fragments} | sed 's/-1\t/-'"~{pool_id}"'\t/' | bgzip -c -@ 4 > "~{pool_id}.mod.fragments.tsv.gz"
+		mv "~{pool_id}.mod.fragments.tsv.gz" "~{pool_id}.fragments.tsv.gz"
 		tabix -p bed "~{pool_id}.fragments.tsv.gz"
 
 		# Generate mapping of sample names (pool) to fragment files TSV
@@ -492,16 +493,16 @@ task split_demux_fragments {
 			ln "fragments_output/${source_subject_id}.fragments.tsv.gz" "renamed_fragments_output/${sample_id}.~{pool_id}.fragments.tsv.gz"
 		done < metadata.tsv
 
-		upload_flags=""
+		upload_args=()
 		for f in renamed_fragments_output/*; do
-			upload_flags="${upload_flags} -o ${f}"
+			upload_args+=(-o "${f}")
 		done
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			"${upload_flags}"
+			"${upload_args[@]}"
 
 		# shellcheck disable=SC2012
 		ls renamed_fragments_output | sed "s|^|~{raw_data_path}/|" > sample_fragment_filenames.txt
