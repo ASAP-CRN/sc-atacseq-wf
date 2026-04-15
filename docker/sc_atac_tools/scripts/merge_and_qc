@@ -63,7 +63,6 @@ def compute_qc_metrics(
     merged_adata: snap.AnnData, plot_prefix: str
 ):
     print("Computing QC metrics...")
-    # TODO - check all plots
     frag_size_distr_out = f"{plot_prefix}.frag_size_distr.png"
     snap.pl.frag_size_distr(
         merged_adata,
