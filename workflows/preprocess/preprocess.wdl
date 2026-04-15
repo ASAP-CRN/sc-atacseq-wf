@@ -101,8 +101,8 @@ workflow preprocess {
 		File peak_motif_mapping_bed_output = select_first([cellranger_atac_count.peak_motif_mapping_bed, cellranger_atac_peak_motif_mapping_bed]) #!FileCoercion
 
 		scatter (sample_object in pool.samples) {
-			String split_fragments_output = "~{split_fragments_raw_data_path}/~{sample_object.sample_id}.fragments.tsv.gz"
-			String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.sample_id}.cleaned_unfiltered.h5ad"
+			String split_fragments_output = "~{split_fragments_raw_data_path}/~{sample_object.sample_id}.~{pool.pool_id}.fragments.tsv.gz"
+			String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.sample_id}.~{pool.pool_id}.cleaned_unfiltered.h5ad"
 
 			String source_subject_id = sample_object.source_subject_id
 			String sample_id = sample_object.sample_id
@@ -149,9 +149,9 @@ workflow preprocess {
 			String initial_adata_object_complete = check_adata_outputs_exist.sample_preprocessing_complete[sample_index][0]
 			Boolean run_counts_to_adata = if run_split_demux_fragments then true else (initial_adata_object_complete == "false")
 
-			Array[String] project_sample_id = [team_id, sample.sample_id, dataset_doi_url]
+			Array[String] project_sample_id = [team_id, "~{sample.sample_id}.~{pool.pool_id}", dataset_doi_url]
 
-			String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.sample_id}.cleaned_unfiltered.h5ad"
+			String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.sample_id}.~{pool.pool_id}.cleaned_unfiltered.h5ad"
 
 			if (run_counts_to_adata) {
 				call counts_to_adata {
@@ -574,17 +574,17 @@ task counts_to_adata {
 			--subject-id ~{subject_id} \
 			--sample-id ~{sample_id} \
 			--batch ~{batch} \
-			--adata-output ~{sample_id}.cleaned_unfiltered.h5ad
+			--adata-output ~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{sample_id}.cleaned_unfiltered.h5ad"
+			-o "~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad"
 	>>>
 
 	output {
-		String initial_adata_object = "~{raw_data_path}/~{sample_id}.cleaned_unfiltered.h5ad"
+		String initial_adata_object = "~{raw_data_path}/~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad"
 	}
 
 	runtime {
