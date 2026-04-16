@@ -5,4 +5,4 @@ kaleido==0.2.1
 harmonypy==0.2.0
 magic-impute==3.0.0
 ipython==8.38.0
-hdf5plugin=6.0.0
+hdf5plugin==6.0.0
