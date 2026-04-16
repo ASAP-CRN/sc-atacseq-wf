@@ -4,6 +4,7 @@ import os
 import argparse
 import scanpy as sc
 import scvi
+import hdf5plugin
 
 
 def train_model(
