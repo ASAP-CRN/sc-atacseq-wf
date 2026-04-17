@@ -28,6 +28,7 @@ workflow cohort_analysis {
 		String batch_key
 		String peakvi_latent_key
 		Int peakvi_max_epochs
+		Int peakvi_batch_size
 
 		Array[String] groups
 		Array[String] features
@@ -100,6 +101,7 @@ workflow cohort_analysis {
 			batch_key = batch_key,
 			peakvi_latent_key = peakvi_latent_key,
 			peakvi_max_epochs = peakvi_max_epochs,
+			peakvi_batch_size = peakvi_batch_size,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -410,6 +412,7 @@ workflow cohort_analysis {
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
+		peakvi_batch_size: {help: "Training batch size for PeakVI. Controls how many cells are processed per training step. [64]"}
 		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'team', 'dataset', 'batch_id', 'leiden']"}
 		features: {help: "Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability']"}
 		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}

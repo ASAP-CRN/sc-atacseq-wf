@@ -58,6 +58,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | String? | batch_key | Key in AnnData object for batch information. ['batch_id'] |
 | String? | peakvi_latent_key | Latent key to save the PeakVI latent to. ['X_peakVI'] |
 | Int? | peakvi_max_epochs | The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300] |
+| Int? | peakvi_batch_size | Training batch size for PeakVI. Controls how many cells are processed per training step. [64] |
 | Array[String]? | groups | Groups to produce umap plots for. ['sample', 'batch', 'team', 'dataset', 'batch_id', 'leiden'] |
 | Array[String]? | features | Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability'] |
 | Boolean? | run_cross_team_cohort_analysis | Whether to run downstream harmonization steps on all samples across projects. If set to false, only preprocessing steps (cellranger and generating the initial adata object(s)) will run for samples. [false] |
