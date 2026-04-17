@@ -13,14 +13,8 @@
               "inputs": {
                 "cohort_id": "${cohort_id}",
                 "preprocessed_adata_objects": [
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000105_s001_1.cleaned_unfiltered.h5ad",
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000108_s001_1.cleaned_unfiltered.h5ad",
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000026_s001_Rep1.cleaned_unfiltered.h5ad",
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000027_s001_Rep1.cleaned_unfiltered.h5ad",
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000001_s002_rep1.cleaned_unfiltered.h5ad",
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000001_s001_rep1.cleaned_unfiltered.h5ad",
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000003_s004_rep1.cleaned_unfiltered.h5ad",
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000128_s001_rep1.cleaned_unfiltered.h5ad"
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMDBS_001117_s001_TechRep1.AT001a.cleaned_unfiltered.h5ad",
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMBDS_000108_s001_1.cleaned_unfiltered.h5ad"
                 ],
                 "raw_data_path": "${cohort_raw_data_path}",
                 "workflow_info": "${workflow_info}",
@@ -30,7 +24,7 @@
               },
               "output_tests": {
                 "merged_adata_object": {
-                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.merged_cleaned_unfiltered.h5ad",
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.merged_filtered.h5ad",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
@@ -144,7 +138,125 @@
         "cellranger_atac_count": {
           "key": "cellranger_atac_count",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "pool_id": "${pool_id}",
+                "fastq_R1s": [
+                  "gs://asap-raw-team-voet-pmdbs-sn-atacseq-10x/fastqs/NextSeq2000_20230614_ASA__a3f230__20230601_AT-014-a-ATAC_S10_L001_R1_001.fastq.gz"
+                ],
+                "fastq_R2s": [
+                  "gs://asap-raw-team-voet-pmdbs-sn-atacseq-10x/fastqs/NextSeq2000_20230614_ASA__a3f230__20230601_AT-014-a-ATAC_S10_L001_R2_001.fastq.gz"
+                ],
+                "fastq_R3s": [
+                  "gs://asap-raw-team-voet-pmdbs-sn-atacseq-10x/fastqs/NextSeq2000_20230614_ASA__a3f230__20230601_AT-014-a-ATAC_S10_L001_R3_001.fastq.gz"
+                ],
+                "fastq_I1s": [
+                  
+                ],
+                "fastq_I2s": [
+                  
+                ],
+                "multimodal_data": false,
+                "cellranger_atac_reference_data": "",
+                "raw_data_path": "${cellranger_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "atac_outputs_tar_gz": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.cellranger_atac_outputs.tar.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_gzip"
+                  ]
+                },
+                "singlecell_csv": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.singlecell.csv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_comma_separated",
+                    "count_columns"
+                  ]
+                },
+                "peaks_bed": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.peaks.bed",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines"
+                  ]
+                },
+                "cut_sites_bigwig": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.cut_sites.bigwig",
+                  "test_tasks": [
+                    
+                  ]
+                },
+                "raw_peaks": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.raw_peak_bc_matrix.h5",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                },
+                "filtered_peaks": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.filtered_peak_bc_matrix.h5",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                },
+                "filtered_tf": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.filtered_tf_bc_matrix.h5",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                },
+                "fragments_tsv_gz": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.fragments.tsv.gz",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_gzip"
+                  ]
+                },
+                "fragments_tsv_gz_tbi": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.fragments.tsv.gz.tbi",
+                  "test_tasks": [
+                    
+                  ]
+                },
+                "summary_csv": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.summary.csv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_comma_separated",
+                    "count_columns"
+                  ]
+                },
+                "peak_annotation_tsv": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.peak_annotation.tsv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_tab_delimited",
+                    "count_columns"
+                  ]
+                },
+                "peak_motif_mapping_bed": {
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.peak_motif_mapping.bed",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "split_demux_fragments": {
           "key": "split_demux_fragments",
