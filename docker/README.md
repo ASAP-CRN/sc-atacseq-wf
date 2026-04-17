@@ -27,7 +27,7 @@
 ## Bin-level (chromatin accessibility)
 
 - _Process bins_: [`process_bins`](./sc_atac_tools/scripts/process_bins)
-    - Stores raw tile counts in `layers["tile_counts"]`
+    - Stores selected features/bins in `layers["tile_counts"]`
     - Performs spectral embedding (LSI/SVD) and UMAP dimensionality reduction on the tile matrix
     - Foundation for all chromatin-level clustering and integration
 
@@ -54,6 +54,7 @@
 
 - _Integrate PeakVI_: [`integrate_peakvi`](./scvi_tools/scripts/integrate_peakvi)
     - Trains a `PeakVI` model on `layers["tile_counts"]` with batch correction
+    - Option to use GPU
     - Stores the latent representation in `obsm` for downstream clustering and UMAP
     - Saves the trained PeakVI model to disk
 
