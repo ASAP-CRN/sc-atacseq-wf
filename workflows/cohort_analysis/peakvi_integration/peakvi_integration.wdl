@@ -125,6 +125,9 @@ task integrate_peakvi {
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
+		gpuType: "nvidia-tesla-t4"
+		gpuCount: 1
+		nvidiaDriverVersion: "545.23.08" #!UnknownRuntimeKey
 	}
 
 	meta {
