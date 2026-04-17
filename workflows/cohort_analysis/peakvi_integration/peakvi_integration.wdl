@@ -126,7 +126,7 @@ task integrate_peakvi {
 		bootDiskSizeGb: 30
 		zones: zones
 		gpuType: "nvidia-tesla-t4"
-		gpuCount: 1
+		gpuCount: 2
 	}
 
 	meta {
