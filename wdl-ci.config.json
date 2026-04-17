@@ -57,7 +57,25 @@
         "reduce_dimensions": {
           "key": "reduce_dimensions",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "cohort_id": "${cohort_id}",
+                "merged_adata_object": "${input_resources_file_path}/${preprocess_workflow_name}/${cohort_id}.merged_filtered.h5ad",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "processed_bins_adata_object": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.processed_bins.h5ad",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "peak_calling": {
           "key": "peak_calling",
