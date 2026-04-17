@@ -10,6 +10,7 @@ workflow peakvi_integration {
 		String batch_key
 		String peakvi_latent_key
 		Int peakvi_max_epochs
+		Int peakvi_batch_size
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -25,6 +26,7 @@ workflow peakvi_integration {
 			batch_key = batch_key,
 			peakvi_latent_key = peakvi_latent_key,
 			peakvi_max_epochs = peakvi_max_epochs,
+			peakvi_batch_size = peakvi_batch_size,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -61,6 +63,7 @@ workflow peakvi_integration {
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
+		peakvi_batch_size: {help: "Training batch size for PeakVI. Controls how many cells are processed per training step. [64]"}
 		raw_data_path: {help: "Raw data bucket path for merged adata and QC plots outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}
@@ -77,6 +80,7 @@ task integrate_peakvi {
 		String batch_key
 		String peakvi_latent_key
 		Int peakvi_max_epochs
+		Int peakvi_batch_size
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -99,6 +103,7 @@ task integrate_peakvi {
 			--batch-key ~{batch_key} \
 			--latent-key ~{peakvi_latent_key} \
 			--max-epochs ~{peakvi_max_epochs} \
+			--batch-size ~{peakvi_batch_size} \
 			--adata-output ~{cohort_id}.peakvi_integrated.h5ad \
 			--output-peakvi-dir "~{cohort_id}_peakvi_model"
 
@@ -139,6 +144,7 @@ task integrate_peakvi {
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
+		peakvi_batch_size: {help: "Training batch size for PeakVI. Controls how many cells are processed per training step. [64]"}
 		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}
