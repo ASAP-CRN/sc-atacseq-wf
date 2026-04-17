@@ -1,8 +1,9 @@
 {
   "sc_atacseq_analysis.cohort_id": "String",
-  "sc_atacseq_analysis.projects": "Array[WomCompositeType {\n asap_dataset_id -> String\nraw_data_bucket -> String\nasap_team_id -> String\nstaging_data_buckets -> Array[String]\nasap_dataset_doi_url -> String\npools -> Array[WomCompositeType {\n fastq_I1s -> Array[File]\nfastq_R1s -> Array[File]+\nsamples -> Array[WomCompositeType {\n asap_subject_id -> String\nsample_id -> String\nbatch -> String? \n}]\nmultimodal_data -> Boolean\nfastq_I2s -> Array[File]\nfastq_R3s -> Array[File]+\nfastq_R2s -> Array[File]+\nasap_pool_id -> String \n}]\nrun_project_cohort_analysis -> Boolean \n}]",
+  "sc_atacseq_analysis.projects": "Array[WomCompositeType {\n asap_dataset_id -> String\nraw_data_bucket -> String\nasap_team_id -> String\nstaging_data_buckets -> Array[String]\nasap_dataset_doi_url -> String\npools -> Array[WomCompositeType {\n fastq_I1s -> Array[File]\nfastq_R1s -> Array[File]+\nsamples -> Array[WomCompositeType {\n source_subject_id -> String\nasap_subject_id -> String\nsample_id -> String\nbatch -> String? \n}]\nmultimodal_data -> Boolean\nfastq_I2s -> Array[File]\nfastq_R3s -> Array[File]+\nfastq_R2s -> Array[File]+\npool_id -> String \n}]\nrun_project_cohort_analysis -> Boolean \n}]",
   "sc_atacseq_analysis.cellranger_atac_reference_data": "File",
-  "sc_atacseq_analysis.vireo_assignment_csv": "File",
+  "sc_atacseq_analysis.cellranger_atac_reference_chrom_sizes": "File",
+  "sc_atacseq_analysis.vireo_assignment_files": "Array[File]",
   "sc_atacseq_analysis.allen_brain_mmc_precomputed_stats_h5": "File",
   "sc_atacseq_analysis.n_top_genes": "Int (optional, default = 3000)",
   "sc_atacseq_analysis.n_comps": "Int (optional, default = 30)",

@@ -1,6 +1,7 @@
 version 1.0
 
 struct Sample {
+	String source_subject_id
 	String asap_subject_id
 	String sample_id
 	String? batch

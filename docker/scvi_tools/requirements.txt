@@ -6,3 +6,4 @@ scib-metrics==0.5.7
 scvi-tools[cuda]==1.4.1
 torch==2.10.0
 leidenalg==0.11.0
+hdf5plugin==6.0.0

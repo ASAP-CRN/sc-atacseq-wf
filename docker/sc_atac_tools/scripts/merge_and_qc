@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
 import argparse
-import anndata as ad
+import tempfile
 import pandas as pd
 import kaleido
 import snapatac2 as snap
-
-# Patch that makes all pandas Series have a nonzero() method - removed after pandas 2.1+
-pd.Series.nonzero = lambda self: self.to_numpy().nonzero()
+import hdf5plugin
 
 
 def merge_adata(
-    adata_objects_fofn: str, chunk_size: int = 5
+    adata_objects_fofn: str
 ):
     sample_files = []
     # Note that the sample id should be the official ASAP_samples
@@ -22,39 +20,21 @@ def merge_adata(
                 columns = sample.strip().split("\t")
                 sample_files.append(columns)
 
-    print(f"Processing {len(sample_files)} samples in chunks of {chunk_size}")
+    print(f"Processing {len(sample_files)} samples")
 
-    merged_chunks = []
+    sample_names = [s[0] for s in sample_files]
+    adatas = [snap.read(s[1]) for s in sample_files]
 
-    for i in range(0, len(sample_files), chunk_size):
-        chunk_files = sample_files[i:i+chunk_size]
-        print(f"Processing chunk {i//chunk_size + 1}/{(len(sample_files)-1)//chunk_size + 1}")
-
-        adatas = {}
-        for sample_name, file_path in chunk_files:
-            raw = snap.read(file_path, backed=None)
-            adatas[sample_name] = raw
-
-        chunk_adata = ad.concat(
-            adatas, 
-            merge="same", 
-            uns_merge="same", 
-            index_unique="_"
-        )
-
-        merged_chunks.append(chunk_adata)
-
-        # Clean up memory
-        del adatas
-
-    # We could subset to the top_genes here before concat if we have memory issues (e.g. whole dataset harmonization)
-    print("Merging all chunks...")
-    merged_adata = ad.concat(
-        merged_chunks,
-        merge="same",
-        uns_merge="same",
-        index_unique="_"
+    # Must output to handle n_vars = 0 / no X matrix
+    tmp_file = tempfile.mktemp(suffix=".h5ad")
+    merged_adata = snap.concat(
+        adatas,
+        join="inner",
+        file=tmp_file,
     )
+    # Must read in merged adata into memory to use compute_qc_metrics()
+    merged_adata.close()
+    merged_adata = snap.read(tmp_file, backed=None)
 
     return merged_adata
 
@@ -63,7 +43,6 @@ def compute_qc_metrics(
     merged_adata: snap.AnnData, plot_prefix: str
 ):
     print("Computing QC metrics...")
-    # TODO - check all plots
     frag_size_distr_out = f"{plot_prefix}.frag_size_distr.png"
     snap.pl.frag_size_distr(
         merged_adata,

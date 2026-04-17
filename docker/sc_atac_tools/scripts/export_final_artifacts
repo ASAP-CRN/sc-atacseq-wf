@@ -2,6 +2,7 @@
 
 import argparse
 import scanpy as sc
+import hdf5plugin
 
 
 def main(args):

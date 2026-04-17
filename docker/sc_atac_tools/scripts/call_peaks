@@ -4,6 +4,8 @@ import argparse
 import pandas as pd
 import polars as pl
 import snapatac2 as snap
+import scanpy as sc
+import hdf5plugin
 
 
 def call_peaks(
@@ -21,7 +23,7 @@ def call_peaks(
 
     adata.uns["merged_peaks"] = merged_peaks.to_pandas()
 
-    peaks_matrix = snap.pp.make_peak_matrix(adata, use_rep=merged_peaks['Peaks'])
+    peaks_matrix = snap.pp.make_peak_matrix(adata, use_rep=merged_peaks["Peaks"])
 
     return adata, merged_peaks, peaks_matrix
 
@@ -30,8 +32,11 @@ def main(args):
     adata = snap.read(args.adata_input, backed=None)
     adata_peaks, merged_peaks_df, adata_peaks_matrix = call_peaks(adata, args.macs3_groupby)
 
-    adata_peaks.write(
-        filename=args.adata_output
+    # Output used in https://github.com/ASAP-CRN/sc-rnaseq-wf/blob/main/workflows/cohort_analysis/cohort_analysis.wdl
+    # doesn't import hdf5plugin so write using scanpy due to different compression compatibility with snapatac2
+    adata_peaks.write_h5ad(
+        filename=args.adata_output,
+        compression="gzip"
     )
     print(f"Wrote {args.adata_output}")
 

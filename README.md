@@ -35,6 +35,8 @@ The workflow is broken up into two main chunks:
 
 Run once per pool; only rerun when the preprocessing workflow version is updated. Preprocessing outputs are stored in the originating team's raw and staging data buckets.
 
+> **Note**: Pooled inputs are processed and split into donor/subject/sample-level with demultiplexing and other tools. Donor, subject, and samples are used interchangeably _**only in this version of the workflow**_ because one subject = one sample per pool.
+
 ## Cohort analysis
 
 Run once per team (all samples from a single team) if `project.run_project_cohort_analysis` is set to `true`, and once for the whole cohort (all samples from all teams). This can be rerun using different sample subsets; including additional samples requires this entire analysis to be rerun. Intermediate files from previous runs are not reused and are stored in timestamped directories.
@@ -48,7 +50,8 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | String | cohort_id | Name of the cohort; used to name output files during cross-team cohort analysis. |
 | Array[[Project](#project)] | projects | The project ID, set of samples and their associated reads and metadata, output bucket locations, and whether or not to run project-level cohort analysis. |
 | File | cellranger_atac_reference_data | Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads#reference-downloads. |
-| File | vireo_assignment_csv | Vireo donor assignment CSV with columns: full_barcode, donor_id. Covers all donors in the pool. |
+| File | cellranger_atac_reference_chrom_sizes | Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting; see [demultiplexing section](#demultiplexing). |
+| Array[File] | vireo_assignment_csv | Vireo donor assignment CSVs with columns: donor_id, sample, raw_bc. Covers all donors in the pool. |
 | File? | allen_brain_mmc_precomputed_stats_h5 | A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy). |
 | Int? | n_top_genes | Number of HVG genes to keep. [3000] |
 | Int? | n_comps | Number of principal components to compute. [30] |
@@ -105,8 +108,10 @@ The inputs JSON may be generated manually, however when running a large number o
 - `project-tsv`: One or more project TSVs with one row per sample and columns team_id, ASAP_dataset_id, ASAP_sample_id, batch, fastq_R1s, fastq_R2s, fastq_R3s, fastq_I1s, fastq_I2s, embargoed, source, modality_flavour, dataset_DOI_url, and SPATIAL columns if applicable: geomx_config, geomx_dsp_config, geomx_annotation_file, visium_cytassist, visium_probe_set, visium_slide_ref, and visium_capture_area. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
     - `team_id`: A unique identifier for the team from which the sample(s) arose.
     - `ASAP_dataset_id`: A generated unique identifier for the dataset from which the sample(s) arose.
-    - `ASAP_subject_id`: A generated unique identifier for the subject within the project.
-    - `ASAP_sample_id`: A generated unique identifier for the sample within the project.
+    - `pool_id`: Source identifier for the pool within the project.
+    - `source_subject_id`: Source identifier for the subject within the pool/project.
+    - `ASAP_subject_id`: A generated unique identifier for the subject within the pool/project.
+    - `ASAP_sample_id`: A generated unique identifier for the sample within the pool/project.
     - `batch`: The sample's batch.
     - `fastq_R1s`: The gs uri to read 1 of sample FASTQ.
         - This is appended to the `project-tsv` from the `fastq-locs-txt`: FASTQ locations for all samples provided in the `project-tsv`. Each sample is expected to have one set of paired fastqs located at `${fastq_path}/${sample_id}*`. The read 1 file should include 'R1' somewhere in the filename. Generate this file e.g. by running `gcloud storage ls gs://fastq_bucket/some/path/**.fastq.gz >> fastq_locs.txt`.
@@ -164,6 +169,9 @@ asap-raw-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             ├── cellranger_atac
             │   └── ${cellranger_atac_task_version}
             │       └── <cellranger_atac output>
+            ├── split_demux_fragments
+            │   └── ${split_fragments_task_version}
+            │       └── <split_demux_fragments output>
             └── counts_to_adata
                 └── ${adata_task_version}
                     └── <counts_to_adata output>
@@ -222,10 +230,12 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${poolA_id}.filtered_peak_bc_matrix.h5
             │   ├── ${poolA_id}.filtered_tf_bc_matrix.h5
             │   ├── ${poolA_id}.fragments.tsv.gz
+            │   ├── ${poolA_id}.fragments.tsv.gz.tbi
             │   ├── ${poolA_id}.summary.csv
             │   ├── ${poolA_id}.peak_annotation.tsv
             │   ├── ${poolA_id}.peak_motif_mapping.bed
-            │   ├── ${sampleA_id}.cleaned_unfiltered.h5ad
+            │   ├── ${sampleA_id}.${poolA_id}.fragments.tsv.gz
+            │   ├── ${sampleA_id}.${poolA_id}.cleaned_unfiltered.h5ad
             │   ├── ${poolB_id}.cellranger_atac_outputs.tar.gz
             │   ├── ${poolB_id}.singlecell.csv
             │   ├── ${poolB_id}.peaks.bed
@@ -234,10 +244,12 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${poolB_id}.filtered_peak_bc_matrix.h5
             │   ├── ${poolB_id}.filtered_tf_bc_matrix.h5
             │   ├── ${poolB_id}.fragments.tsv.gz
+            │   ├── ${poolB_id}.fragments.tsv.gz.tbi
             │   ├── ${poolB_id}.summary.csv
             │   ├── ${poolB_id}.peak_annotation.tsv
             │   ├── ${poolB_id}.peak_motif_mapping.bed
-            │   ├── ${sampleB_id}.cleaned_unfiltered.h5ad
+            │   ├── ${sampleB_id}.${poolB_id}.fragments.tsv.gz
+            │   ├── ${sampleB_id}.${poolB_id}.cleaned_unfiltered.h5ad
             │   ├── ...
             │   ├── ${poolN_id}.cellranger_atac_outputs.tar.gz
             │   ├── ${poolN_id}.singlecell.csv
@@ -247,10 +259,12 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${poolN_id}.filtered_peak_bc_matrix.h5
             │   ├── ${poolN_id}.filtered_tf_bc_matrix.h5
             │   ├── ${poolN_id}.fragments.tsv.gz
+            │   ├── ${poolN_id}.fragments.tsv.gz.tbi
             │   ├── ${poolN_id}.summary.csv
             │   ├── ${poolN_id}.peak_annotation.tsv
             │   ├── ${poolN_id}.peak_motif_mapping.bed
-            │   ├── ${sampleN_id}.cleaned_unfiltered.h5ad
+            │   ├── ${sampleN_id}.${poolN_id}.fragments.tsv.gz
+            │   ├── ${sampleN_id}.${poolN_id}.cleaned_unfiltered.h5ad
             │   └── MANIFEST.tsv
             ├── workflow_version # plain text file
             └── workflow_metadata
@@ -277,7 +291,7 @@ The script defaults to a dry run, printing out the files that would be copied or
 -h  Display this message and exit
 -l  List available teams
 -w  Workflow name used as a directory in bucket (e.g. 'pmdbs_sc_atacseq')
--v  Release version (e.g. v4.0.0)
+-v  Release version (e.g. v5.0.0)
 -p  Promote data. If this option is not selected, data that would be copied or deleted is printed out, but files are not actually changed (dry run)
 ```
 
@@ -285,13 +299,13 @@ The script defaults to a dry run, printing out the files that would be copied or
 
 ```bash
 # List available teams
-./wf-common/util/promote_staging_data -l -w pmdbs_atac_rnaseq -v v4.0.0
+./wf-common/util/promote_staging_data -l -w pmdbs_atac_rnaseq -v v5.0.0
 
 # Print out the files that would be copied or deleted from the staging bucket to the curated bucket for teams' datasets processed through the sc ATAC-seq pipeline for a specific release version
-./wf-common/util/promote_staging_data -w pmdbs_atac_rnaseq -v v4.0.0
+./wf-common/util/promote_staging_data -w pmdbs_atac_rnaseq -v v5.0.0
 
 # Promote data for teams' datasets processed through the sc ATAC-seq pipeline for a specific release version
-./wf-common/util/promote_staging_data -w pmdbs_atac_rnaseq -v v4.0.0 -p
+./wf-common/util/promote_staging_data -w pmdbs_atac_rnaseq -v v5.0.0 -p
 ```
 
 # Docker images
@@ -351,6 +365,7 @@ Docker images can be build using the [`build_docker_images`](https://github.com/
 | Image | Major tool versions | Links |
 | :- | :- | :- |
 | cellranger_atac | <ul><li>[cellranger-atac v2.2.0](https://www.10xgenomics.com/support/software/cell-ranger-atac/latest/release-notes/release-notes#2025-April)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/cellranger_atac) |
+| scatac_fragment_tools | <ul><li>[scatac_fragment_tools v0.1.5](https://github.com/aertslab/scatac_fragment_tools/releases/tag/0.1.5)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/scatac_fragment_tools) |
 | sc_atac_tools | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li></ul> Python libraries: <ul><li>argparse 1.4.0</li><li>[snapatac2 2.8.0](https://github.com/kaizhang/SnapATAC2/releases/tag/v2.8.0)</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>[harmonypy 0.2.0](https://github.com/slowkow/harmonypy/releases/tag/v0.2.0)</li><li>[magic-impute 3.0.0](https://github.com/KrishnaswamyLab/MAGIC/releases/tag/v3.0.0)</li><li>kaleido 0.2.1</li><li>ipython 8.38.0</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/sc_atac_tools) |
 | scvi_tools | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li><li>[cuda 12.8.1](https://developer.nvidia.com/cuda-12-8-1-download-archive)</li></ul> Python libraries: <ul><li>argparse 1.4.0</li><li>[scvi-tools 1.4.1](https://github.com/scverse/scvi-tools/releases/tag/1.4.1)</li><li>[torch 2.10.0](https://github.com/pytorch/pytorch/releases/tag/v2.10.0)</li><li>[jax 0.9.0](https://github.com/jax-ml/jax/releases/tag/jax-v0.9.0)</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>[scib-metrics 0.5.7](https://github.com/YosefLab/scib-metrics/releases/tag/v0.5.7)</li><li>pyarrow 23.0.0</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/scvi_tools) |
 | util | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/wf-common/tree/main/docker/util) |
@@ -371,6 +386,23 @@ In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-
 | Genome | Cell Ranger ARC reference | Link |
 | :- | :- | :- |
 | Human GRCh38 | 2024-A | https://www.10xgenomics.com/support/software/cell-ranger-arc/downloads#reference-downloads |
+
+### Demultiplexing
+
+To use Team Voet researcher's `scatac_fragment_tools`, there are several inputs required:
+- Path to a text file mapping sample names to fragment files.
+- Path to a text file mapping samples to cell types and cell types to cell barcodes.
+- Filename with chromosome sizes (\*.chrom.sizes, \*.fa.fai).
+
+Links:
+- https://github.com/aertslab/scatac_fragment_tools/
+- https://aertslab.github.io/scatac_fragment_tools/split.html
+
+These steps are run in the `split_demux_fragments` task in [preprocessing](workflows/preprocess/preprocess.wdl). Researchers should provide a Vireo assignment file that contains demultiplexed pooled sc ATAC-seq data. Vireo assigns individual cells to specific donors without requiring pre-existing genotype references. It efficiently identifies singlets and doublets by modeling genetic variation.
+
+**Generating chromosome sizes file**
+1. The Cell Ranger ARC reference is used in this pipeline, so untar `refdata-cellranger-arc-GRCh38-2024-A.tar.gz`
+2. Create the chromosome sizes file: `cut -f1,2 refdata-cellranger-arc-GRCh38-2024-A/fasta/genome.fa.fai > refdata-cellranger-arc-GRCh38-2024-A.chrom.sizes`
 
 ### Allen Brain Institute's MapMyCells references
 

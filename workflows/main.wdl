@@ -14,7 +14,8 @@ workflow sc_atacseq_analysis {
 
 		# Preprocess
 		File cellranger_atac_reference_data
-		File vireo_assignment_csv
+		File cellranger_atac_reference_chrom_sizes
+		Array[File] vireo_assignment_files
 
 		# Allen Institute's Map My Cells
 		File allen_brain_mmc_precomputed_stats_h5
@@ -61,7 +62,8 @@ workflow sc_atacseq_analysis {
 				dataset_doi_url = project.asap_dataset_doi_url,
 				pools = project.pools,
 				cellranger_atac_reference_data = cellranger_atac_reference_data,
-				vireo_assignment_csv = vireo_assignment_csv,
+				cellranger_atac_reference_chrom_sizes = cellranger_atac_reference_chrom_sizes,
+				vireo_assignment_files = vireo_assignment_files,
 				workflow_name = workflow_name,
 				workflow_version = workflow_version,
 				workflow_release = workflow_release,
@@ -81,6 +83,7 @@ workflow sc_atacseq_analysis {
 			preprocess.filtered_peaks,
 			preprocess.filtered_tf,
 			preprocess.fragments_tsv_gz,
+			preprocess.fragments_tsv_gz_tbi,
 			preprocess.summary_csv,
 			preprocess.peak_annotation_tsv,
 			preprocess.peak_motif_mapping_bed,
@@ -160,11 +163,13 @@ workflow sc_atacseq_analysis {
 		Array[Array[File]] cellranger_atac_filtered_peaks = preprocess.filtered_peaks
 		Array[Array[File]] cellranger_atac_filtered_tf = preprocess.filtered_tf
 		Array[Array[File]] cellranger_atac_fragments_tsv_gz = preprocess.fragments_tsv_gz
+		Array[Array[File]] cellranger_atac_fragments_tsv_gz_tbi = preprocess.fragments_tsv_gz_tbi
 		Array[Array[File]] cellranger_atac_summary_csv = preprocess.summary_csv
 		Array[Array[File]] cellranger_atac_peak_annotation_tsv = preprocess.peak_annotation_tsv
 		Array[Array[File]] cellranger_atac_peak_motif_mapping_bed = preprocess.peak_motif_mapping_bed
 
 		# Preprocess
+		Array[Array[File]] sample_split_fragments_tsv_gz = preprocess.sample_split_fragments_tsv_gz
 		Array[Array[File]] initial_adata_object = preprocess.initial_adata_object
 
 		# Project cohort analysis outputs
@@ -297,7 +302,8 @@ workflow sc_atacseq_analysis {
 		cohort_id: {help: "Name of the cohort; used to name output files during cross-team cohort analysis."}
 		projects: {help: "The project ID, set of samples and their associated reads and metadata, output bucket locations, sc data type, and whether or not to run project-level cohort analysis."}
 		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
-		vireo_assignment_csv: {help: "Vireo donor assignment CSV with columns: full_barcode, donor_id. Covers all donors in the pool."}
+		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
+		vireo_assignment_files: {help: "Vireo donor assignment CSV with columns: donor_id, sample, raw_bc. Covers all donors in the pool."}
 		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
 		n_top_genes: {help: "Number of HVG genes to keep. [3000]"}
 		n_comps: {help: "Number of principal components to compute. [30]"}
