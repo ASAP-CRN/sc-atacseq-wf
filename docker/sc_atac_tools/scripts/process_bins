@@ -2,6 +2,7 @@
 
 import argparse
 import snapatac2 as snap
+import hdf5plugin
 
 
 def reduce_dims(
@@ -15,7 +16,7 @@ def reduce_dims(
 
 
 def main(args):
-    adata = snap.read(args.adata_input)
+    adata = snap.read(args.adata_input, backed=None)
 
     adata = adata[:, adata.var["selected"]].copy()
     adata.layers["tile_counts"] = adata.X[:]
