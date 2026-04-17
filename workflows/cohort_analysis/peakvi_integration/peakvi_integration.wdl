@@ -127,7 +127,6 @@ task integrate_peakvi {
 		zones: zones
 		gpuType: "nvidia-tesla-t4"
 		gpuCount: 1
-		nvidiaDriverVersion: "545.23.08" #!UnknownRuntimeKey
 	}
 
 	meta {
