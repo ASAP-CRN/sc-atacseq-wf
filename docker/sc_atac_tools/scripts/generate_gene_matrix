@@ -10,7 +10,7 @@ def create_gene_matrix(
 ):
     gene_matrix = snap.pp.make_gene_matrix(adata, snap.genome.hg38)
 
-    sc.pp.filter_genes(gene_matrix, min_cells= 5)
+    sc.pp.filter_genes(gene_matrix, min_cells=5)
 
     # Copy over UMAP embedding
     gene_matrix.obsm["X_umap"] = adata.obsm["X_umap"]

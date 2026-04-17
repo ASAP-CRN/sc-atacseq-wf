@@ -3,6 +3,7 @@
 import argparse
 import snapatac2 as snap
 import scanpy as sc
+import hdf5plugin
 
 
 def magic_imputation(

@@ -4,6 +4,7 @@ import argparse
 import pandas as pd
 import polars as pl
 import snapatac2 as snap
+import hdf5plugin
 
 
 def call_peaks(
