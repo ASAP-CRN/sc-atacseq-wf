@@ -60,11 +60,11 @@ def compute_qc_metrics(
     )
     print(f"Wrote {tsse_out}")
 
-    snap.pp.filter_cells(merged_adata, min_tsse=7)
+    snap.pp.filter_cells(merged_adata, min_tsse=5)
     # snap.pp.filter_cells(merged_adata, min_counts=5000, min_tsse=10, max_counts=100000)
 
-    snap.pp.add_tile_matrix(merged_adata, bin_size=5000)
-    snap.pp.select_features(merged_adata, n_features=50000)
+    snap.pp.add_tile_matrix(merged_adata, bin_size=500)
+    snap.pp.select_features(merged_adata, n_features=500000)
 
     snap.pp.scrublet(merged_adata)
     snap.pp.filter_doublets(merged_adata)
