@@ -158,7 +158,7 @@
                   
                 ],
                 "multimodal_data": false,
-                "cellranger_atac_reference_data": "",
+                "cellranger_atac_reference_data": "gs://asap-workflow-dev/workflow-resources/refdata-cellranger-arc-GRCh38-2024-A.tar.gz",
                 "raw_data_path": "${cellranger_raw_data_path}",
                 "workflow_info": "${workflow_info}",
                 "billing_project": "${billing_project}",
