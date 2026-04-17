@@ -23,7 +23,7 @@ def call_peaks(
 
     adata.uns["merged_peaks"] = merged_peaks.to_pandas()
 
-    peaks_matrix = snap.pp.make_peak_matrix(adata, use_rep=merged_peaks['Peaks'])
+    peaks_matrix = snap.pp.make_peak_matrix(adata, use_rep=merged_peaks["Peaks"])
 
     return adata, merged_peaks, peaks_matrix
 
