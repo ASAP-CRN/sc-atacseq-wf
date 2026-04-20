@@ -7,7 +7,7 @@
       "tasks": {
         "merge_and_qc": {
           "key": "merge_and_qc",
-          "digest": "",
+          "digest": "cex6xrmrmbrvjkc3ccjv4ikbdwfh624s",
           "tests": [
             {
               "inputs": {
@@ -56,7 +56,7 @@
         },
         "reduce_dimensions": {
           "key": "reduce_dimensions",
-          "digest": "",
+          "digest": "e3ytxsdsmfon7qru3a73p7nku54r6mtq",
           "tests": [
             {
               "inputs": {
@@ -79,7 +79,7 @@
         },
         "peak_calling": {
           "key": "peak_calling",
-          "digest": "",
+          "digest": "gxfdb26lkl7ggoefiptbf4zbgsezxn6p",
           "tests": [
             {
               "inputs": {
@@ -256,7 +256,7 @@
         },
         "motif_enrichment": {
           "key": "motif_enrichment",
-          "digest": "",
+          "digest": "xjenjw4pfz6dcqwk2qdbx3c57syxqxcr",
           "tests": [
             {
               "inputs": {
@@ -805,7 +805,7 @@
       "cohort_id": "team-voet",
       "asap_dataset_id": "DS_PMDBS_0035",
       "pool_id": "AT001a",
-      "source_subject_id": "ASA_076",
+      "source_subject_id": "ASA_031",
       "asap_subject_id": "ASAP_PMDBS_001117",
       "sample_id": "ASAP_PMDBS_001117_s001_TechRep1",
       "batch": "Batch1",
