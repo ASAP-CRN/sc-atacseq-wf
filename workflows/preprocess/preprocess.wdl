@@ -331,7 +331,7 @@ task cellranger_atac_count {
 
 		cellranger-atac --version
 
-		/usr/bin/time \
+		/usr/bin/time -v \
 		cellranger-atac count \
 			--id=~{pool_id} \
 			--reference="$(pwd)/cellranger_atac_refdata" \
@@ -470,6 +470,7 @@ task split_demux_fragments {
 		mkdir fragments_output
 		mkdir renamed_fragments_output
 
+		/usr/bin/time -v \
 		scatac_fragment_tools split \
 			--sample_fragments "~{pool_id}.sample_to_fragment.tsv" \
 			--cell_type_barcodes cell_barcodes.tsv \
@@ -564,6 +565,7 @@ task counts_to_adata {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		counts_to_adata \
 			--cellranger-atac-sample-split-fragments ~{sample_split_fragments_tsv_gz} \
 			--team ~{team_id} \

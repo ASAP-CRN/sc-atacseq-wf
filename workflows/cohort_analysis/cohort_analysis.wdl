@@ -522,6 +522,7 @@ task reduce_dimensions {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		process_bins \
 			--adata-input ~{merged_adata_object} \
 			--adata-output ~{cohort_id}.processed_bins.h5ad
@@ -574,6 +575,7 @@ task peak_calling {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		call_peaks \
 			--adata-input ~{integrated_adata_object} \
 			--macs3-groupby ~{macs3_groupby} \
@@ -710,6 +712,7 @@ task make_gene_matrix {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		generate_gene_matrix \
 			--adata-input ~{harmony_merged_peaks_adata_object} \
 			--output-prefix ~{cohort_id}
@@ -763,6 +766,7 @@ task process_gene_matrix {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		process_genes \
 			--adata-input ~{gene_matrix_adata_object} \
 			--batch-key ~{batch_key} \
@@ -832,6 +836,7 @@ task impute_gene_matrix {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		impute_gene_matrix \
 			--adata-input ~{processed_gene_matrix_adata_object} \
 			--adata-output "~{cohort_id}.gene_matrix.magic_imputed.h5ad"
@@ -949,6 +954,7 @@ task export_final_artifacts {
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		export_final_artifacts \
 			--cohort-id ~{cohort_id} \
 			--adata-input ~{celltype_merged_peaks_adata_object} \
