@@ -138,11 +138,20 @@
                 "zones": "${zones}"
               },
               "output_tests": {
-                "gene_matrix_adata_object": {
-                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.gene_matrix.h5ad",
+                "scib_report_results_csv": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.scib_report.csv",
                   "test_tasks": [
                     "compare_file_basename",
-                    "check_hdf5"
+                    "check_empty_lines",
+                    "check_comma_separated",
+                    "count_columns"
+                  ]
+                },
+                "scib_report_results_svg": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.scib_results.svg",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "svg_validator"
                   ]
                 }
               }
