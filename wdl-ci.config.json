@@ -511,7 +511,8 @@
                 "cut_sites_bigwig": {
                   "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.cut_sites.bigwig",
                   "test_tasks": [
-                    "compare_file_basename"
+                    "compare_file_basename",
+                    "bigwig_validator"
                   ]
                 },
                 "raw_peaks": {
@@ -545,7 +546,9 @@
                 "fragments_tsv_gz_tbi": {
                   "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.fragments.tsv.gz.tbi",
                   "test_tasks": [
-                    "compare_file_basename"
+                    "compare_file_basename",
+                    "check_gzip",
+                    "check_tbi_index"
                   ]
                 },
                 "summary_csv": {
