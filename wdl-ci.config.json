@@ -169,12 +169,8 @@
                 "fastq_R3s": [
                   "gs://asap-raw-team-voet-pmdbs-sn-atacseq-10x/fastqs/NextSeq2000_20230614_ASA__a3f230__20230601_AT-014-a-ATAC_S10_L001_R3_001.fastq.gz"
                 ],
-                "fastq_I1s": [
-                  
-                ],
-                "fastq_I2s": [
-                  
-                ],
+                "fastq_I1s": [],
+                "fastq_I2s": [],
                 "multimodal_data": false,
                 "cellranger_atac_reference_data": "gs://asap-workflow-dev/workflow-resources/refdata-cellranger-arc-GRCh38-2024-A.tar.gz",
                 "raw_data_path": "${cellranger_raw_data_path}",
@@ -210,7 +206,7 @@
                 "cut_sites_bigwig": {
                   "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.cut_sites.bigwig",
                   "test_tasks": [
-                    
+                    "compare_file_basename"
                   ]
                 },
                 "raw_peaks": {
@@ -244,7 +240,7 @@
                 "fragments_tsv_gz_tbi": {
                   "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.fragments.tsv.gz.tbi",
                   "test_tasks": [
-                    
+                    "compare_file_basename"
                   ]
                 },
                 "summary_csv": {
@@ -279,12 +275,84 @@
         "split_demux_fragments": {
           "key": "split_demux_fragments",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "pool_id": "${pool_id}",
+                "source_subject_ids": [
+                  "${source_subject_id}"
+                ],
+                "sample_ids": [
+                  "${sample_id}"
+                ],
+                "cellranger_atac_fragments": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.fragments.tsv.gz",
+                "cellranger_atac_reference_data": "gs://asap-workflow-dev/workflow-resources/refdata-cellranger-arc-GRCh38-2024-A.chrom.sizes",
+                "vireo_assignment_files":[
+                  "gs://asap-raw-team-voet-pmdbs-sn-atac/vireo_assignment_260324_final_CC_demultiplexing.csv",
+                  "gs://asap-raw-team-voet-pmdbs-sn-atac/vireo_assignment_260324_final_SN_demultiplexing.csv"
+                ],
+                "raw_data_path": "${split_fragments_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "subject_split_fragments_tsv_gz": {
+                  "value": [
+                    "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.${pool_id}.fragments.tsv.gz"
+                  ],
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_gzip"
+                  ]
+                },
+                "sample_split_fragments_tsv_gz": {
+                  "value": [
+                    "${input_resources_file_path}/${preprocess_workflow_name}/${source_subject_id}.fragments.tsv.gz"
+                  ],
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_gzip"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "counts_to_adata": {
           "key": "counts_to_adata",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "team_id": "${cohort_id}",
+                "dataset_id": "${asap_dataset_id}",
+                "pool_id": "${pool_id}",
+                "source_subject_id": "${source_subject_id}",
+                "subject_id": "${asap_subject_id}",
+                "sample_id": "${sample_id}",
+                "batch": "${batch}",
+                "sample_split_fragments_tsv_gz": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.${pool_id}.fragments.tsv.gz",
+                "raw_data_path": "${split_fragments_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "initial_adata_object": {
+                  "value": [
+                    "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.${pool_id}.cleaned_unfiltered.h5ad"
+                  ],
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                }
+              }
+            }
+          ]
         }
       }
     },
@@ -363,6 +431,8 @@
       "batch_key": "batch_id",
       "peakvi_latent_key": "X_peakVI",
       "peakvi_max_epochs": 300,
+      "peakvi_n_hidden": 128,
+      "peakvi_batch_size": 128,
       "groups": [
         "sample",
         "batch",
