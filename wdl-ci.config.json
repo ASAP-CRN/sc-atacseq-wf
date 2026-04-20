@@ -603,7 +603,7 @@
                   "${sample_id}"
                 ],
                 "cellranger_atac_fragments": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.fragments.tsv.gz",
-                "cellranger_atac_reference_data": "gs://asap-workflow-dev/workflow-resources/refdata-cellranger-arc-GRCh38-2024-A.chrom.sizes",
+                "cellranger_atac_reference_chrom_sizes": "gs://asap-workflow-dev/workflow-resources/refdata-cellranger-arc-GRCh38-2024-A.chrom.sizes",
                 "vireo_assignment_files":[
                   "gs://asap-raw-team-voet-pmdbs-sn-atac/vireo_assignment_260324_final_CC_demultiplexing.csv",
                   "gs://asap-raw-team-voet-pmdbs-sn-atac/vireo_assignment_260324_final_SN_demultiplexing.csv"
@@ -659,9 +659,7 @@
               },
               "output_tests": {
                 "initial_adata_object": {
-                  "value": [
-                    "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.${pool_id}.cleaned_unfiltered.h5ad"
-                  ],
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.${pool_id}.cleaned_unfiltered.h5ad",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
@@ -804,7 +802,7 @@
   },
   "test_params": {
     "global_params": {
-      "cohort_id": "asap-cohort",
+      "cohort_id": "team-voet",
       "asap_dataset_id": "DS_PMDBS_0035",
       "pool_id": "AT001a",
       "source_subject_id": "ASA_076",

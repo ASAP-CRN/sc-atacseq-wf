@@ -23,20 +23,20 @@ task check_tbi_index {
 		expected_magic=$(printf '\x54\x42\x49\x01')
 
 		check_tbi() {
-            local file="$1"
-            local label="$2"
-            local magic
-            # Read first 4 decompressed bytes; tolerate SIGPIPE from head
-            magic=$(gzip -cd "$file" 2>/dev/null | head -c 4 || true)
-            if [[ "$magic" != "$expected_magic" ]]; then
-                err "$label [$(basename "$file")] is not a valid TBI index file"
-                return 1
-            fi
-            echo "$label [$(basename "$file")] is a valid TBI index file"
-        }
+			local file="$1"
+			local label="$2"
+			local magic
+			# Read first 4 decompressed bytes; tolerate SIGPIPE from head
+			magic=$(gzip -cd "$file" 2>/dev/null | head -c 4 || true)
+			if [[ "$magic" != "$expected_magic" ]]; then
+				err "$label [$(basename "$file")] is not a valid TBI index file"
+				return 1
+			fi
+			echo "$label [$(basename "$file")] is a valid TBI index file"
+		}
 
 		check_tbi "~{validated_output}"   "Validated output"   || exit 1
-        check_tbi "~{current_run_output}" "Current run output" || exit 1
+		check_tbi "~{current_run_output}" "Current run output" || exit 1
 	>>>
 
 	output {
