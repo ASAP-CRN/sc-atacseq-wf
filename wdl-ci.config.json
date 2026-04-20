@@ -80,37 +80,240 @@
         "peak_calling": {
           "key": "peak_calling",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "cohort_id": "${cohort_id}",
+                "integrated_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.harmony_integrated.h5ad",
+                "integration_method": "harmony",
+                "macs3_groupby": "leiden",
+                "raw_data_path": "${cohort_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "merged_peaks_adata_object": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.harmony.leiden.merged_peaks.h5ad",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                },
+                "merged_peaks_csv": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.harmony.leiden.merged_peaks.csv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_comma_separated",
+                    "count_columns"
+                  ]
+                },
+                "peaks_matrix_adata_object": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.harmony.leiden.peaks_matrix.h5ad",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "benchmark_sc_integration": {
           "key": "benchmark_sc_integration",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "cohort_id": "${cohort_id}",
+                "harmony_merged_peaks_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.harmony.leiden.merged_peaks.h5ad",
+                "peakvi_merged_peaks_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.peakvi.leiden.merged_peaks.h5ad",
+                "batch_key": "${batch_key}",
+                "raw_data_path": "${cohort_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "gene_matrix_adata_object": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.gene_matrix.h5ad",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "make_gene_matrix": {
           "key": "make_gene_matrix",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "cohort_id": "${cohort_id}",
+                "harmony_merged_peaks_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.harmony.leiden.merged_peaks.h5ad",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "gene_matrix_adata_object": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.scib_report.csv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_comma_separated",
+                    "count_columns"
+                  ]
+                },
+                "scib_report_results_svg": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.scib_results.svg",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "svg_validator"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "process_gene_matrix": {
           "key": "process_gene_matrix",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "cohort_id": "${cohort_id}",
+                "gene_matrix_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.gene_matrix.h5ad",
+                "n_top_genes": "${n_top_genes}",
+                "n_comps": "${n_comps}",
+                "batch_key": "${batch_key}",
+                "raw_data_path": "${cohort_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "processed_gene_matrix_adata_object": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.processed_gene_matrix.h5ad",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                },
+                "all_genes_csv": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.all_genes.csv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_comma_separated",
+                    "count_columns"
+                  ]
+                },
+                "hvg_genes_csv": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.hvg_genes.csv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_comma_separated",
+                    "count_columns"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "impute_gene_matrix": {
           "key": "impute_gene_matrix",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "cohort_id": "${cohort_id}",
+                "processed_gene_matrix_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.processed_gene_matrix.h5ad",
+                "raw_data_path": "${cohort_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "imputed_gene_matrix_adata_object": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.gene_matrix.magic_imputed.h5ad",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "motif_enrichment": {
           "key": "motif_enrichment",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "cohort_id": "${cohort_id}",
+                "celltype_merged_peaks_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.harmony.cell_type.merged_peaks.h5ad",
+                "raw_data_path": "${cohort_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "motifs_parquet": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.motifs.parquet",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_parquet"
+                  ]
+                }
+              }
+            }
+          ]
         },
         "export_final_artifacts": {
           "key": "export_final_artifacts",
           "digest": "",
-          "tests": []
+          "tests": [
+            {
+              "inputs": {
+                "cohort_id": "${cohort_id}",
+                "celltype_merged_peaks_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.harmony.cell_type.merged_peaks.h5ad",
+                "raw_data_path": "${cohort_raw_data_path}",
+                "workflow_info": "${workflow_info}",
+                "billing_project": "${billing_project}",
+                "container_registry": "${container_registry}",
+                "zones": "${zones}"
+              },
+              "output_tests": {
+                "final_adata_object": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.final.h5ad",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_hdf5"
+                  ]
+                },
+                "final_metadata_csv": {
+                  "value": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.final_metadata.csv",
+                  "test_tasks": [
+                    "compare_file_basename",
+                    "check_empty_lines",
+                    "check_comma_separated",
+                    "count_columns"
+                  ]
+                }
+              }
+            }
+          ]
         }
       }
     },
