@@ -8,7 +8,7 @@ import hdf5plugin
 
 
 def train_model(
-    adata: sc.AnnData, batch_key: str, latent_key: str, max_epochs: int, batch_size: int
+    adata: sc.AnnData, batch_key: str, latent_key: str, max_epochs: int, n_hidden:int, batch_size: int
 ):
     print(f"Training data with PeakVI...")
     scvi.model.PEAKVI.setup_anndata(
@@ -17,7 +17,8 @@ def train_model(
         batch_key=batch_key
     )
 
-    model = scvi.model.PEAKVI(adata)
+    model = scvi.model.PEAKVI(adata, n_hidden=n_hidden)
+    print(f"params={sum(p.numel() for p in model.module.parameters())/1e6:.1f}M")
     model.train(max_epochs=max_epochs, batch_size=batch_size)
 
     latent = model.get_latent_representation()
@@ -34,7 +35,7 @@ def main(args):
     print(f"Using {scvi.settings.dl_num_workers} workers")
 
     adata = sc.read_h5ad(args.adata_input)
-    adata_peakvi, peakvi_model = train_model(adata, args.batch_key, args.latent_key, args.max_epochs, args.batch_size)
+    adata_peakvi, peakvi_model = train_model(adata, args.batch_key, args.latent_key, args.max_epochs, args.n_hidden, args.batch_size)
 
     peakvi_model.save(args.output_peakvi_dir, overwrite=True)
     print(f"Wrote PeakVI model to {args.output_peakvi_dir}")
@@ -79,11 +80,18 @@ if __name__ == "__main__":
         help="The maximum number of full passes through the training data during PeakVI model training [300]",
     )
     parser.add_argument(
+        "-n",
+        "--n-hidden",
+        type=int,
+        required=True,
+        help="Number of nodes per hidden layer (i.e., the number of neurons per fully-connected layer between the input features and the latent space) [128]",
+    )
+    parser.add_argument(
         "-z",
         "--batch-size",
         type=int,
         required=True,
-        help="Training batch size for PeakVI. Controls how many cells are processed per training step [64]",
+        help="Training batch size for PeakVI. Controls how many cells are processed per training step [128]",
     )
     parser.add_argument(
         "-o",
