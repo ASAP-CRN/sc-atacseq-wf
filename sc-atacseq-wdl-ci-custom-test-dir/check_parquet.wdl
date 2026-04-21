@@ -52,7 +52,7 @@ task check_parquet {
 
 	runtime {
 		docker: "dnastack/dnastack-wdl-ci-tools:0.1.1"
-		cpu: 1
+		cpu: 2
 		memory: "3.75 GB"
 		disk: disk_size + " GB"
 		disks: "local-disk " + disk_size + " HDD"
