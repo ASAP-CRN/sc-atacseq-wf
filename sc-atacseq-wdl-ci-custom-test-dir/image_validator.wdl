@@ -20,7 +20,7 @@ task image_validator {
 			echo -e "[ERROR] $message" >&2
 		}
 
-		if ! identify ~{validated_output}; then
+		if ! identify "~{validated_output}"; then
 			err "Validated image file: [~{basename(validated_output)}] is invalid"
 			exit 1
 		else
