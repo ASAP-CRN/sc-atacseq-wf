@@ -39,7 +39,7 @@ task check_parquet {
 		fi
 
 		# Confirm that current output is in parquet format
-		if (check_parquet ~{current_run_output}); then
+		if (check_parquet "~{current_run_output}"); then
 			echo "Current run output [~{basename(current_run_output)}] is a valid parquet file"
 		else
 			err "Current run output [~{basename(current_run_output)}] is not a valid parquet file"
