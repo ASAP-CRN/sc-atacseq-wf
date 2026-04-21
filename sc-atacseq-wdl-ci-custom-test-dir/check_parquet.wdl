@@ -33,7 +33,7 @@ task check_parquet {
 		}
 
 		# Confirm that validated output is in parquet format
-		if ! (check_parquet ~{validated_output}); then
+		if ! (check_parquet "~{validated_output}"); then
 			err "Validated output file [~{basename(validated_output)}] is not a valid parquet file"
 			exit 1
 		fi
