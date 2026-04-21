@@ -56,7 +56,7 @@
         },
         "reduce_dimensions": {
           "key": "reduce_dimensions",
-          "digest": "e3ytxsdsmfon7qru3a73p7nku54r6mtq",
+          "digest": "lgso42gxgr6al2mq4rcxj4jzi7ktizck",
           "tests": [
             {
               "inputs": {
@@ -79,7 +79,7 @@
         },
         "peak_calling": {
           "key": "peak_calling",
-          "digest": "gxfdb26lkl7ggoefiptbf4zbgsezxn6p",
+          "digest": "23ip234zgocxkg5p5uv62pvxbxpjji5w",
           "tests": [
             {
               "inputs": {
@@ -160,7 +160,7 @@
         },
         "make_gene_matrix": {
           "key": "make_gene_matrix",
-          "digest": "ba5akfqovrcobnsigc7lcnzg4cvh2gxr",
+          "digest": "nsd664oiuqki75l3gqm2m3oyczqv2ora",
           "tests": [
             {
               "inputs": {
@@ -183,7 +183,7 @@
         },
         "process_gene_matrix": {
           "key": "process_gene_matrix",
-          "digest": "vzuy3o6o5znybsxp37xteviy7mtwfnoq",
+          "digest": "mmrnns6c3pqopb6rhef5ncsyqaivke43",
           "tests": [
             {
               "inputs": {
@@ -230,7 +230,7 @@
         },
         "impute_gene_matrix": {
           "key": "impute_gene_matrix",
-          "digest": "whfxz6a4fcil3jqgckyohsefwqkavz3u",
+          "digest": "smwmt62j5bywu5cvmc2v6bf6lwef6o7o",
           "tests": [
             {
               "inputs": {
@@ -282,7 +282,7 @@
         },
         "export_final_artifacts": {
           "key": "export_final_artifacts",
-          "digest": "t7bhj64bj7k3fm2dl7s5kkx4lwwmjmp2",
+          "digest": "okurd7zse2slaokyg2vesdlcfcfiegez",
           "tests": [
             {
               "inputs": {
@@ -469,7 +469,7 @@
       "tasks": {
         "cellranger_atac_count": {
           "key": "cellranger_atac_count",
-          "digest": "6qe74yjnar4ozgzgmtipgto6t7g27zjz",
+          "digest": "j2v4hes3n4hcdavbnnvpeylbucwmrkht",
           "tests": [
             {
               "inputs": {
@@ -591,7 +591,7 @@
         },
         "split_demux_fragments": {
           "key": "split_demux_fragments",
-          "digest": "mzdvr5k7kfgrmsgaebdehxajcolottn3",
+          "digest": "2j7h3ssmnajxad3orwvj62kluiwfkwju",
           "tests": [
             {
               "inputs": {
@@ -639,7 +639,7 @@
         },
         "counts_to_adata": {
           "key": "counts_to_adata",
-          "digest": "izxzeqw3fbb5vjgiwfcwveqfweoe5dxp",
+          "digest": "2hf7q4jwhem2a6tstdm3oiiwraxwtlpz",
           "tests": [
             {
               "inputs": {
