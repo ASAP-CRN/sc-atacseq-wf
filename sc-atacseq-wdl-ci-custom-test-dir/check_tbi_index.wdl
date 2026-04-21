@@ -9,7 +9,7 @@ task check_tbi_index {
 		File validated_output
 	}
 
-	Int disk_size = ceil(size(current_run_output, "GB") + size(validated_output, "GB") + 10)
+	Int disk_size = ceil(size([current_run_output, validated_output], "GB") + 10)
 
 	command <<<
 		set -euo pipefail
