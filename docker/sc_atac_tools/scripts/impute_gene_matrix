@@ -15,7 +15,8 @@ def magic_imputation(
 
 
 def main(args):
-    adata = snap.read(args.adata_input, backed=None)
+    adata = snap.read(args.adata_input)
+    adata.to_memory()
     adata_magic_imputed = magic_imputation(adata)
 
     adata_magic_imputed.write(
