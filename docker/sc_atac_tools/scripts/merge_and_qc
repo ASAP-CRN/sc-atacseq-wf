@@ -34,8 +34,7 @@ def merge_adata(
     )
     # Must read in merged adata into memory to use compute_qc_metrics()
     merged_adata.close()
-    merged_adata = snap.read(tmp_file)
-    merged_adata.to_memory()
+    merged_adata = snap.read(tmp_file).to_memory()
 
     return merged_adata
 

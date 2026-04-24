@@ -29,8 +29,7 @@ def call_peaks(
 
 
 def main(args):
-    adata = snap.read(args.adata_input)
-    adata.to_memory()
+    adata = snap.read(args.adata_input).to_memory()
     adata_peaks, merged_peaks_df, adata_peaks_matrix = call_peaks(adata, args.macs3_groupby)
 
     # Output used in https://github.com/ASAP-CRN/sc-rnaseq-wf/blob/main/workflows/cohort_analysis/cohort_analysis.wdl

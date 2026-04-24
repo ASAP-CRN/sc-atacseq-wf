@@ -34,8 +34,7 @@ def run_harmony(
 
 
 def main(args):
-    adata = snap.read(args.adata_input)
-    adata.to_memory()
+    adata = snap.read(args.adata_input).to_memory()
     adata_harmony = run_harmony(adata, args.batch_key)
 
     adata_harmony.write(
