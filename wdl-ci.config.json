@@ -7,7 +7,7 @@
       "tasks": {
         "merge_and_qc": {
           "key": "merge_and_qc",
-          "digest": "ppvfbiffiwbwj6ywovqslmam24tyryjx",
+          "digest": "shuc7rpce76e6zq7lf3ba3gzv5gd5grz",
           "tests": [
             {
               "inputs": {
