@@ -678,7 +678,7 @@
       "tasks": {
         "map_cell_types": {
           "key": "map_cell_types",
-          "digest": "xnxfshedip5ibmakivcq6x76j2ekq7up",
+          "digest": "4drhqu6ex3lwgiljdizaeu54ofg6qsxt",
           "tests": [
             {
               "inputs": {
@@ -720,7 +720,7 @@
         },
         "add_mapped_cell_types": {
           "key": "add_mapped_cell_types",
-          "digest": "rt6pza6pu2eopx6sovqnl22ubigcu55i",
+          "digest": "vpj2dcsebmo5htwbgtunznqyl6e6ij3k",
           "tests": [
             {
               "inputs": {
@@ -755,7 +755,7 @@
         },
         "plot_groups_and_features": {
           "key": "plot_groups_and_features",
-          "digest": "bqzcp2lfiauabqf45gmiuhsvjthniiun",
+          "digest": "pfkxhbmhzahw4yhpm3qivevvmn63mzxr",
           "tests": [
             {
               "inputs": {
