@@ -487,7 +487,7 @@ task merge_and_qc {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
