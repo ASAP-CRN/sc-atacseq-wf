@@ -8,22 +8,26 @@ import snapatac2 as snap
 import hdf5plugin
 
 
-def merge_adata(
-    adata_objects_fofn: str
-):
-    sample_files = []
-    # Note that the sample id should be the official ASAP_samples
-    with open(adata_objects_fofn, "r") as file:
-        for sample in file:
-            # Check that sample line is not empty
-            if sample.strip():
-                columns = sample.strip().split("\t")
-                sample_files.append(columns)
+def process_sample(sample_name: str, file_path: str):
+    print(f"Processing sample: {sample_name}")
+    adata = snap.read(file_path).to_memory()
 
-    print(f"Processing {len(sample_files)} samples")
+    snap.metrics.tsse(adata, snap.genome.hg38)
 
-    sample_names = [s[0] for s in sample_files]
-    adatas = [snap.read(s[1]) for s in sample_files]
+    snap.pp.filter_cells(adata, min_tsse=5)
+    # snap.pp.filter_cells(merged_adata, min_counts=5000, min_tsse=10, max_counts=100000)
+
+    snap.pp.scrublet(adata)
+    snap.pp.filter_doublets(adata)
+
+    snap.pp.add_tile_matrix(adata, bin_size=500)
+
+    print(f"  {sample_name}: {adata.n_obs} cells after filtering")
+    return adata
+
+
+def merge_and_select_features(adatas: list, n_features: int = 500000):
+    print(f"Merging {len(adatas)} processed samples...")
 
     # Must output to handle n_vars = 0 / no X matrix
     tmp_file = tempfile.mktemp(suffix=".h5ad")
@@ -32,17 +36,22 @@ def merge_adata(
         join="inner",
         file=tmp_file,
     )
-    # Must read in merged adata into memory to use compute_qc_metrics()
     merged_adata.close()
+
+    del adatas
+
     merged_adata = snap.read(tmp_file).to_memory()
 
+    snap.pp.select_features(merged_adata, n_features=n_features)
+
+    # Subset to selected features
+    merged_adata = merged_adata[:, merged_adata.var["selected"]].copy()
+
+    print(f"Merged: {merged_adata.n_obs} cells x {merged_adata.n_vars} features")
     return merged_adata
 
 
-def compute_qc_metrics(
-    merged_adata: snap.AnnData, plot_prefix: str
-):
-    print("Computing QC metrics...")
+def plot_qc(merged_adata, plot_prefix: str):
     frag_size_distr_out = f"{plot_prefix}.frag_size_distr.png"
     snap.pl.frag_size_distr(
         merged_adata,
@@ -51,7 +60,6 @@ def compute_qc_metrics(
     )
     print(f"Wrote {frag_size_distr_out}")
 
-    snap.metrics.tsse(merged_adata, snap.genome.hg38)
     tsse_out = f"{plot_prefix}.tsse.png"
     snap.pl.tsse(
         merged_adata,
@@ -60,31 +68,36 @@ def compute_qc_metrics(
     )
     print(f"Wrote {tsse_out}")
 
-    snap.pp.filter_cells(merged_adata, min_tsse=5)
-    # snap.pp.filter_cells(merged_adata, min_counts=5000, min_tsse=10, max_counts=100000)
-
-    snap.pp.add_tile_matrix(merged_adata, bin_size=500)
-    snap.pp.select_features(merged_adata, n_features=500000)
-
-    snap.pp.scrublet(merged_adata)
-    snap.pp.filter_doublets(merged_adata)
-
-    return merged_adata
-
 
 def main(args):
-    adatas = merge_adata(args.adata_objects_fofn)
-    adatas_qc = compute_qc_metrics(adatas, args.plot_prefix)
+    sample_files = []
+    # Note that the sample id should be the official ASAP_samples
+    with open(args.adata_objects_fofn, "r") as file:
+        for sample in file:
+            # Check that sample line is not empty
+            if sample.strip():
+                columns = sample.strip().split("\t")
+                sample_files.append(columns)
 
-    adatas_qc.write(
-        filename=args.adata_output
-    )
+    print(f"Processing {len(sample_files)} samples")
+
+    # Per-sample QC
+    processed = []
+    for sample_name, file_path in sample_files:
+        adata = process_sample(sample_name, file_path)
+        processed.append(adata)
+
+    # Merge and global feature selection
+    merged = merge_and_select_features(processed, n_features=500000)
+
+    # QC plots on merged data
+    plot_qc(merged, args.plot_prefix)
+
+    # Save outputs
+    merged.write(filename=args.adata_output)
     print(f"Wrote {args.adata_output}")
 
-    adatas_qc.obs.to_csv(
-        args.output_metadata,
-        index=True
-    )
+    merged.obs.to_csv(args.output_metadata, index=True)
     print(f"Wrote {args.output_metadata}")
 
 
