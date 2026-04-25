@@ -8,24 +8,6 @@ import snapatac2 as snap
 import hdf5plugin
 
 
-def process_sample(sample_name: str, file_path: str):
-    print(f"Processing sample: {sample_name}")
-    adata = snap.read(file_path).to_memory()
-
-    snap.metrics.tsse(adata, snap.genome.hg38)
-
-    snap.pp.filter_cells(adata, min_tsse=5)
-    # snap.pp.filter_cells(merged_adata, min_counts=5000, min_tsse=10, max_counts=100000)
-
-    snap.pp.scrublet(adata)
-    snap.pp.filter_doublets(adata)
-
-    snap.pp.add_tile_matrix(adata, bin_size=500)
-
-    print(f"  {sample_name}: {adata.n_obs} cells after filtering")
-    return adata
-
-
 def merge_and_select_features(adatas: list, n_features: int = 500000):
     print(f"Merging {len(adatas)} processed samples...")
 
@@ -81,14 +63,19 @@ def main(args):
 
     print(f"Processing {len(sample_files)} samples")
 
-    # Per-sample QC
-    processed = []
-    for sample_name, file_path in sample_files:
-        adata = process_sample(sample_name, file_path)
-        processed.append(adata)
+    adatas = [snap.read(s[1]).to_memory() for s in sample_files]
+
+    # Per-sample QC (functions handle lists natively)
+    snap.metrics.tsse(adatas, snap.genome.hg38)
+    snap.pp.filter_cells(adatas, min_tsse=5)
+    # snap.pp.filter_cells(adatas, min_counts=5000, min_tsse=10, max_counts=100000)
+    snap.pp.add_tile_matrix(adatas, bin_size=500)
+    snap.pp.select_features(adatas, n_features=500000)
+    snap.pp.scrublet(adatas)
+    snap.pp.filter_doublets(adatas)
 
     # Merge and global feature selection
-    merged = merge_and_select_features(processed, n_features=500000)
+    merged = merge_and_select_features(adatas, n_features=500000)
 
     # QC plots on merged data
     plot_qc(merged, args.plot_prefix)
