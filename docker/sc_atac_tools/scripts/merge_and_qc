@@ -65,16 +65,22 @@ def main(args):
 
     # Per-sample QC: process one at a time to limit memory
     adatas = []
-    for sample_name, file_path in sample_files:
-        print(f"Processing sample: {sample_name}", flush=True)
+    for i, (sample_name, file_path) in enumerate(sample_files, 1):
+        print(f"Processing sample {i}/{len(sample_files)}: {sample_name}", flush=True)
         adata = snap.read(file_path).to_memory()
         snap.metrics.tsse(adata, snap.genome.hg38)
         snap.pp.filter_cells(adata, min_tsse=5)
         # snap.pp.filter_cells(adatas, min_counts=5000, min_tsse=10, max_counts=100000)
+        if adata.n_obs == 0:
+            print(f"  {sample_name}: no cells remaining after filtering cells, skipping", flush=True)
+            continue
         snap.pp.add_tile_matrix(adata, bin_size=500)
         snap.pp.select_features(adata, n_features=500000)
         snap.pp.scrublet(adata)
         snap.pp.filter_doublets(adata)
+        if adata.n_obs == 0:
+            print(f"  {sample_name}: no cells remaining after doublet removal, skipping", flush=True)
+            continue
         print(f"  {sample_name}: {adata.n_obs} cells after filtering", flush=True)
         adatas.append(adata)
 
