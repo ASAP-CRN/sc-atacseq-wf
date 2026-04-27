@@ -34,8 +34,10 @@ def run_harmony(
 
 def main(args):
     adata = snap.read(args.adata_input).to_memory()
+    
     # Filter adata to only keep the n_features
-    adata = adata[:, adata.var["selected"]].copy() 
+    adata = adata[:, adata.var["selected"]].copy()
+    adata.layers["tile_counts"] = adata.X[:]
 
     adata_harmony = run_harmony(adata, args.batch_key)
 

@@ -35,6 +35,11 @@ def main(args):
     print(f"Using {scvi.settings.dl_num_workers} workers")
 
     adata = sc.read_h5ad(args.adata_input)
+    
+    # Filter adata to only keep the n_features
+    adata = adata[:, adata.var["selected"]].copy()
+    adata.layers["tile_counts"] = adata.X[:]
+
     adata_peakvi, peakvi_model = train_model(adata, args.batch_key, args.latent_key, args.max_epochs, args.n_hidden, args.batch_size)
 
     peakvi_model.save(args.output_peakvi_dir, overwrite=True)
