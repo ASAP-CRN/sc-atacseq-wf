@@ -1,15 +1,27 @@
 #!/usr/bin/env python3
 
 import argparse
-import tempfile
-import os
 import pandas as pd
 import kaleido
 import snapatac2 as snap
-import hdf5plugin
 
 
-def plot_qc(merged_adata, plot_prefix: str):
+def qc(
+    adatas: list
+):
+    snap.pp.filter_cells(adatas, min_counts=5000, min_tsse=10, max_counts=100000)
+
+    snap.pp.select_features(adatas, n_features=500000)
+
+    snap.pp.scrublet(adatas)
+    snap.pp.filter_doublets(adatas)
+
+    return adatas
+
+
+def plot_qc(
+    merged_adata: snap.AnnData, plot_prefix: str
+):
     frag_size_distr_out = f"{plot_prefix}.frag_size_distr.png"
     snap.pl.frag_size_distr(
         merged_adata,
@@ -39,62 +51,26 @@ def main(args):
 
     print(f"Processing {len(sample_files)} samples")
 
-    # Per-sample QC: process one at a time to limit memory
-    tmp_files = []
-    for i, (sample_name, file_path) in enumerate(sample_files, 1):
-        print(f"Processing sample {i}/{len(sample_files)}: {sample_name}", flush=True)
-        adata = snap.read(file_path).to_memory()
-        snap.metrics.tsse(adata, snap.genome.hg38)
-        snap.pp.filter_cells(adata, min_tsse=5)
-        # snap.pp.filter_cells(adatas, min_counts=5000, min_tsse=10, max_counts=100000)
-        if adata.n_obs == 0:
-            print(f"  {sample_name}: no cells remaining after filtering cells, skipping", flush=True)
-            continue
-        snap.pp.add_tile_matrix(adata, bin_size=500)
-        snap.pp.select_features(adata, n_features=500000)
-        snap.pp.scrublet(adata)
-        snap.pp.filter_doublets(adata)
-        if adata.n_obs == 0:
-            print(f"  {sample_name}: no cells remaining after doublet removal, skipping", flush=True)
-            continue
-        print(f"  {sample_name}: {adata.n_obs} cells after filtering", flush=True)
+    sample_names = [s[0] for s in sample_files]
+    adatas = [snap.read(s[1]) for s in sample_files]
 
-        # Write to local temp file and free memory
-        tmp = tempfile.mktemp(suffix='.h5ad')
-        adata.write(filename=tmp)
-        tmp_files.append((sample_name, tmp))
-        del adata
+    adatas = qc(adatas)
 
-    # Create AnnDataSet from local temp files to get global feature selection
-    print(f"Selecting features across {len(tmp_files)} samples...", flush=True)
-    dataset = snap.AnnDataSet(
-        adatas=[(name, snap.read(f)) for name, f in tmp_files],
-        filename=tempfile.mktemp(suffix='.h5ads'),
+    merged_adata = snap.concat(
+        adatas,
+        join="inner",
+        file=args.adata_output,
     )
-    snap.pp.select_features(dataset, n_features=500000)
-    selected_features = [v for v, s in zip(dataset.var_names, dataset.var["selected"]) if s]
-    dataset.close()
-
-    # Load each sample, subset to selected features, concat
-    print(f"Merging with {len(selected_features)} selected features...", flush=True)
-    adatas = []
-    for name, f in tmp_files:
-        adata = snap.read(f).to_memory()
-        adata = adata[:, selected_features].copy()
-        adatas.append(adata)
-        os.remove(f)
-
-    merged = snap.concat(adatas, join='inner')
-
-    # QC plots on merged data
-    plot_qc(merged, args.plot_prefix)
-
-    # Save outputs
-    merged.write(filename=args.adata_output)
     print(f"Wrote {args.adata_output}")
 
-    merged.obs.to_csv(args.output_metadata, index=True)
+    merged_adata.obs[:].write_csv(
+        args.output_metadata
+    )
     print(f"Wrote {args.output_metadata}")
+
+    plot_qc(merged_adata, args.plot_prefix)
+
+    merged_adata.close()
 
 
 if __name__ == "__main__":

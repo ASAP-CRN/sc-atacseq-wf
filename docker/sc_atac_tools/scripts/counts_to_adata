@@ -44,9 +44,13 @@ def main(args):
         args.pool_id,
         args.batch
     )
+
+    # Compute scores and add vars to in-memory AnnData
+    snap.metrics.tsse(adata, snap.genome.hg38)
+    snap.pp.add_tile_matrix(adata, bin_size=500)
+
     adata.write(
-        filename=args.adata_output,
-        compression="gzip"
+        filename=args.adata_output
     )
     print(f"Wrote {args.adata_output}")
 

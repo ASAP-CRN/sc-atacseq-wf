@@ -4,7 +4,6 @@ import argparse
 import pandas as pd
 import numpy as np
 import snapatac2 as snap
-import hdf5plugin
 import harmonypy as hm
 
 
@@ -35,6 +34,9 @@ def run_harmony(
 
 def main(args):
     adata = snap.read(args.adata_input).to_memory()
+    # Filter adata to only keep the n_features
+    adata = adata[:, adata.var["selected"]].copy() 
+
     adata_harmony = run_harmony(adata, args.batch_key)
 
     adata_harmony.write(
