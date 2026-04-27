@@ -2,35 +2,11 @@
 
 import argparse
 import tempfile
+import os
 import pandas as pd
 import kaleido
 import snapatac2 as snap
 import hdf5plugin
-
-
-def merge_and_select_features(adatas: list, n_features: int = 500000):
-    print(f"Merging {len(adatas)} processed samples...")
-
-    # Must output to handle n_vars = 0 / no X matrix
-    tmp_file = tempfile.mktemp(suffix=".h5ad")
-    merged_adata = snap.concat(
-        adatas,
-        join="inner",
-        file=tmp_file,
-    )
-    merged_adata.close()
-
-    del adatas
-
-    merged_adata = snap.read(tmp_file).to_memory()
-
-    snap.pp.select_features(merged_adata, n_features=n_features)
-
-    # Subset to selected features
-    merged_adata = merged_adata[:, merged_adata.var["selected"]].copy()
-
-    print(f"Merged: {merged_adata.n_obs} cells x {merged_adata.n_vars} features")
-    return merged_adata
 
 
 def plot_qc(merged_adata, plot_prefix: str):
@@ -64,7 +40,7 @@ def main(args):
     print(f"Processing {len(sample_files)} samples")
 
     # Per-sample QC: process one at a time to limit memory
-    adatas = []
+    tmp_files = []
     for i, (sample_name, file_path) in enumerate(sample_files, 1):
         print(f"Processing sample {i}/{len(sample_files)}: {sample_name}", flush=True)
         adata = snap.read(file_path).to_memory()
@@ -82,10 +58,33 @@ def main(args):
             print(f"  {sample_name}: no cells remaining after doublet removal, skipping", flush=True)
             continue
         print(f"  {sample_name}: {adata.n_obs} cells after filtering", flush=True)
-        adatas.append(adata)
 
-    # Merge and global feature selection
-    merged = merge_and_select_features(adatas, n_features=500000)
+        # Write to local temp file and free memory
+        tmp = tempfile.mktemp(suffix='.h5ad')
+        adata.write(filename=tmp)
+        tmp_files.append((sample_name, tmp))
+        del adata
+
+    # Create AnnDataSet from local temp files to get global feature selection
+    print(f"Selecting features across {len(tmp_files)} samples...", flush=True)
+    dataset = snap.AnnDataSet(
+        adatas=[(name, snap.read(f)) for name, f in tmp_files],
+        filename=tempfile.mktemp(suffix='.h5ads'),
+    )
+    snap.pp.select_features(dataset, n_features=500000)
+    selected_features = [v for v, s in zip(dataset.var_names, dataset.var["selected"]) if s]
+    dataset.close()
+
+    # Load each sample, subset to selected features, concat
+    print(f"Merging with {len(selected_features)} selected features...", flush=True)
+    adatas = []
+    for name, f in tmp_files:
+        adata = snap.read(f).to_memory()
+        adata = adata[:, selected_features].copy()
+        adatas.append(adata)
+        os.remove(f)
+
+    merged = snap.concat(adatas, join='inner')
 
     # QC plots on merged data
     plot_qc(merged, args.plot_prefix)
