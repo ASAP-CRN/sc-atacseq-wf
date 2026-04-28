@@ -389,7 +389,7 @@
       "tasks": {
         "integrate_peakvi": {
           "key": "integrate_peakvi",
-          "digest": "byk5rjnci7dqubsk354exbqqgwuyss7p",
+          "digest": "tdw7tp6xk5db3yr22cs44qg5mxrwoeei",
           "tests": [
             {
               "inputs": {
