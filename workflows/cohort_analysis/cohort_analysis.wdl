@@ -517,8 +517,9 @@ task reduce_dimensions {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(merged_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(merged_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(merged_adata_object, "GB") * 10 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(merged_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -535,7 +536,7 @@ task reduce_dimensions {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -570,8 +571,9 @@ task peak_calling {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(integrated_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(integrated_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(integrated_adata_object, "GB") * 10 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(integrated_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -600,7 +602,7 @@ task peak_calling {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -640,8 +642,9 @@ task benchmark_sc_integration {
 		String zones
 	}
 
-	Int mem_gb = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 2 + 20)
-	Int disk_size = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 10 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -673,7 +676,7 @@ task benchmark_sc_integration {
 
 	runtime {
 		docker: "~{container_registry}/scvi_tools:1.0.0"
-		cpu: 2
+		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -707,8 +710,9 @@ task make_gene_matrix {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(harmony_merged_peaks_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(harmony_merged_peaks_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(harmony_merged_peaks_adata_object, "GB") * 10 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(harmony_merged_peaks_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -725,7 +729,7 @@ task make_gene_matrix {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -761,8 +765,9 @@ task process_gene_matrix {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(gene_matrix_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(gene_matrix_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(gene_matrix_adata_object, "GB") * 10 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(gene_matrix_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -793,7 +798,7 @@ task process_gene_matrix {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -831,8 +836,9 @@ task impute_gene_matrix {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(processed_gene_matrix_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(processed_gene_matrix_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(processed_gene_matrix_adata_object, "GB") * 10 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(processed_gene_matrix_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -855,7 +861,7 @@ task impute_gene_matrix {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -890,8 +896,9 @@ task motif_enrichment {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 40)
-	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 15 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -950,7 +957,7 @@ task export_final_artifacts {
 	}
 
 	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 50)
+	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail

@@ -94,7 +94,7 @@ task integrate_peakvi {
 	}
 
 	Int mem_gb = ceil(size(processed_bins_adata_object, "GB") * 2 + 50)
-	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 2 + 50)
+	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -175,8 +175,9 @@ task cluster_peakvi {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(peakvi_integrated_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(peakvi_integrated_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(peakvi_integrated_adata_object, "GB") * 10 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(peakvi_integrated_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -203,7 +204,7 @@ task cluster_peakvi {
 
 	runtime {
 		docker: "~{container_registry}/scvi_tools:1.0.0"
-		cpu: 2
+		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
