@@ -93,8 +93,9 @@ task integrate_peakvi {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(processed_bins_adata_object, "GB") * 10 + 50)
-	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	# N1 custom machine type must be compatible with gpuType
+	Int calc_mem_gb = ceil(size(processed_bins_adata_object, "GB") * 6 + 50)
+	Int mem_gb = if calc_mem_gb > 256 then 256 else calc_mem_gb
 	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 4 + 50)
 
 	command <<<
