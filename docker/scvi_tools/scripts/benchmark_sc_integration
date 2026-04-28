@@ -4,6 +4,7 @@ import argparse
 import scanpy as sc
 import pandas as pd
 import numpy as np
+import hdf5plugin
 from scib_metrics.benchmark import Benchmarker, BatchCorrection
 
 
