@@ -10,7 +10,7 @@ def qc(
     adatas: list
 ):
     snap.pp.filter_cells(adatas, min_counts=5000, min_tsse=10, max_counts=100000)
-    adatas = [a for a in adatas if a.n_obs > 0]
+    adatas = [a for a in adatas if a.n_obs >= 50]
     print(f"{len(adatas)} samples remaining after cell filtering")
 
     snap.pp.select_features(adatas, n_features=500000)
