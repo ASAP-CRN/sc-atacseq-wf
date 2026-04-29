@@ -70,7 +70,7 @@ def main(args):
 
     obs = merged_adata.obs[:]
     obs = obs.insert_column(0, pl.Series("barcode", list(merged_adata.obs_names)))
-    obs.write_csv(args.output_metadata, index=True)
+    obs.write_csv(args.output_metadata)
     print(f"Wrote {args.output_metadata}")
 
     plot_qc(merged_adata, args.plot_prefix)
