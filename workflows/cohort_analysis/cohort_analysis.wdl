@@ -602,7 +602,7 @@ task peak_calling {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 4
+		cpu: 32
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
