@@ -89,6 +89,7 @@ workflow sc_atacseq_analysis {
 			preprocess.summary_csv,
 			preprocess.peak_annotation_tsv,
 			preprocess.peak_motif_mapping_bed,
+			preprocess.sample_split_fragments_tsv_gz,
 			preprocess.initial_adata_object
 		]) #!StringCoercion
 
