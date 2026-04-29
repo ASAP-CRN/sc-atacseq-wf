@@ -94,8 +94,8 @@ task integrate_peakvi {
 	}
 
 	# N1 custom machine type must be compatible with gpuType
-	Int calc_mem_gb = ceil(size(processed_bins_adata_object, "GB") * 6 + 50)
-	Int mem_gb = if calc_mem_gb > 256 then 256 else calc_mem_gb
+	Int calc_mem_gb = ceil(size(processed_bins_adata_object, "GB") * 8 + 50)
+	Int mem_gb = if calc_mem_gb > 312 then 312 else calc_mem_gb
 	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 4 + 50)
 
 	command <<<
