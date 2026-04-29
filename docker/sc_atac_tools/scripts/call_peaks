@@ -18,7 +18,7 @@ def call_peaks(
         raise ValueError(f"'{groupby}' not found in adata.obs")
 
     print(f"Calling peaks by {groupby} and setting replicate as 'sample'...")
-    snap.tl.macs3(adata, groupby=groupby, replicate="sample", n_jobs=num_workers)
+    snap.tl.macs3(adata, groupby=groupby, replicate="sample", n_jobs=num_workers, tempdir=os.environ["TMPDIR"])
     merged_peaks = snap.tl.merge_peaks(adata.uns["macs3"], chrom_sizes=snap.genome.hg38)
 
     print(f"Merged peaks dim:")

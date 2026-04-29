@@ -573,10 +573,13 @@ task peak_calling {
 
 	Int calc_mem_gb = ceil(size(integrated_adata_object, "GB") * 10 + 50)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
-	Int disk_size = ceil(size(integrated_adata_object, "GB") * 4 + 50)
+	Int disk_size = ceil(size(integrated_adata_object, "GB") * 4 + 100)
 
 	command <<<
 		set -euo pipefail
+
+		export TMPDIR=/mnt/disks/cromwell_root/macs3_tmp
+		mkdir -p $TMPDIR
 
 		/usr/bin/time -v \
 		call_peaks \
