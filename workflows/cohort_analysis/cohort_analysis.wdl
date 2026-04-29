@@ -488,7 +488,6 @@ task merge_and_qc {
 		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} SSD"
-		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -608,7 +607,6 @@ task peak_calling {
 		cpu: 32
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -682,7 +680,6 @@ task benchmark_sc_integration {
 		cpu: 4
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -927,7 +924,6 @@ task motif_enrichment {
 		cpu: 8
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
 	}
