@@ -14,7 +14,7 @@
                 "cohort_id": "${cohort_id}",
                 "preprocessed_adata_objects": [
                   "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.${pool_id}.cleaned_unfiltered.h5ad",
-                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMDBS_001118_s001_TechRep1.${pool_id}.cleaned_unfiltered.h5ad"
+                  "${input_resources_file_path}/${preprocess_workflow_name}/ASAP_PMDBS_001118_s001_BiolRep1.${pool_id}.cleaned_unfiltered.h5ad"
                 ],
                 "raw_data_path": "${cohort_raw_data_path}",
                 "workflow_info": "${workflow_info}",
@@ -807,17 +807,17 @@
       "pool_id": "AT001a",
       "source_subject_id": "ASA_031",
       "asap_subject_id": "ASAP_PMDBS_001117",
-      "sample_id": "ASAP_PMDBS_001117_s001_TechRep1",
+      "sample_id": "ASAP_PMDBS_001117_s001_BiolRep1",
       "batch": "Batch1",
       "project_sample_ids": [
         [
           "team-voet",
-          "ASAP_PMDBS_001117_s001_TechRep1.AT001a",
+          "ASAP_PMDBS_001117_s001_BiolRep1.AT001a",
           "https://doi.org/10.5281/zenodo.18988729"
         ],
         [
           "team-voet",
-          "ASAP_PMDBS_001118_s001_TechRep1.AT001a",
+          "ASAP_PMDBS_001118_s001_BiolRep1.AT001a",
           "https://doi.org/10.5281/zenodo.18988729"
         ]
       ],
