@@ -79,7 +79,7 @@
         },
         "peak_calling": {
           "key": "peak_calling",
-          "digest": "7wxcfmmm4rnvxmhuyal7cmuqiuqf4fvy",
+          "digest": "tamombnx3wn32cdl532odvpiv2a4ggk5",
           "tests": [
             {
               "inputs": {
@@ -389,7 +389,7 @@
       "tasks": {
         "integrate_peakvi": {
           "key": "integrate_peakvi",
-          "digest": "tdw7tp6xk5db3yr22cs44qg5mxrwoeei",
+          "digest": "nqc4y36s7b5cnk67jrdpzt5rxfiezoos",
           "tests": [
             {
               "inputs": {
