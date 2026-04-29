@@ -570,7 +570,7 @@ task peak_calling {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(integrated_adata_object, "GB") * 10 + 50)
+	Int calc_mem_gb = ceil(size(integrated_adata_object, "GB") * 20 + 80)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size(integrated_adata_object, "GB") * 4 + 100)
 
@@ -643,7 +643,7 @@ task benchmark_sc_integration {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 10 + 50)
+	Int calc_mem_gb = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 15 + 50)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 4 + 50)
 
@@ -896,7 +896,7 @@ task motif_enrichment {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 15 + 50)
+	Int calc_mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 20 + 80)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 4 + 50)
 
@@ -955,7 +955,7 @@ task export_final_artifacts {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 20)
+	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 8 + 20)
 	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 4 + 50)
 
 	command <<<
