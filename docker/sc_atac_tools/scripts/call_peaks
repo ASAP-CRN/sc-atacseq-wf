@@ -2,6 +2,7 @@
 
 import argparse
 import os
+import time
 import pandas as pd
 import polars as pl
 import snapatac2 as snap
@@ -9,20 +10,52 @@ import scanpy as sc
 import hdf5plugin
 
 
+def _macs3_with_retry(
+    adata: snap.AnnData, groupby: str, replicate: str, tempdir: str, max_retries=3
+):
+    """Run snap.tl.macs3 with retry on the known clean_up_ndarray bug.
+
+    The bug is non-deterministic — re-attempts often succeed because
+    numpy memory layout differs run-to-run.
+    """
+    for attempt in range(max_retries):
+        try:
+            snap.tl.macs3(
+                adata,
+                groupby=groupby,
+                replicate=replicate,
+                n_jobs=1,
+                tempdir=tempdir,
+            )
+            return
+        except ValueError as e:
+            if "cannot resize" in str(e) and attempt < max_retries - 1:
+                print(
+                    f"WARNING: hit MACS3 clean_up_ndarray bug on attempt {attempt+1}/{max_retries}. "
+                    f"Retrying in 60s...",
+                    flush=True,
+                )
+                time.sleep(60)
+                continue
+            raise
+
+
 def call_peaks(
     adata: snap.AnnData, groupby: str
 ):
-    num_workers = max(1, os.cpu_count() - 1)
-
     if groupby not in adata.obs.columns:
         raise ValueError(f"'{groupby}' not found in adata.obs")
 
     print(f"Calling peaks by {groupby} and setting replicate as 'sample'...")
-    snap.tl.macs3(adata, groupby=groupby, replicate="sample", n_jobs=num_workers, tempdir=os.environ["TMPDIR"])
+    _macs3_with_retry(
+        adata,
+        groupby=groupby,
+        replicate="sample",
+        tempdir=os.environ["TMPDIR"],
+    )
     merged_peaks = snap.tl.merge_peaks(adata.uns["macs3"], chrom_sizes=snap.genome.hg38)
 
-    print(f"Merged peaks dim:")
-    merged_peaks.shape
+    print(f"Merged peaks dim: {merged_peaks.shape}")
 
     adata.uns["merged_peaks"] = merged_peaks.to_pandas()
 
