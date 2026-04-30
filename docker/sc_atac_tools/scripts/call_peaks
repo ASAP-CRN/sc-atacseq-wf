@@ -17,14 +17,18 @@ def _macs3_with_retry(
 
     The bug is non-deterministic — re-attempts often succeed because
     numpy memory layout differs run-to-run.
+    n_jobs=1 will probably avoid this bug but is too slow.
+    If # of clusters is reasonable (e.g., 8) then n_jobs=num_workers.
     """
+    num_workers = max(1, os.cpu_count() - 1)
+
     for attempt in range(max_retries):
         try:
             snap.tl.macs3(
                 adata,
                 groupby=groupby,
                 replicate=replicate,
-                n_jobs=1,
+                n_jobs=num_workers,
                 tempdir=tempdir,
             )
             return
