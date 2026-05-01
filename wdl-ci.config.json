@@ -7,7 +7,7 @@
       "tasks": {
         "merge_and_qc": {
           "key": "merge_and_qc",
-          "digest": "pu3v565dv2hi72g5dsy4bglwmn7jlrfi",
+          "digest": "v3zedveyignkx22frgkr7kjqf4l2i6n7",
           "tests": [
             {
               "inputs": {
@@ -56,7 +56,7 @@
         },
         "reduce_dimensions": {
           "key": "reduce_dimensions",
-          "digest": "5hbp4t4jimxbcdbcmxk44tjgocx3esz5",
+          "digest": "rxchnoxaliwmw2tcdkhbv3gkf6ykymvl",
           "tests": [
             {
               "inputs": {
@@ -79,7 +79,7 @@
         },
         "peak_calling": {
           "key": "peak_calling",
-          "digest": "gjvlqzl22hxtp6oara64rxqhohecz2w3",
+          "digest": "kbihxbwxzok5nqplrktdbwkwuyl5hvez",
           "tests": [
             {
               "inputs": {
@@ -123,7 +123,7 @@
         },
         "benchmark_sc_integration": {
           "key": "benchmark_sc_integration",
-          "digest": "gorwthwwde6er7wjldi4yyd3b3n5yhxy",
+          "digest": "kufob7vla5hcm5wugychvlxbox4slayl",
           "tests": [
             {
               "inputs": {
@@ -160,7 +160,7 @@
         },
         "make_gene_matrix": {
           "key": "make_gene_matrix",
-          "digest": "xwwvja5fxnt4jsvga7jgha5fl46tn4pe",
+          "digest": "j2lqqd2ruubp4m2b5hbbjwnbyw22ql7w",
           "tests": [
             {
               "inputs": {
@@ -183,7 +183,7 @@
         },
         "process_gene_matrix": {
           "key": "process_gene_matrix",
-          "digest": "ki73rxkywbnnjlhnd4m7f7zdcyp3yhet",
+          "digest": "7nymsbmo75dh7nu7fnur252awu63l4ux",
           "tests": [
             {
               "inputs": {
@@ -230,7 +230,7 @@
         },
         "impute_gene_matrix": {
           "key": "impute_gene_matrix",
-          "digest": "ffty3ki46n7czqpntivvcm3gdomhd46z",
+          "digest": "wzc2gsdtc6puripd5j7xmtx5pbykc356",
           "tests": [
             {
               "inputs": {
@@ -256,7 +256,7 @@
         },
         "motif_enrichment": {
           "key": "motif_enrichment",
-          "digest": "fsk4qekbchsjyiawlmfosvvs6gbqsrw7",
+          "digest": "f6gd5o5gpjot5seil3jidy7oaf5faay5",
           "tests": [
             {
               "inputs": {
@@ -282,7 +282,7 @@
         },
         "export_final_artifacts": {
           "key": "export_final_artifacts",
-          "digest": "dcbzxoi5vimx3wwhtaeju6lnasxsht4j",
+          "digest": "qqz6w2avx7qosi4qajmyitfkxlz2ky5q",
           "tests": [
             {
               "inputs": {
@@ -324,7 +324,7 @@
       "tasks": {
         "integrate_harmony": {
           "key": "integrate_harmony",
-          "digest": "rjtq2pmg2nijkhatgk3f7s3hti6findm",
+          "digest": "i7osmmkpxf3rljtzerur2sx3mqrd2c4e",
           "tests": [
             {
               "inputs": {
@@ -348,7 +348,7 @@
         },
         "cluster_harmony": {
           "key": "cluster_harmony",
-          "digest": "xxe6mtyxpih7g27t5nb7ndun5juq4vqm",
+          "digest": "3gxqzlbodedqwnbbd3qwda7iy66ux6if",
           "tests": [
             {
               "inputs": {
@@ -427,7 +427,7 @@
         },
         "cluster_peakvi": {
           "key": "cluster_peakvi",
-          "digest": "voa7rjt5oc55lagm5e27wdmenhlo5kde",
+          "digest": "tbs43353jue2ajibg3oiz5rye322msxz",
           "tests": [
             {
               "inputs": {
@@ -591,7 +591,7 @@
         },
         "split_demux_fragments": {
           "key": "split_demux_fragments",
-          "digest": "2j7h3ssmnajxad3orwvj62kluiwfkwju",
+          "digest": "zw4njxrvc5pydb5xt4lnjttp46ydn32s",
           "tests": [
             {
               "inputs": {
@@ -639,7 +639,7 @@
         },
         "counts_to_adata": {
           "key": "counts_to_adata",
-          "digest": "2hf7q4jwhem2a6tstdm3oiiwraxwtlpz",
+          "digest": "dtfhx7vpybhidkc7woyxm7kpfyb3lqm3",
           "tests": [
             {
               "inputs": {
