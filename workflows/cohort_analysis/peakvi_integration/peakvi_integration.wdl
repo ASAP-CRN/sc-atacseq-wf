@@ -176,7 +176,7 @@ task cluster_peakvi {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(peakvi_integrated_adata_object, "GB") * 10 + 50)
+	Int calc_mem_gb = ceil(size(peakvi_integrated_adata_object, "GB") * 5 + 50)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size(peakvi_integrated_adata_object, "GB") * 4 + 50)
 

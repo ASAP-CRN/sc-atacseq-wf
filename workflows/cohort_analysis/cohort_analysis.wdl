@@ -517,7 +517,7 @@ task reduce_dimensions {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(merged_adata_object, "GB") * 10 + 50)
+	Int calc_mem_gb = ceil(size(merged_adata_object, "GB") * 6 + 50)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size(merged_adata_object, "GB") * 4 + 50)
 
@@ -572,7 +572,7 @@ task peak_calling {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(integrated_adata_object, "GB") * 20 + 80)
+	Int calc_mem_gb = ceil(size(integrated_adata_object, "GB") * 10 + 80)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size(integrated_adata_object, "GB") * 4 + 100)
 
@@ -714,7 +714,7 @@ task make_gene_matrix {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(harmony_merged_peaks_adata_object, "GB") * 10 + 50)
+	Int calc_mem_gb = ceil(size(harmony_merged_peaks_adata_object, "GB") * 5 + 50)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size(harmony_merged_peaks_adata_object, "GB") * 4 + 50)
 
@@ -770,7 +770,7 @@ task process_gene_matrix {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(gene_matrix_adata_object, "GB") * 30 + 200)
+	Int calc_mem_gb = ceil(size(gene_matrix_adata_object, "GB") * 20 + 80)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size(gene_matrix_adata_object, "GB") * 4 + 50)
 
@@ -842,8 +842,7 @@ task impute_gene_matrix {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(processed_gene_matrix_adata_object, "GB") * 30 + 200)
-	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int mem_gb = ceil(size(processed_gene_matrix_adata_object, "GB") * 20 + 80)
 	Int disk_size = ceil(size(processed_gene_matrix_adata_object, "GB") * 4 + 50)
 
 	command <<<
