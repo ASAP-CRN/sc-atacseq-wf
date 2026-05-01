@@ -486,6 +486,7 @@ task merge_and_qc {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} SSD"
 		bootDiskSizeGb: 30
@@ -536,6 +537,7 @@ task reduce_dimensions {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -605,6 +607,7 @@ task peak_calling {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 16
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		bootDiskSizeGb: 30
@@ -678,6 +681,7 @@ task benchmark_sc_integration {
 	runtime {
 		docker: "~{container_registry}/scvi_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		bootDiskSizeGb: 30
@@ -730,6 +734,7 @@ task make_gene_matrix {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -799,6 +804,7 @@ task process_gene_matrix {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -862,6 +868,7 @@ task impute_gene_matrix {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -922,6 +929,7 @@ task motif_enrichment {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 8
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		bootDiskSizeGb: 30
@@ -984,6 +992,7 @@ task export_final_artifacts {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 2
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3

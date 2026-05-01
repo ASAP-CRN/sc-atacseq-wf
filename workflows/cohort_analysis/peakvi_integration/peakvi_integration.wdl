@@ -134,6 +134,7 @@ task integrate_peakvi {
 	runtime {
 		docker: "~{container_registry}/scvi_tools:1.0.0"
 		cpu: 8
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		bootDiskSizeGb: 30
@@ -206,6 +207,7 @@ task cluster_peakvi {
 	runtime {
 		docker: "~{container_registry}/scvi_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3

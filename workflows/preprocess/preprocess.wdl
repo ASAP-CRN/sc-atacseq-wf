@@ -258,6 +258,7 @@ task check_output_files_exist {
 	runtime {
 		docker: "gcr.io/google.com/cloudsdktool/google-cloud-cli:524.0.0-slim"
 		cpu: 2
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "4 GB"
 		disks: "local-disk 20 HDD"
 		preemptible: 3
@@ -397,6 +398,7 @@ task cellranger_atac_count {
 	runtime {
 		docker: "~{container_registry}/cellranger_atac:2.2.0"
 		cpu: threads
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		bootDiskSizeGb: 40
@@ -516,6 +518,7 @@ task split_demux_fragments {
 	runtime {
 		docker: "~{container_registry}/scatac_fragment_tools:0.1.5"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "16 GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -591,6 +594,7 @@ task counts_to_adata {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "32 GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3

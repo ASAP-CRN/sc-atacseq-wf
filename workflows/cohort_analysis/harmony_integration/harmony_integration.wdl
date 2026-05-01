@@ -90,6 +90,7 @@ task integrate_harmony {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -150,6 +151,7 @@ task cluster_harmony {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
