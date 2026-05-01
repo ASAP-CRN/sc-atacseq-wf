@@ -765,7 +765,7 @@ task process_gene_matrix {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(gene_matrix_adata_object, "GB") * 10 + 50)
+	Int calc_mem_gb = ceil(size(gene_matrix_adata_object, "GB") * 30 + 200)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size(gene_matrix_adata_object, "GB") * 4 + 50)
 
@@ -836,7 +836,7 @@ task impute_gene_matrix {
 		String zones
 	}
 
-	Int calc_mem_gb = ceil(size(processed_gene_matrix_adata_object, "GB") * 10 + 50)
+	Int calc_mem_gb = ceil(size(processed_gene_matrix_adata_object, "GB") * 30 + 200)
 	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
 	Int disk_size = ceil(size(processed_gene_matrix_adata_object, "GB") * 4 + 50)
 
