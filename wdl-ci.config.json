@@ -123,7 +123,7 @@
         },
         "benchmark_sc_integration": {
           "key": "benchmark_sc_integration",
-          "digest": "kufob7vla5hcm5wugychvlxbox4slayl",
+          "digest": "s6gvpryvrunshob2qsvzm67lrmiln5jy",
           "tests": [
             {
               "inputs": {
@@ -160,7 +160,7 @@
         },
         "make_gene_matrix": {
           "key": "make_gene_matrix",
-          "digest": "j2lqqd2ruubp4m2b5hbbjwnbyw22ql7w",
+          "digest": "aso2tt5lraz5a2fkwuakjuakv4idmbai",
           "tests": [
             {
               "inputs": {
@@ -256,7 +256,7 @@
         },
         "motif_enrichment": {
           "key": "motif_enrichment",
-          "digest": "f6gd5o5gpjot5seil3jidy7oaf5faay5",
+          "digest": "hsop7mu7tyii5avln7aqfzktprqjqxyr",
           "tests": [
             {
               "inputs": {
