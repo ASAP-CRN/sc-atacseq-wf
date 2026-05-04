@@ -13,7 +13,8 @@ import hdf5plugin
 def _macs3_with_retry(
     adata: snap.AnnData, groupby: str, replicate: str, tempdir: str, max_retries=3
 ):
-    """Run snap.tl.macs3 with retry on the known clean_up_ndarray bug.
+    """
+    Run snap.tl.macs3 with retry on the known clean_up_ndarray bug.
 
     The bug is non-deterministic — re-attempts often succeed because
     numpy memory layout differs run-to-run.
