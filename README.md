@@ -86,7 +86,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 | Type | Name | Description |
 | :- | :- | :- |
-| String | asap_pool_id | ASAP-generated unique identifier for pool; used for naming output files. |
+| String | pool_id | ASAP-generated unique identifier for pool; used for naming output files. |
 | File | fastq_R1 | Path to the pooled samples' read 1 FASTQ file. |
 | File | fastq_R2 | Path to the pooled samples' read 2 FASTQ file. |
 | File | fastq_R3 | Path to the pooled samples' 3 FASTQ file. |
@@ -99,6 +99,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 | Type | Name | Description |
 | :- | :- | :- |
+| String | source_subject_id | CRN Team provided unique identifier for subject/donor; used for metadata. |
 | String | asap_subject_id | ASAP-generated unique identifier for subject/donor; used for metadata. |
 | String | sample_id | ASAP-generated unique identifier combined with the replicate for the sample within the project. |
 | String? | batch | The sample's batch. |

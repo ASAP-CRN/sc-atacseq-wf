@@ -531,7 +531,7 @@ task split_demux_fragments {
 
 	parameter_meta {
 		pool_id: {help: "Generated ASAP pool ID; used to name output files."}
-		source_subject_ids: {help: "An array of generated ASAP subject IDs; used for mapping."}
+		source_subject_ids: {help: "An array of provided source subject IDs; used for mapping."}
 		sample_ids: {help: "An array of generated ASAP sample ID; used for mapping."}
 		cellranger_atac_fragments: {help: "A BED-like TSV file output by Cell Ranger ATAC containing the deduplicated, aligned fragment coordinates, cell barcodes, and read support for each fragment."}
 		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
