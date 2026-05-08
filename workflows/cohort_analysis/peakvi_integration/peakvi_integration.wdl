@@ -10,6 +10,8 @@ workflow peakvi_integration {
 		String batch_key
 		String peakvi_latent_key
 		Int peakvi_max_epochs
+		Int peakvi_n_hidden
+		Int peakvi_batch_size
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -25,6 +27,8 @@ workflow peakvi_integration {
 			batch_key = batch_key,
 			peakvi_latent_key = peakvi_latent_key,
 			peakvi_max_epochs = peakvi_max_epochs,
+			peakvi_n_hidden = peakvi_n_hidden,
+			peakvi_batch_size = peakvi_batch_size,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -61,6 +65,8 @@ workflow peakvi_integration {
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
+		peakvi_n_hidden: {help: "Number of nodes per hidden layer (i.e., the number of neurons per fully-connected layer between the input features and the latent space). [128]"}
+		peakvi_batch_size: {help: "Training batch size for PeakVI. Controls how many cells are processed per training step. [128]"}
 		raw_data_path: {help: "Raw data bucket path for merged adata and QC plots outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}
@@ -77,6 +83,8 @@ task integrate_peakvi {
 		String batch_key
 		String peakvi_latent_key
 		Int peakvi_max_epochs
+		Int peakvi_n_hidden
+		Int peakvi_batch_size
 
 		String raw_data_path
 		Array[Array[String]] workflow_info
@@ -85,11 +93,15 @@ task integrate_peakvi {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(processed_bins_adata_object, "GB") * 2 + 50)
-	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 2 + 50)
+	# N1 custom machine type must be compatible with gpuType
+	Int calc_mem_gb = ceil(size(processed_bins_adata_object, "GB") * 8 + 50)
+	Int mem_gb = if calc_mem_gb > 312 then 312 else calc_mem_gb
+	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
+
+		nvidia-smi
 
 		mkdir peakvi_dir
 
@@ -99,6 +111,8 @@ task integrate_peakvi {
 			--batch-key ~{batch_key} \
 			--latent-key ~{peakvi_latent_key} \
 			--max-epochs ~{peakvi_max_epochs} \
+			--n-hidden ~{peakvi_n_hidden} \
+			--batch-size ~{peakvi_batch_size} \
 			--adata-output ~{cohort_id}.peakvi_integrated.h5ad \
 			--output-peakvi-dir "~{cohort_id}_peakvi_model"
 
@@ -122,9 +136,10 @@ task integrate_peakvi {
 		cpu: 8
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
+		gpuType: "nvidia-tesla-t4"
+		gpuCount: 1
 	}
 
 	meta {
@@ -137,6 +152,8 @@ task integrate_peakvi {
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
+		peakvi_n_hidden: {help: "Number of nodes per hidden layer (i.e., the number of neurons per fully-connected layer between the input features and the latent space). [128]"}
+		peakvi_batch_size: {help: "Training batch size for PeakVI. Controls how many cells are processed per training step. [128]"}
 		raw_data_path: {help: "Raw data bucket path for outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis/<cohort_analysis_version>/<run_timestamp>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
 		billing_project: {help: "Billing project to charge GCP costs."}
@@ -159,8 +176,9 @@ task cluster_peakvi {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(peakvi_integrated_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(peakvi_integrated_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(peakvi_integrated_adata_object, "GB") * 5 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(peakvi_integrated_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -187,7 +205,8 @@ task cluster_peakvi {
 
 	runtime {
 		docker: "~{container_registry}/scvi_tools:1.0.0"
-		cpu: 2
+		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3

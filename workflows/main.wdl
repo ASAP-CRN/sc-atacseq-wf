@@ -14,6 +14,8 @@ workflow sc_atacseq_analysis {
 
 		# Preprocess
 		File cellranger_atac_reference_data
+		File cellranger_atac_reference_chrom_sizes
+		Array[File] vireo_assignment_files
 
 		# Allen Institute's Map My Cells
 		File allen_brain_mmc_precomputed_stats_h5
@@ -26,6 +28,8 @@ workflow sc_atacseq_analysis {
 		String batch_key = "batch_id"
 		String peakvi_latent_key = "X_peakVI"
 		Int peakvi_max_epochs = 300
+		Int peakvi_n_hidden = 128
+		Int peakvi_batch_size = 128
 
 		Array[String] groups = ["sample", "batch", "team", "dataset", "batch_id", "leiden"]
 		Array[String] features = ["n_fragment", "tsse", "frac_dup", "frac_mito", "doublet_score", "doublet_probability"]
@@ -58,9 +62,10 @@ workflow sc_atacseq_analysis {
 				team_id = project.asap_team_id,
 				dataset_id = project.asap_dataset_id,
 				dataset_doi_url = project.asap_dataset_doi_url,
-				samples = project.samples,
-				multimodal_sc_data = project.multimodal_sc_data,
+				pools = project.pools,
 				cellranger_atac_reference_data = cellranger_atac_reference_data,
+				cellranger_atac_reference_chrom_sizes = cellranger_atac_reference_chrom_sizes,
+				vireo_assignment_files = vireo_assignment_files,
 				workflow_name = workflow_name,
 				workflow_version = workflow_version,
 				workflow_release = workflow_release,
@@ -80,9 +85,11 @@ workflow sc_atacseq_analysis {
 			preprocess.filtered_peaks,
 			preprocess.filtered_tf,
 			preprocess.fragments_tsv_gz,
+			preprocess.fragments_tsv_gz_tbi,
 			preprocess.summary_csv,
 			preprocess.peak_annotation_tsv,
 			preprocess.peak_motif_mapping_bed,
+			preprocess.sample_split_fragments_tsv_gz,
 			preprocess.initial_adata_object
 		]) #!StringCoercion
 
@@ -99,6 +106,8 @@ workflow sc_atacseq_analysis {
 					batch_key = batch_key,
 					peakvi_latent_key = peakvi_latent_key,
 					peakvi_max_epochs = peakvi_max_epochs,
+					peakvi_n_hidden = peakvi_n_hidden,
+					peakvi_batch_size = peakvi_batch_size,
 					groups = groups,
 					features = features,
 					workflow_name = workflow_name,
@@ -130,6 +139,8 @@ workflow sc_atacseq_analysis {
 				batch_key = batch_key,
 				peakvi_latent_key = peakvi_latent_key,
 				peakvi_max_epochs = peakvi_max_epochs,
+				peakvi_n_hidden = peakvi_n_hidden,
+				peakvi_batch_size = peakvi_batch_size,
 				groups = groups,
 				features = features,
 				workflow_name = workflow_name,
@@ -159,11 +170,13 @@ workflow sc_atacseq_analysis {
 		Array[Array[File]] cellranger_atac_filtered_peaks = preprocess.filtered_peaks
 		Array[Array[File]] cellranger_atac_filtered_tf = preprocess.filtered_tf
 		Array[Array[File]] cellranger_atac_fragments_tsv_gz = preprocess.fragments_tsv_gz
+		Array[Array[File]] cellranger_atac_fragments_tsv_gz_tbi = preprocess.fragments_tsv_gz_tbi
 		Array[Array[File]] cellranger_atac_summary_csv = preprocess.summary_csv
 		Array[Array[File]] cellranger_atac_peak_annotation_tsv = preprocess.peak_annotation_tsv
 		Array[Array[File]] cellranger_atac_peak_motif_mapping_bed = preprocess.peak_motif_mapping_bed
 
 		# Preprocess
+		Array[Array[File]] sample_split_fragments_tsv_gz = preprocess.sample_split_fragments_tsv_gz
 		Array[Array[File]] initial_adata_object = preprocess.initial_adata_object
 
 		# Project cohort analysis outputs
@@ -296,12 +309,16 @@ workflow sc_atacseq_analysis {
 		cohort_id: {help: "Name of the cohort; used to name output files during cross-team cohort analysis."}
 		projects: {help: "The project ID, set of samples and their associated reads and metadata, output bucket locations, sc data type, and whether or not to run project-level cohort analysis."}
 		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
+		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
+		vireo_assignment_files: {help: "Vireo donor assignment CSV with columns: donor_id, sample, raw_bc. Covers all donors in the pool."}
 		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
 		n_top_genes: {help: "Number of HVG genes to keep. [3000]"}
 		n_comps: {help: "Number of principal components to compute. [30]"}
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
+		peakvi_n_hidden: {help: "Number of nodes per hidden layer (i.e., the number of neurons per fully-connected layer between the input features and the latent space). [128]"}
+		peakvi_batch_size: {help: "Training batch size for PeakVI. Controls how many cells are processed per training step. [128]"}
 		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'team', 'dataset', 'batch_id', 'leiden']"}
 		features: {help: "Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability']"}
 		run_cross_team_cohort_analysis: {help: "Whether to run downstream harmonization steps on all samples across projects. If set to false, only preprocessing steps (cellranger and generating the initial adata object(s)) will run for samples. [false]"}

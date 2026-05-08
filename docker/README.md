@@ -5,10 +5,14 @@
 
 ## _PREPROCESSING_
 - _Pre-preprocessing_: executed by WDL [`cellranger-atac count`](../workflows/preprocess/preprocess.wdl)
-    - Aligns FASTQ files and generates fragment files per sample
+    - Aligns FASTQ files and generates fragment files per pool
 
-- _Counts to AnnData_: [`counts_to_adata`](./sc_atac_tools/scripts/counts_to_adata)
-    - Imports Cell Ranger ATAC fragment files via `snap.pp.import_fragments`
+- _Splitting demuxed sample Cell Ranger fragment files_: executed by WDL [`scatac_fragment_tools split`](../workflows/preprocess/preprocess.wdl)
+    - Prepares mapping inputs required to split the fragment files
+    - Splits pool-level fragment files into sample-level (one subject = one sample per pool)
+
+- _Converting counts to AnnData_: [`counts_to_adata`](./sc_atac_tools/scripts/counts_to_adata)
+    - Imports demuxed sample-level Cell Ranger ATAC fragment files via `snap.pp.import_fragments`
     - Performs initial per-sample tiling and stores as backed SnapATAC2 AnnData
 
 - _Merge and QC_: [`merge_and_qc`](./sc_atac_tools/scripts/merge_and_qc)
@@ -23,7 +27,7 @@
 ## Bin-level (chromatin accessibility)
 
 - _Process bins_: [`process_bins`](./sc_atac_tools/scripts/process_bins)
-    - Stores raw tile counts in `layers["tile_counts"]`
+    - Stores selected features/bins in `layers["tile_counts"]`
     - Performs spectral embedding (LSI/SVD) and UMAP dimensionality reduction on the tile matrix
     - Foundation for all chromatin-level clustering and integration
 
@@ -50,6 +54,7 @@
 
 - _Integrate PeakVI_: [`integrate_peakvi`](./scvi_tools/scripts/integrate_peakvi)
     - Trains a `PeakVI` model on `layers["tile_counts"]` with batch correction
+    - Option to use GPU
     - Stores the latent representation in `obsm` for downstream clustering and UMAP
     - Saves the trained PeakVI model to disk
 

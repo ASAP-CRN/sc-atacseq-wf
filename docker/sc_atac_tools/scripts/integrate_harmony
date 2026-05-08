@@ -2,25 +2,43 @@
 
 import argparse
 import pandas as pd
+import numpy as np
 import snapatac2 as snap
-import harmonypy
+import harmonypy as hm
 
 
 def run_harmony(
     adata: snap.AnnData, batch_key: str
 ):
+    # Assumes the old harmonypy output format and applies Z_corr.T
+    # https://github.com/scverse/scanpy/issues/3940
+    # snap.pp.harmony(
+    #     adata,
+    #     batch=batch_key,
+    #     max_iter_harmony=20
+    # )
     print(f"Running Harmony integration...")
-    snap.pp.harmony(
-        adata,
-        batch=batch_key,
+    ho = hm.run_harmony(
+        adata.obsm["X_spectral"],
+        adata.obs,
+        batch_key,
         max_iter_harmony=20
+    )
+    adata.obsm["X_spectral_harmony"] = np.array(ho.Z_corr)
+    adata.obsm["X_spectral_harmony"] = np.ascontiguousarray(
+        adata.obsm["X_spectral_harmony"], dtype=np.float64
     )
 
     return adata
 
 
 def main(args):
-    adata = snap.read(args.adata_input)
+    adata = snap.read(args.adata_input).to_memory()
+    
+    # Filter adata to only keep the n_features
+    adata = adata[:, adata.var["selected"]].copy()
+    adata.layers["tile_counts"] = adata.X[:]
+
     adata_harmony = run_harmony(adata, args.batch_key)
 
     adata_harmony.write(

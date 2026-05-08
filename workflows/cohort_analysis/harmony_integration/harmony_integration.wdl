@@ -69,8 +69,9 @@ task integrate_harmony {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(processed_bins_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(processed_bins_adata_object, "GB") * 12 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(processed_bins_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -88,7 +89,8 @@ task integrate_harmony {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -121,8 +123,9 @@ task cluster_harmony {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(harmony_integrated_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(harmony_integrated_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(harmony_integrated_adata_object, "GB") * 2 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(harmony_integrated_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -147,7 +150,8 @@ task cluster_harmony {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3

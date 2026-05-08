@@ -28,6 +28,8 @@ workflow cohort_analysis {
 		String batch_key
 		String peakvi_latent_key
 		Int peakvi_max_epochs
+		Int peakvi_n_hidden
+		Int peakvi_batch_size
 
 		Array[String] groups
 		Array[String] features
@@ -100,6 +102,8 @@ workflow cohort_analysis {
 			batch_key = batch_key,
 			peakvi_latent_key = peakvi_latent_key,
 			peakvi_max_epochs = peakvi_max_epochs,
+			peakvi_n_hidden = peakvi_n_hidden,
+			peakvi_batch_size = peakvi_batch_size,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
 			billing_project = billing_project,
@@ -410,6 +414,8 @@ workflow cohort_analysis {
 		batch_key: {help: "Key in AnnData object for batch information. ['batch_id']"}
 		peakvi_latent_key: {help: "Latent key to save the peakVI latent to. ['X_peakVI']"}
 		peakvi_max_epochs: {help: "The maximum number of full passes through the training data during PeakVI model training. If the model converges early, training will halt before this limit is reached. [300]"}
+		peakvi_n_hidden: {help: "Number of nodes per hidden layer (i.e., the number of neurons per fully-connected layer between the input features and the latent space). [128]"}
+		peakvi_batch_size: {help: "Training batch size for PeakVI. Controls how many cells are processed per training step. [128]"}
 		groups: {help: "Groups to produce umap plots for. ['sample', 'batch', 'team', 'dataset', 'batch_id', 'leiden']"}
 		features: {help: "Features to produce umap plots for. ['n_fragment', 'tsse', 'frac_dup', 'frac_mito', 'doublet_score', 'doublet_probability']"}
 		workflow_name: {help: "Workflow name; stored in the file-level manifest and final manifest with all saved files."}
@@ -437,8 +443,9 @@ task merge_and_qc {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(preprocessed_adata_objects, "GB") * 3 + 150)
-	Int disk_size = ceil(size(preprocessed_adata_objects, "GB") * 3 + 50)
+	Int calc_mem_gb = ceil(size(preprocessed_adata_objects, "GB") * 13 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(preprocessed_adata_objects, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -479,9 +486,9 @@ task merge_and_qc {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
-		preemptible: 3
+		disks: "local-disk ~{disk_size} SSD"
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -510,12 +517,14 @@ task reduce_dimensions {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(merged_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(merged_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(merged_adata_object, "GB") * 6 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(merged_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		process_bins \
 			--adata-input ~{merged_adata_object} \
 			--adata-output ~{cohort_id}.processed_bins.h5ad
@@ -527,7 +536,8 @@ task reduce_dimensions {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -562,12 +572,17 @@ task peak_calling {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(integrated_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(integrated_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(integrated_adata_object, "GB") * 10 + 80)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(integrated_adata_object, "GB") * 4 + 100)
 
 	command <<<
 		set -euo pipefail
 
+		export TMPDIR=/mnt/disks/cromwell_root/macs3_tmp
+		mkdir -p $TMPDIR
+
+		/usr/bin/time -v \
 		call_peaks \
 			--adata-input ~{integrated_adata_object} \
 			--macs3-groupby ~{macs3_groupby} \
@@ -591,10 +606,10 @@ task peak_calling {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 16
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -631,8 +646,9 @@ task benchmark_sc_integration {
 		String zones
 	}
 
-	Int mem_gb = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 2 + 20)
-	Int disk_size = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 5 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size([harmony_merged_peaks_adata_object, peakvi_merged_peaks_adata_object], "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -664,10 +680,10 @@ task benchmark_sc_integration {
 
 	runtime {
 		docker: "~{container_registry}/scvi_tools:1.0.0"
-		cpu: 2
+		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -698,12 +714,14 @@ task make_gene_matrix {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(harmony_merged_peaks_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(harmony_merged_peaks_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(harmony_merged_peaks_adata_object, "GB") * 5 + 50)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(harmony_merged_peaks_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		generate_gene_matrix \
 			--adata-input ~{harmony_merged_peaks_adata_object} \
 			--output-prefix ~{cohort_id}
@@ -715,7 +733,8 @@ task make_gene_matrix {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -751,12 +770,14 @@ task process_gene_matrix {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(gene_matrix_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(gene_matrix_adata_object, "GB") * 2 + 50)
+	Int calc_mem_gb = ceil(size(gene_matrix_adata_object, "GB") * 20 + 80)
+	Int mem_gb = if calc_mem_gb > 624 then 624 else calc_mem_gb
+	Int disk_size = ceil(size(gene_matrix_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		process_genes \
 			--adata-input ~{gene_matrix_adata_object} \
 			--batch-key ~{batch_key} \
@@ -782,7 +803,8 @@ task process_gene_matrix {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -820,12 +842,13 @@ task impute_gene_matrix {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(processed_gene_matrix_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(processed_gene_matrix_adata_object, "GB") * 2 + 50)
+	Int mem_gb = ceil(size(processed_gene_matrix_adata_object, "GB") * 20 + 80)
+	Int disk_size = ceil(size(processed_gene_matrix_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		impute_gene_matrix \
 			--adata-input ~{processed_gene_matrix_adata_object} \
 			--adata-output "~{cohort_id}.gene_matrix.magic_imputed.h5ad"
@@ -843,7 +866,8 @@ task impute_gene_matrix {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
-		cpu: 2
+		cpu: 4
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3
@@ -878,8 +902,8 @@ task motif_enrichment {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 40)
-	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 50)
+	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 20)
+	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
@@ -903,9 +927,9 @@ task motif_enrichment {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 8
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
-		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -937,12 +961,13 @@ task export_final_artifacts {
 		String zones
 	}
 
-	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 20)
-	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 2 + 50)
+	Int mem_gb = ceil(size(celltype_merged_peaks_adata_object, "GB") * 8 + 20)
+	Int disk_size = ceil(size(celltype_merged_peaks_adata_object, "GB") * 4 + 50)
 
 	command <<<
 		set -euo pipefail
 
+		/usr/bin/time -v \
 		export_final_artifacts \
 			--cohort-id ~{cohort_id} \
 			--adata-input ~{celltype_merged_peaks_adata_object} \
@@ -965,6 +990,7 @@ task export_final_artifacts {
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.0.0"
 		cpu: 2
+		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} HDD"
 		preemptible: 3

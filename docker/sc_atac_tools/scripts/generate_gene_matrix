@@ -10,7 +10,7 @@ def create_gene_matrix(
 ):
     gene_matrix = snap.pp.make_gene_matrix(adata, snap.genome.hg38)
 
-    sc.pp.filter_genes(gene_matrix, min_cells= 5)
+    sc.pp.filter_genes(gene_matrix, min_cells=5)
 
     # Copy over UMAP embedding
     gene_matrix.obsm["X_umap"] = adata.obsm["X_umap"]
@@ -22,9 +22,12 @@ def main(args):
     adata = snap.read(args.adata_input)
     adata_gene_matrix = create_gene_matrix(adata)
 
+    # Output used in https://github.com/ASAP-CRN/sc-rnaseq-wf/blob/main/workflows/cohort_analysis/cohort_analysis.wdl
+    # doesn't import hdf5plugin so write using scanpy due to different compression compatibility with snapatac2
     adata_gene_matrix_out = f"{args.output_prefix}.gene_matrix.h5ad"
-    adata_gene_matrix.write(
-        filename=adata_gene_matrix_out
+    adata_gene_matrix.write_h5ad(
+        filename=adata_gene_matrix_out,
+        compression="gzip"
     )
     print(f"Wrote {adata_gene_matrix_out}")
 
