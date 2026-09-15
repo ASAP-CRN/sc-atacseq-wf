@@ -101,8 +101,10 @@ workflow preprocess {
 		File peak_motif_mapping_bed_output = select_first([cellranger_atac_count.peak_motif_mapping_bed, cellranger_atac_peak_motif_mapping_bed]) #!FileCoercion
 
 		scatter (sample_object in pool.samples) {
-			String split_fragments_output = "~{split_fragments_raw_data_path}/~{sample_object.sample_id}.~{pool.pool_id}.fragments.tsv.gz"
-			String initial_adata_object_output = "~{adata_raw_data_path}/~{sample_object.sample_id}.~{pool.pool_id}.cleaned_unfiltered.h5ad"
+			String mux_dataset_sample_pool_id = "~{dataset_id}.~{sample_object.sample_id}.~{pool.pool_id}"
+
+			String split_fragments_output = "~{split_fragments_raw_data_path}/~{mux_dataset_sample_pool_id}.fragments.tsv.gz"
+			String initial_adata_object_output = "~{adata_raw_data_path}/~{mux_dataset_sample_pool_id}.cleaned_unfiltered.h5ad"
 
 			String source_subject_id = sample_object.source_subject_id
 			String sample_id = sample_object.sample_id
@@ -120,6 +122,7 @@ workflow preprocess {
 		if (run_split_demux_fragments) {
 			call split_demux_fragments {
 				input:
+					dataset_sample_pool_id = mux_dataset_sample_pool_id,
 					pool_id = pool.pool_id,
 					source_subject_ids = source_subject_id,
 					sample_ids = sample_id,
@@ -428,6 +431,7 @@ task cellranger_atac_count {
 
 task split_demux_fragments {
 	input {
+		String dataset_sample_pool_id
 		String pool_id
 		Array[String] source_subject_ids
 		Array[String] sample_ids
@@ -490,9 +494,9 @@ task split_demux_fragments {
 			exit 1
 		fi
 
-		# Rename outputs with ASAP_sample_id + pool_id
+		# Rename outputs with ASAP_dataset_id + ASAP_sample_id + pool_id
 		while IFS=$'\t' read -r source_subject_id sample_id; do
-			ln "fragments_output/${source_subject_id}.fragments.tsv.gz" "renamed_fragments_output/${sample_id}.~{pool_id}.fragments.tsv.gz"
+			ln "fragments_output/${source_subject_id}.fragments.tsv.gz" "renamed_fragments_output/${dataset_sample_pool_id}.fragments.tsv.gz"
 		done < metadata.tsv
 
 		upload_args=()
