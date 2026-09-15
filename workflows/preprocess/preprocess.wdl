@@ -122,7 +122,7 @@ workflow preprocess {
 		if (run_split_demux_fragments) {
 			call split_demux_fragments {
 				input:
-					dataset_sample_pool_id = mux_dataset_sample_pool_id,
+					dataset_id = dataset_id,
 					pool_id = pool.pool_id,
 					source_subject_ids = source_subject_id,
 					sample_ids = sample_id,
@@ -431,7 +431,7 @@ task cellranger_atac_count {
 
 task split_demux_fragments {
 	input {
-		String dataset_sample_pool_id
+		String dataset_id
 		String pool_id
 		Array[String] source_subject_ids
 		Array[String] sample_ids
@@ -496,7 +496,7 @@ task split_demux_fragments {
 
 		# Rename outputs with ASAP_dataset_id + ASAP_sample_id + pool_id
 		while IFS=$'\t' read -r source_subject_id sample_id; do
-			ln "fragments_output/${source_subject_id}.fragments.tsv.gz" "renamed_fragments_output/${dataset_sample_pool_id}.fragments.tsv.gz"
+			ln "fragments_output/${source_subject_id}.fragments.tsv.gz" "renamed_fragments_output/~{dataset_id}.${sample_id}.~{pool_id}.fragments.tsv.gz"
 		done < metadata.tsv
 
 		upload_args=()
@@ -534,6 +534,7 @@ task split_demux_fragments {
 	}
 
 	parameter_meta {
+		dataset_id: {help: "Generated ASAP dataset ID; used to name output files."}
 		pool_id: {help: "Generated ASAP pool ID; used to name output files."}
 		source_subject_ids: {help: "An array of provided source subject IDs; used for mapping."}
 		sample_ids: {help: "An array of generated ASAP sample ID; used for mapping."}
