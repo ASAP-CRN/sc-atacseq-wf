@@ -52,6 +52,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | File | cellranger_atac_reference_data | Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads#reference-downloads. |
 | File | cellranger_atac_reference_chrom_sizes | Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting; see [demultiplexing section](#demultiplexing). |
 | Array[File] | vireo_assignment_csv | Vireo donor assignment CSVs with columns: donor_id, sample, raw_bc. Covers all donors in the pool. |
+| String | mmc_taxonomy | Cell type taxonomy of the precomputed stats reference; appended to MMC output filenames. Must match allen_brain_mmc_precomputed_stats_h5. Options are 'SEEAD' (human), 'Siletti' (human), or 'ABC' (mouse). |
 | File? | allen_brain_mmc_precomputed_stats_h5 | A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy). |
 | Int? | n_top_genes | Number of HVG genes to keep. [3000] |
 | Int? | n_comps | Number of principal components to compute. [30] |

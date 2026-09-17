@@ -4,7 +4,7 @@
   "sc_atacseq_analysis.cellranger_atac_reference_data": "File",
   "sc_atacseq_analysis.cellranger_atac_reference_chrom_sizes": "File",
   "sc_atacseq_analysis.vireo_assignment_files": "Array[File]",
-  "sc_rnaseq_analysis.mmc_taxonomy": "String ('SEAAD', 'Siletti', or 'ABC')",
+  "sc_atacseq_analysis.mmc_taxonomy": "String ('SEAAD', 'Siletti', or 'ABC')",
   "sc_atacseq_analysis.allen_brain_mmc_precomputed_stats_h5": "File",
   "sc_atacseq_analysis.n_top_genes": "Int (optional, default = 3000)",
   "sc_atacseq_analysis.n_comps": "Int (optional, default = 30)",
