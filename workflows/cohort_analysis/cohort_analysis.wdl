@@ -18,6 +18,7 @@ workflow cohort_analysis {
 		Array[String] preprocessing_output_file_paths = []
 
 		# Allen Institute's Map My Cells
+		String mmc_taxonomy
 		File allen_brain_mmc_precomputed_stats_h5
 
 		# Normalization parameters
@@ -194,6 +195,7 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			filtered_adata_object = make_gene_matrix.gene_matrix_adata_object, #!FileCoercion
+			mmc_taxonomy = mmc_taxonomy,
 			allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
@@ -415,6 +417,7 @@ workflow cohort_analysis {
 		project_sample_ids: {help: "Associated team ID, sample ID, and dataset DOI URL; used to generate a sample list."}
 		preprocessed_adata_objects: {help: "An array of preprocessed AnnData objects to run cohort analysis on."}
 		preprocessing_output_file_paths: {help: "Selected preprocessed output files to upload to the staging bucket alongside selected cohort analysis output files."}
+		mmc_taxonomy: {help: "Cell type taxonomy of the precomputed stats reference; appended to MMC output filenames. Must match allen_brain_mmc_precomputed_stats_h5. Options are 'SEEAD' (human), 'Siletti' (human), or 'ABC' (mouse)."}
 		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
 		n_top_genes: {help: "Number of highly-variable genes to keep. [3000]"}
 		n_comps: {help: "Number of principal components to compute. [30]"}
