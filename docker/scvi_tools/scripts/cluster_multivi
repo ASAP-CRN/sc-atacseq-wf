@@ -12,8 +12,10 @@ def cluster(
     print(f"Building neighbors graph on {latent_key} (n_neighbors={n_neighbors})")
     sc.pp.neighbors(mdata, use_rep=latent_key, n_neighbors=n_neighbors)
 
+    leiden_keys = []
     for res in leiden_resolutions:
         key = f"leiden_multivi_{res:4.2f}"
+        leiden_keys.append(key)
         print(f"Leiden clustering at resolution {res} -> {key}")
         sc.tl.leiden(
             mdata,
@@ -28,8 +30,16 @@ def cluster(
 
     sc.tl.umap(mdata)
 
+    # Without an explicit `color` every point renders in the same grey; plot the
+    # clusters that were just computed, plus any metadata columns present.
+    color_keys = leiden_keys + [
+        k for k in ("sample", "batch", "cell_type") if k in mdata.obs
+    ]
+    print(f"Plotting UMAP coloured by: {color_keys}")
+
     sc.pl.umap(
         mdata,
+        color=color_keys,
         save=".png"
     )
     print(f"Wrote umap.png; will rename")
