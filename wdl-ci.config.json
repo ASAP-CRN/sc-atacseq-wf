@@ -650,6 +650,9 @@
                 "subject_id": "${asap_subject_id}",
                 "sample_id": "${sample_id}",
                 "batch": "${batch}",
+                "brain_region_level_1": "${brain_region_level_1}",
+                "brain_region_level_2": "${brain_region_level_2}",
+                "brain_region_level_3": "${brain_region_level_3}",
                 "sample_split_fragments_tsv_gz": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.${pool_id}.fragments.tsv.gz",
                 "raw_data_path": "${split_fragments_raw_data_path}",
                 "workflow_info": "${workflow_info}",
@@ -810,6 +813,9 @@
       "asap_subject_id": "ASAP_PMDBS_001084",
       "sample_id": "ASAP_PMDBS_001084_s001_BiolRep1",
       "batch": "Batch1",
+      "brain_region_level_1": "Midbrain mesencephalon (MB, UBERON:0001891)",
+      "brain_region_level_2": "Substantia nigra (SN, UBERON:0002038)",
+      "brain_region_level_3": "NA",
       "project_sample_ids": [
         [
           "team-voet",

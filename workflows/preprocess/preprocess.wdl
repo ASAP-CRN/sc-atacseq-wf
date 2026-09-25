@@ -166,6 +166,9 @@ workflow preprocess {
 						subject_id = sample.asap_subject_id,
 						sample_id = sample.sample_id,
 						batch = select_first([sample.batch]),
+						brain_region_level_1 = select_first([sample.brain_region_level_1, "NA"]),
+						brain_region_level_2 = select_first([sample.brain_region_level_2, "NA"]),
+						brain_region_level_3 = select_first([sample.brain_region_level_3, "NA"]),
 						sample_split_fragments_tsv_gz = sample_split_fragments_tsv_gz_output[sample_index],
 						raw_data_path = adata_raw_data_path,
 						workflow_info = workflow_info,
@@ -558,6 +561,9 @@ task counts_to_adata {
 		String subject_id
 		String sample_id
 		String batch
+		String brain_region_level_1
+		String brain_region_level_2
+		String brain_region_level_3
 
 		File sample_split_fragments_tsv_gz
 
@@ -583,6 +589,9 @@ task counts_to_adata {
 			--subject-id ~{subject_id} \
 			--sample-id ~{sample_id} \
 			--batch ~{batch} \
+			--brain-region-level-1 "~{brain_region_level_1}" \
+			--brain-region-level-2 "~{brain_region_level_2}" \
+			--brain-region-level-3 "~{brain_region_level_3}" \
 			--adata-output ~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad
 
 		upload_outputs \
@@ -597,7 +606,7 @@ task counts_to_adata {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "32 GB"
@@ -619,6 +628,9 @@ task counts_to_adata {
 		subject_id: {help: "Generated ASAP subject ID; stored in the AnnData objects."}
 		sample_id: {help: "Generated ASAP sample ID; stored in the AnnData objects and used to name output files."}
 		batch: {help: "The sample's batch; stored in the AnnData objects."}
+		brain_region_level_1: {help: "Abbreviation of most granular anatomical region (Level 1)."}
+		brain_region_level_2: {help: "Abbreviation of intermediate level anatomical region (Level 2)."}
+		brain_region_level_3: {help: "Abbreviation of coarse level anatomical region (Level 3)."}
 		sample_split_fragments_tsv_gz: {help: "A BED-like TSV file output by Cell Ranger ATAC for demultiplexed samples."}
 		raw_data_path: {help: "Raw data bucket path for counts to adata outputs; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/preprocess/counts_to_adata/<adata_task_version>`)."}
 		workflow_info: {help: "UTC timestamp, workflow name, workflow version, and GitHub release; stored in the file-level manifest and final manifest with all saved files."}
