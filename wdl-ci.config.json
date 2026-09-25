@@ -684,6 +684,7 @@
               "inputs": {
                 "cohort_id": "${cohort_id}",
                 "filtered_adata_object": "${input_resources_file_path}/${cohort_workflow_name}/${cohort_id}.gene_matrix.h5ad",
+                "mmc_taxonomy": "SEAAD",
                 "allen_brain_mmc_precomputed_stats_h5": "gs://asap-workflow-dev/workflow-resources/precomputed_stats.20231120.sea_ad.MTG.h5",
                 "raw_data_path": "${cohort_raw_data_path}",
                 "workflow_info": "${workflow_info}",
