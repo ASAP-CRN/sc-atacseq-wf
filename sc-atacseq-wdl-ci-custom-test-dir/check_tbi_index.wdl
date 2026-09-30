@@ -47,7 +47,7 @@ task check_tbi_index {
 		cpu: 2
 		memory: "3.75 GB"
 		disk: disk_size + " GB"
-		disks: "local-disk " + disk_size + " HDD"
+		disks: "local-disk " + disk_size + " SSD"
 		preemptible: 1
 	}
 }

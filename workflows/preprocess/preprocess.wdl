@@ -266,7 +266,7 @@ task check_output_files_exist {
 		cpu: 2
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "4 GB"
-		disks: "local-disk 20 HDD"
+		disks: "local-disk 20 SSD"
 		preemptible: 3
 		zones: zones
 	}
@@ -406,7 +406,7 @@ task cellranger_atac_count {
 		cpu: threads
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		bootDiskSizeGb: 40
 		zones: zones
 	}
@@ -527,7 +527,7 @@ task split_demux_fragments {
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "16 GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		zones: zones
 	}
@@ -610,7 +610,7 @@ task counts_to_adata {
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "32 GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones

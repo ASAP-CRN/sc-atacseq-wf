@@ -135,7 +135,7 @@ task integrate_peakvi {
 		docker: "~{container_registry}/scvi_tools:1.0.0"
 		cpu: 8
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		bootDiskSizeGb: 30
 		zones: zones
 		gpuType: "nvidia-tesla-t4"
@@ -208,7 +208,7 @@ task cluster_peakvi {
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
