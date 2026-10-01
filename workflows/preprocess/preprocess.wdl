@@ -513,8 +513,8 @@ task split_demux_fragments {
 			-i ~{write_tsv(workflow_info)} \
 			"${upload_args[@]}"
 
-		# shellcheck disable=SC2012
-		ls renamed_fragments_output | sed "s|^|~{raw_data_path}/|" | grep -v "meta.tsv$" > sample_fragment_filenames.txt
+		# List outputs in sample_ids order; callers index this by multiplexed sample position
+		cut -f2 metadata.tsv | sed "s|.*|~{raw_data_path}/~{dataset_id}.&.~{pool_id}.fragments.tsv.gz|" > sample_fragment_filenames.txt
 	>>>
 
 	output {
