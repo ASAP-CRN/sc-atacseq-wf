@@ -160,7 +160,7 @@ task cluster_harmony {
 	}
 
 	meta {
-		description: "Constructs a k-nearest neighbor graph on the Harmony-corrected spectral embedding and applies Leiden community detection to cluster cells."
+		description: "Constructs a k-nearest neighbor graph on the Harmony-corrected spectral embedding, applies Leiden community detection to cluster cells, and computes a UMAP embedding from the Harmony-corrected spectral embedding."
 	}
 
 	parameter_meta {

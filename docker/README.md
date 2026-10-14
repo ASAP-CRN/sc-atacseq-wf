@@ -41,9 +41,8 @@
     - Stores corrected embedding in `obsm` for downstream clustering and UMAP
 
 - _Harmony clustering_: [`cluster_harmony`](./sc_atac_tools/scripts/cluster_harmony)
-    - Builds KNN graph and runs leiden clustering on the spectral embedding
-    - Generates Harmony-integrated UMAP
-    - Calls peaks per cluster for use in downstream gene matrix construction
+    - Builds KNN graph and runs leiden clustering on the Harmony-corrected spectral embedding
+    - Recomputes the UMAP embedding (`obsm["X_umap"]`) on the Harmony-corrected spectral embedding and plots it colored by Leiden cluster
 
 - _Peak calling_: [`call_peaks`](./sc_atac_tools/scripts/call_peaks)
     - Calls peaks per cluster via `snap.tl.macs3` (groupby `leiden`)
@@ -98,11 +97,12 @@
 ## _ANNOTATION_
 
 - _Map my cells_: [`mmc`](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/sc_tools/scripts/main/mmc)
-    - Runs Allen Brain Map's [MapMyCells](https://portal.brain-map.org/atlases-and-data/bkp/mapmycells) on the **raw** gene activity matrix against SEA-AD Human taxonomy
+    - Runs Allen Brain Map's [MapMyCells](https://portal.brain-map.org/atlases-and-data/bkp/mapmycells) on the **raw** gene activity matrix against the 10x whole human brain (Siletti) or SEA-AD taxonomy, set by `mmc_taxonomy`
     - Must be run on raw (un-normalized) gene counts — before `process_genes`
 
 - _Cell transcriptional phenotype_: [`transcriptional_phenotype`](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/sc_tools/scripts/main/transcriptional_phenotype)
-    - Assigns `cell_type` to high-fidelity MMC mappings (correlation > 0.5, bootstrap probability > 0.5); all else labeled `"unknown"`
+    - Assigns `cell_type` to high-fidelity MMC mappings (correlation ≥ 0.5, bootstrap probability ≥ 0.5); all else labeled `"Unknown"`
+    - The taxonomy levels are read from the MMC results header: SEA-AD (class/subclass/supertype) or Siletti (supercluster/cluster/subcluster). For Siletti, `cell_type` is the supercluster, except cluster `Splat_395` (DA VGLUT2 neurons, within the heterogeneous `Splatter` supercluster), which is labeled "Dopaminergic" using cluster-level scores
     - Annotates AnnData and exports full cell type assignments
 
 > **Note**: `mmc` and `transcriptional_phenotype` are shared scripts from [`sc-rnaseq-wf`](https://github.com/ASAP-CRN/sc-rnaseq-wf). The gene activity matrix acts as a proxy for RNA expression by counting the TN5 insertions in each gene’s regulatory domain to enable cell type annotation.

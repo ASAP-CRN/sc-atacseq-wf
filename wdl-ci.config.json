@@ -595,6 +595,7 @@
           "tests": [
             {
               "inputs": {
+                "dataset_id": "${asap_dataset_id}",
                 "pool_id": "${pool_id}",
                 "source_subject_ids": [
                   "${source_subject_id}"

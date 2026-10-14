@@ -7,11 +7,109 @@ Common workflows, tasks, utility scripts, and docker images reused across harmon
 
 # Table of contents
 
+- [User guide](#user-guide)
 - [Workflows](#workflows)
 - [Inputs](#inputs)
 - [Outputs](#outputs)
     - [Output structure](#output-structure)
 - [Docker images](#docker-images)
+
+
+# User guide
+
+## What this analysis is for
+
+This workflow gives a **harmonized first pass** over all ASAP sc/sn ATAC-seq samples. It is meant to help you decide **whether a meta-analysis is worth running, and how**. It is not the final analysis of any dataset. Treat the cell type labels and peak sets in particular as a starting point:
+
+- **Cell types are inferred from chromatin, not RNA.** ATAC-seq does not measure expression, so a gene activity matrix (Tn5 insertions over each gene body and promoter) is used as a proxy and mapped to an Allen Brain Cell Atlas taxonomy with [MapMyCells](https://brain-map.org/bkp/analyze/mapmycells). Gene activity is sparser and noisier than RNA, so expect more `Unknown` cells and less reliable calls for rare or closely related cell types than in the [sc RNA-seq workflow](https://github.com/ASAP-CRN/sc-rnaseq-wf). Only confident calls (correlation and bootstrap probability ≥ 0.5) are kept as `cell_type`; all others are `Unknown`.
+- **Labels depend on the reference.** Cells are mapped to the Siletti et al. 2023 whole human brain taxonomy (`mmc_taxonomy = 'Siletti'`) at the supercluster level, with dopaminergic (DA VGLUT2) neurons split out of the "Splatter" supercluster as `Dopaminergic`. The SEA-AD middle temporal gyrus taxonomy (`SEAAD`) is still available, but covers cortical cell types only. Brain regions or cell types that are rare or missing in the reference will be mislabeled or `Unknown`. The workflow is human (hg38) only.
+- **Peaks depend on how cells are grouped.** Peaks are called with MACS3 per group (Leiden cluster or cell type, with `sample` as the replicate) and then merged. Cell types with few cells, including `Unknown`, contribute few or noisy peaks.
+- **Check before you build on it.** Use the outputs to answer:
+    - Are QC metrics comparable across teams and samples (fragment size distribution and TSS enrichment plots, `final_metadata.csv`)?
+    - Do cells group by cell type rather than by sample, pool or team after integration (UMAPs, `scib_report.csv`)?
+    - Are the expected cell types present in the expected proportions, and what fraction of cells is `Unknown`?
+    - Are the cell types you care about present in enough samples and cells to compare groups?
+
+If the answers look good, a meta-analysis across datasets is likely reasonable. If not, consider re-running with a different reference or a subset of samples, or analyzing datasets separately.
+
+## Parameters and versions used in a run
+
+Every run records:
+
+- **Workflow version and release:** the `MANIFEST.tsv` in each staging directory lists, for every file, its md5, timestamp, workflow name, workflow version and GitHub release.
+- **Samples:** `${cohort_id}.sample_list.tsv` lists the samples included in the cohort analysis.
+- **Inputs and parameters:** the inputs JSON submitted for the run. Defaults are listed in [Inputs](#inputs).
+- **Tool versions:** fixed by the Docker image tags used by that workflow release; see [Tool and library versions](#tool-and-library-versions).
+
+Default QC filters and settings (applied per sample before merging):
+
+| Filter or setting | Default |
+| :- | :- |
+| Unique fragments per cell (`n_fragment`) | 5,000–100,000 |
+| TSS enrichment (`tsse`) | ≥ 10 |
+| Samples with fewer than 50 cells after filtering | Removed |
+| Doublets (scrublet, per sample) | Removed using SnapATAC2's default doublet probability threshold |
+| Features | 500 bp genome-wide bins; the 500,000 most accessible bins are kept |
+| Genes in the gene activity matrix | Detected in ≥ 5 cells |
+| Leiden clustering resolution (Harmony and PeakVI) | 0.2 |
+| Cell type confidence (MapMyCells) | correlation ≥ 0.5 and bootstrap probability ≥ 0.5, otherwise `Unknown` |
+
+## Working with the outputs
+
+Two integrations are run side by side and both are benchmarked in `${cohort_id}.scib_report.csv`: Harmony on the SnapATAC2 spectral embedding, and PeakVI. Cell type annotation and the final outputs use **Harmony**. The scib report only scores batch mixing (there are no reference labels to score biological conservation against), so a high score can also mean over-correction; check the UMAPs too.
+
+The main output is `${cohort_id}.final.h5ad`. Useful contents:
+
+| Location | Contents |
+| :- | :- |
+| `X`, `layers["tile_counts"]` | Raw fragment counts over the selected 500 bp bins (not a peak matrix; see below) |
+| `obs["n_fragment"]`, `obs["frac_dup"]`, `obs["frac_mito"]`, `obs["tsse"]`, `obs["doublet_score"]`, `obs["doublet_probability"]` | Per-cell QC metrics |
+| `obs["sample"]`, `obs["subject"]`, `obs["pool"]`, `obs["team"]`, `obs["dataset"]`, `obs["batch"]`, `obs["batch_id"]`, `obs["brain_region_level_*"]` | Sample metadata; `batch_id` (team, dataset and pool) is the integration batch key |
+| `obs["cell_type"]`, `obs["phenotype"]`, `obs["rho"]`, `obs["prob"]` | MapMyCells call, before (`phenotype`) and after (`cell_type`) the confidence threshold, plus the reference's taxonomy levels (`supercluster_name`, `cluster_name`, `subcluster_name` for Siletti; `class_name`, `subclass_name`, `supertype_name` for SEAAD) |
+| `obs["leiden"]` | Leiden clusters on the Harmony embedding |
+| `obsm["X_spectral"]`, `obsm["X_spectral_harmony"]`, `obsm["X_umap"]` | Spectral embedding before and after Harmony, and UMAP of the Harmony embedding |
+| `uns["merged_peaks"]` | Peaks called per cell type and merged across cell types |
+
+Other outputs you will likely want:
+
+| File | Contents |
+| :- | :- |
+| `${cohort_id}.harmony.cell_type.peaks_matrix.h5ad` | Cell-by-peak count matrix over the cell type peaks; the starting point for differential accessibility |
+| `${cohort_id}.harmony.cell_type.merged_peaks.csv` | The cell type peak set |
+| `${cohort_id}.motifs.parquet` | TF motif enrichment (CIS-BP motifs) in cell type marker peaks, one row per motif and cell type |
+| `${cohort_id}.gene_matrix.magic_imputed.h5ad` | MAGIC-imputed gene activity; smoothed across similar cells, so use it for visualization only, not for statistical tests |
+| `${cohort_id}.peakvi.leiden.merged_peaks.h5ad` | The PeakVI integration (`obsm["X_peakVI"]`) with its own Leiden clusters and UMAP |
+
+AnnData objects open with `scanpy`/`anndata` (Python) as usual.
+
+```python
+import scanpy as sc
+
+adata = sc.read_h5ad("cohort.final.h5ad")
+adata.obs["cell_type"].value_counts()
+sc.pl.umap(adata, color=["cell_type", "sample"])
+
+# Cell-by-peak matrix for differential accessibility; add cell types from the final object
+peaks = sc.read_h5ad("cohort.harmony.cell_type.peaks_matrix.h5ad")
+peaks.obs["cell_type"] = adata.obs.loc[peaks.obs_names, "cell_type"]
+```
+
+### Example notebooks
+
+Example notebooks on the Verily Workbench (VWB) walk through loading the outputs, checking QC and integration, and comparing cell types across datasets:
+
+- https://github.com/ASAP-CRN/asap-crn-learning-lab
+
+## Running your own analysis
+
+If you process the data yourself instead of (or after) using this workflow, consider:
+
+- **Start from the sample-level outputs.** Cell Ranger ATAC and demultiplexing are the most expensive steps per pool. The per-sample `${sample_id}.${pool_id}.fragments.tsv.gz` and `${sample_id}.${pool_id}.cleaned_unfiltered.h5ad` files in the curated buckets are already demultiplexed (Vireo), have TSS enrichment computed and a 500 bp tile matrix, and have not had the cohort QC filters above applied, so you can apply your own QC.
+- **Use raw counts for models.** PeakVI and differential accessibility tests expect raw counts; spectral embeddings and imputed gene activity are only for dimensionality reduction and plotting.
+- **Choose the batch key carefully.** This workflow integrates on `batch_id` (team, dataset and pool). Integrating on a variable confounded with biology (e.g. disease status or brain region) removes real signal.
+- **Pick a reference that matches your tissue.** Check that the cell types you care about exist in the reference taxonomy, and expect lower-confidence calls from gene activity than from RNA. If you have paired RNA (multiome), annotate on RNA and transfer labels to ATAC instead.
+- **Re-call peaks for your question.** The peak set depends on the cell grouping. If you subset cells or refine cell types, call peaks again on the new groups rather than reusing the cohort peak set.
+- **Plan for scale.** Memory scales with the number of cells and bins; merging and peak calling on large cohorts needs hundreds of GB of RAM, and PeakVI needs a GPU.
 
 
 # Workflows
@@ -51,9 +149,9 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | Array[[Project](#project)] | projects | The project ID, set of samples and their associated reads and metadata, output bucket locations, and whether or not to run project-level cohort analysis. |
 | File | cellranger_atac_reference_data | Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads#reference-downloads. |
 | File | cellranger_atac_reference_chrom_sizes | Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting; see [demultiplexing section](#demultiplexing). |
-| Array[File] | vireo_assignment_csv | Vireo donor assignment CSVs with columns: donor_id, sample, raw_bc. Covers all donors in the pool. |
-| String | mmc_taxonomy | Cell type taxonomy of the precomputed stats reference; appended to MMC output filenames. Must match allen_brain_mmc_precomputed_stats_h5. Options are 'SEEAD' (human), 'Siletti' (human), or 'ABC' (mouse). |
-| File? | allen_brain_mmc_precomputed_stats_h5 | A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy). |
+| Array[File] | vireo_assignment_files | Vireo donor assignment CSVs with columns: donor_id, sample, raw_bc. Covers all donors in the pool. |
+| String | mmc_taxonomy | Cell type taxonomy of the precomputed stats reference; appended to MMC output filenames. Must match allen_brain_mmc_precomputed_stats_h5. Options are `SEAAD` (human, [SEA-AD](https://brain-map.org/consortia/sea-ad)), `Siletti` (human, [Allen WHB-10Xv3 taxonomy](https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/WHB-10Xv3/20240831/)), or `ABC` (mouse, [WMB-10X](https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/WMB-10X/20240831/.)). |
+| File | allen_brain_mmc_precomputed_stats_h5 | A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy). |
 | Int? | n_top_genes | Number of HVG genes to keep. [3000] |
 | Int? | n_comps | Number of principal components to compute. [30] |
 | String? | batch_key | Key in AnnData object for batch information. ['batch_id'] |
@@ -81,7 +179,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | Array[[Pool](#pool)] | pools | The set of pools (multiplexed data) associated with this project. |
 | Boolean | run_project_cohort_analysis | Whether or not to run cohort analysis within the project. |
 | String | raw_data_bucket | Raw data bucket; intermediate output files that are not final workflow outputs are stored here. |
-| String | staging_data_bucket | Staging data bucket; final project-level outputs are stored here. |
+| Array[String] | staging_data_buckets | Staging data buckets; final project-level outputs are stored here. |
 
 ### Pool
 
@@ -110,7 +208,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 
 ## Generating the inputs JSON
 
-The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The [`generate_inputs` utility script](https://github.com/ASAP-CRN/wf-common/blob/main/util/generate_inputs) may be used to automatically generate the inputs JSON (`inputs.{staging_env}.{cohort_dataset_id}.{date}.json`) and a sample list TSV (`{team_id}.{cohort_dataset_id}.sample_list.{date}.tsv`); same as the one generated in [the write_cohort_sample_list task](https://github.com/ASAP-CRN/wf-common/wdl/tasks/write_cohort_sample_list.wdl)). The script requires the libraries outlined in [the requirements.txt file](https://github.com/ASAP-CRN/wf-common/util/requirements.txt) and the following inputs:
+The inputs JSON may be generated manually, however when running a large number of samples, this can become unwieldly. The [`generate_inputs` utility script](https://github.com/ASAP-CRN/wf-common/blob/main/util/workflow_inputs/generate_inputs) may be used to automatically generate the inputs JSON (`inputs.{staging_env}.{cohort_dataset_id}.{date}.json`) and a sample list TSV (`{team_id}.{cohort_dataset_id}.sample_list.{date}.tsv`); same as the one generated in [the write_cohort_sample_list task](https://github.com/ASAP-CRN/wf-common/blob/main/wdl/tasks/write_cohort_sample_list.wdl)). The script requires the libraries outlined in [the requirements.txt file](https://github.com/ASAP-CRN/wf-common/blob/main/util/requirements.txt) and the following inputs:
 
 - `project-tsv`: One or more project TSVs with one row per sample and columns team_id, ASAP_dataset_id, ASAP_sample_id, batch, fastq_R1s, fastq_R2s, fastq_R3s, fastq_I1s, fastq_I2s, embargoed, source, modality_flavour, dataset_DOI_url, and SPATIAL columns if applicable: geomx_config, geomx_dsp_config, geomx_annotation_file, visium_cytassist, visium_probe_set, visium_slide_ref, and visium_capture_area. All samples from all projects may be included in the same project TSV, or multiple project TSVs may be provided.
     - `team_id`: A unique identifier for the team from which the sample(s) arose.
@@ -143,12 +241,12 @@ The inputs JSON may be generated manually, however when running a large number o
 Example usage:
 
 ```bash
-./wf-common/util/generate_inputs \
+./wf-common/util/workflow_inputs/generate_inputs \
     --project-tsv metadata.tsv \
     --inputs-template workflows/inputs.json \
     --run-project-cohort-analysis \
     --workflow-name sc_atacseq_analysis \
-    --release-version v5.0.0 \
+    --release-version v6.0.0 \
     --cohort-dataset-id cohort-pmdbs-sc-atacseq
 ```
 
@@ -218,13 +316,13 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${cohort_id}.all_genes.csv
             │   ├── ${cohort_id}.hvg_genes.csv
             │   ├── ${cohort_id}.gene_matrix.magic_imputed.h5ad
-            │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.extended_results.json
-            │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.results.csv
-            │   ├── ${cohort_id}.{mmc_otf_mapping.SEAAD}.log.txt
+            │   ├── ${cohort_id}.mmc_otf_mapping.{Siletti,SEAAD}.extended_results.json
+            │   ├── ${cohort_id}.mmc_otf_mapping.{Siletti,SEAAD}.results.csv
+            │   ├── ${cohort_id}.mmc_otf_mapping.{Siletti,SEAAD}.log.txt
             │   ├── ${cohort_id}.mmc_results.parquet
-            │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.h5ad
-            │   ├── ${cohort_id}.peakvi.cell_type.merged_peaks.csv
-            │   ├── ${cohort_id}.peakvi.cell_type.peaks_matrix.h5ad
+            │   ├── ${cohort_id}.harmony.cell_type.merged_peaks.h5ad
+            │   ├── ${cohort_id}.harmony.cell_type.merged_peaks.csv
+            │   ├── ${cohort_id}.harmony.cell_type.peaks_matrix.h5ad
             │   ├── ${cohort_id}.motifs.parquet
             │   ├── ${cohort_id}.features.umap.png
             │   ├── ${cohort_id}.groups.umap.png
@@ -285,7 +383,7 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
 
 ## Promoting staging data
 
-The [`promote_staging_data` script](https://github.com/ASAP-CRN/wf-common/blob/main/util/promote_staging_data) can be used to promote staging data that has been approved to the curated data bucket for a team or set of teams.
+The [`promote_staging_data` script](https://github.com/ASAP-CRN/wf-common/blob/main/util/data_promotion/promote_staging_data) can be used to promote staging data that has been approved to the curated data bucket for a team or set of teams.
 
 This script compiles bucket and file information for both the initial (staging) and target (prod) environment. It also runs data integrity tests to ensure staging data can be promoted and generates a Markdown report. It (1) checks that files are not empty and are not less than or equal to 10 bytes (factoring in white space) and (2) checks that files have associated metadata and is present in MANIFEST.tsv.
 
@@ -301,7 +399,7 @@ The script defaults to a dry run, printing out the files that would be copied or
 -h  Display this message and exit
 -l  List available teams
 -w  Workflow name used as a directory in bucket (e.g. 'pmdbs_sc_atacseq')
--v  Release version (e.g. v5.0.0)
+-v  Release version (e.g. v6.0.0)
 -p  Promote data. If this option is not selected, data that would be copied or deleted is printed out, but files are not actually changed (dry run)
 ```
 
@@ -309,13 +407,13 @@ The script defaults to a dry run, printing out the files that would be copied or
 
 ```bash
 # List available teams
-./wf-common/util/promote_staging_data -l -w pmdbs_atac_rnaseq -v v5.0.0
+./wf-common/util/data_promotion/promote_staging_data -l -w pmdbs_sc_atacseq -v v6.0.0
 
 # Print out the files that would be copied or deleted from the staging bucket to the curated bucket for teams' datasets processed through the sc ATAC-seq pipeline for a specific release version
-./wf-common/util/promote_staging_data -w pmdbs_atac_rnaseq -v v5.0.0
+./wf-common/util/data_promotion/promote_staging_data -w pmdbs_sc_atacseq -v v6.0.0
 
 # Promote data for teams' datasets processed through the sc ATAC-seq pipeline for a specific release version
-./wf-common/util/promote_staging_data -w pmdbs_atac_rnaseq -v v5.0.0 -p
+./wf-common/util/data_promotion/promote_staging_data -w pmdbs_sc_atacseq -v v6.0.0 -p
 ```
 
 # Docker images
@@ -375,14 +473,14 @@ Docker images can be build using the [`build_docker_images`](https://github.com/
 | Image | Major tool versions | Links |
 | :- | :- | :- |
 | cellranger_atac | <ul><li>[cellranger-atac v2.2.0](https://www.10xgenomics.com/support/software/cell-ranger-atac/latest/release-notes/release-notes#2025-April)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/cellranger_atac) |
-| scatac_fragment_tools | <ul><li>[scatac_fragment_tools v0.1.5](https://github.com/aertslab/scatac_fragment_tools/releases/tag/0.1.5)</li><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/scatac_fragment_tools) |
-| sc_atac_tools | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li></ul> Python libraries: <ul><li>argparse 1.4.0</li><li>[snapatac2 2.8.0](https://github.com/kaizhang/SnapATAC2/releases/tag/v2.8.0)</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>[harmonypy 0.2.0](https://github.com/slowkow/harmonypy/releases/tag/v0.2.0)</li><li>[magic-impute 3.0.0](https://github.com/KrishnaswamyLab/MAGIC/releases/tag/v3.0.0)</li><li>kaleido 0.2.1</li><li>ipython 8.38.0</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/sc_atac_tools) |
-| scvi_tools | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li><li>[cuda 12.8.1](https://developer.nvidia.com/cuda-12-8-1-download-archive)</li></ul> Python libraries: <ul><li>argparse 1.4.0</li><li>[scvi-tools 1.4.1](https://github.com/scverse/scvi-tools/releases/tag/1.4.1)</li><li>[torch 2.10.0](https://github.com/pytorch/pytorch/releases/tag/v2.10.0)</li><li>[jax 0.9.0](https://github.com/jax-ml/jax/releases/tag/jax-v0.9.0)</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>[scib-metrics 0.5.7](https://github.com/YosefLab/scib-metrics/releases/tag/v0.5.7)</li><li>pyarrow 23.0.0</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/scvi_tools) |
+| scatac_fragment_tools | <ul><li>[scatac_fragment_tools v0.1.5](https://github.com/aertslab/scatac_fragment_tools/releases/tag/0.1.5)</li><li>[google-cloud-cli 554.0.0](https://cloud.google.com/sdk/docs/release-notes)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/scatac_fragment_tools) |
+| sc_atac_tools | <ul><li>[google-cloud-cli 554.0.0](https://cloud.google.com/sdk/docs/release-notes)</li><li>[python 3.10.12](https://www.python.org/downloads/release/python-31012/)</li></ul> Python libraries: <ul><li>argparse 1.4.0</li><li>[snapatac2 2.9.0](https://github.com/kaizhang/SnapATAC2/releases/tag/v2.9.0)</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>[harmonypy 0.2.0](https://github.com/slowkow/harmonypy/releases/tag/v0.2.0)</li><li>[magic-impute 3.0.0](https://github.com/KrishnaswamyLab/MAGIC/releases/tag/v3.0.0)</li><li>kaleido 0.2.1</li><li>ipython 8.38.0</li><li>hdf5plugin 6.0.0</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/sc_atac_tools) |
+| scvi_tools | <ul><li>[google-cloud-cli 554.0.0](https://cloud.google.com/sdk/docs/release-notes)</li><li>[python 3.13.12](https://www.python.org/downloads/release/python-31312/)</li><li>[cuda 12.8.1](https://developer.nvidia.com/cuda-12-8-1-download-archive)</li></ul> Python libraries: <ul><li>argparse 1.4.0</li><li>[scvi-tools 1.4.1](https://github.com/scverse/scvi-tools/releases/tag/1.4.1)</li><li>[torch 2.10.0](https://github.com/pytorch/pytorch/releases/tag/v2.10.0)</li><li>[jax 0.9.0](https://github.com/jax-ml/jax/releases/tag/jax-v0.9.0)</li><li>[scanpy 1.11.3](https://scanpy.readthedocs.io/en/stable/release-notes/index.html#v1-11-3)</li><li>[scib-metrics 0.5.7](https://github.com/YosefLab/scib-metrics/releases/tag/v0.5.7)</li><li>pyarrow 23.0.0</li><li>leidenalg 0.11.0</li><li>hdf5plugin 6.0.0</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/sc-atacseq-wf/tree/main/docker/scvi_tools) |
 | util | <ul><li>[google-cloud-cli 524.0.0](https://cloud.google.com/sdk/docs/release-notes#52400_2025-05-28)</li></ul> | [Dockerfile](https://github.com/ASAP-CRN/wf-common/tree/main/docker/util) |
 
 # wdl-ci
 
-[`wdl-ci`](https://github.com/DNAstack/wdl-ci) provides tools to validate and test workflows and tasks written in [Workflow Description Language (WDL)](https://github.com/openwdl/wdl). `wdl-ci` in this repository is set up to run on pull request.
+[`wdl-ci`](https://github.com/DNAstack/wdl-ci) provides tools to validate and test workflows and tasks written in [Workflow Description Language (WDL)](https://github.com/openwdl/wdl). In addition to the tests packaged in `wdl-ci`, the [sc-atacseq-wdl-ci-custom-test-dir](./sc-atacseq-wdl-ci-custom-test-dir) is a directory containing custom WDL-based tests that are used to test workflow tasks. `wdl-ci` in this repository is set up to run on pull request.
 
 In general, `wdl-ci` will use inputs provided in the [wdl-ci.config.json](./wdl-ci.config.json) and compare current outputs and validated outputs based on changed tasks/workflows to ensure outputs are still valid by meeting the critera in the specified tests. For example, if the Cell Ranger ATAC task in our workflow was changed, then this task would be submitted and that output would be considered the "current output". When inspecting the raw counts generated by Cell Ranger, there is a test specified in the [wdl-ci.config.json](./wdl-ci.config.json) called, "check_hdf5". The test will compare the "current output" and "validated output" (provided in the [wdl-ci.config.json](./wdl-ci.config.json)) to make sure that the raw_peak_bc_matrix.h5 file is still a valid HDF5 file.
 
@@ -420,4 +518,5 @@ These steps are run in the `split_demux_fragments` task in [preprocessing](workf
 
 | Taxonomy | Description | Link |
 | :- | :- | :- |
+| 10x Whole human brain taxonomy (CCN20240330) | Transcriptomic diversity of cell types in adult human brain. Source file used is `precomputed_stats.siletti.training.h5`. | https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/WHB-10Xv3/20240831/. |
 | 10x Human MTG SEA-AD taxonomy (CCN20230505) | A high-resolution transcriptomic atlas of cell types from middle temporal gyrus from the SEA-AD aged human cohort that spans the spectrum of Alzheimer's disease. Source file used is `precomputed_stats.20231120.sea_ad.MTG.h5`. | https://allen-brain-cell-atlas.s3-us-west-2.amazonaws.com/mapmycells/SEAAD/20240831/ |
