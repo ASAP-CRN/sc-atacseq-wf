@@ -7,7 +7,7 @@
       "tasks": {
         "merge_and_qc": {
           "key": "merge_and_qc",
-          "digest": "v3zedveyignkx22frgkr7kjqf4l2i6n7",
+          "digest": "gefwpgyjvdszc643mfq3lvcdgmexv7sl",
           "tests": [
             {
               "inputs": {
@@ -56,7 +56,7 @@
         },
         "reduce_dimensions": {
           "key": "reduce_dimensions",
-          "digest": "r5ezjdemda5xsp2dyq53b4e5zj2t5ops",
+          "digest": "4om3k2j7ob5eyx34iifjvs7psgeu4tej",
           "tests": [
             {
               "inputs": {
@@ -79,7 +79,7 @@
         },
         "peak_calling": {
           "key": "peak_calling",
-          "digest": "vlt75ur6g3chegs67on3zxyq27b4l2fi",
+          "digest": "nukdjzy2bf3cyp6oyvj3adhiq4sst6ch",
           "tests": [
             {
               "inputs": {
@@ -123,7 +123,7 @@
         },
         "benchmark_sc_integration": {
           "key": "benchmark_sc_integration",
-          "digest": "s6gvpryvrunshob2qsvzm67lrmiln5jy",
+          "digest": "",
           "tests": [
             {
               "inputs": {
@@ -160,7 +160,7 @@
         },
         "make_gene_matrix": {
           "key": "make_gene_matrix",
-          "digest": "aso2tt5lraz5a2fkwuakjuakv4idmbai",
+          "digest": "dcejdewhk5avm6a6z5memtowacyrgzyj",
           "tests": [
             {
               "inputs": {
@@ -183,7 +183,7 @@
         },
         "process_gene_matrix": {
           "key": "process_gene_matrix",
-          "digest": "wplc5bx2runotyblmtmrlvnpjhmczwsj",
+          "digest": "353y63roq3qmohvmpk2ljo4anx2zi75z",
           "tests": [
             {
               "inputs": {
@@ -230,7 +230,7 @@
         },
         "impute_gene_matrix": {
           "key": "impute_gene_matrix",
-          "digest": "7mdl5d2hnjo3yv34ghubysyzlbt6y7es",
+          "digest": "xdw75jgixuegzqbjhodexz63v6cqg67w",
           "tests": [
             {
               "inputs": {
@@ -256,7 +256,7 @@
         },
         "motif_enrichment": {
           "key": "motif_enrichment",
-          "digest": "hsop7mu7tyii5avln7aqfzktprqjqxyr",
+          "digest": "txwc4xjeycltlph4do6vponjsj5d67bx",
           "tests": [
             {
               "inputs": {
@@ -282,7 +282,7 @@
         },
         "export_final_artifacts": {
           "key": "export_final_artifacts",
-          "digest": "qqz6w2avx7qosi4qajmyitfkxlz2ky5q",
+          "digest": "4rhanlplg2q4eilmxrihu4w4v5hkogpx",
           "tests": [
             {
               "inputs": {
@@ -324,7 +324,7 @@
       "tasks": {
         "integrate_harmony": {
           "key": "integrate_harmony",
-          "digest": "alcske7uo5dmnrdfz6gwattvkxgt4hcz",
+          "digest": "ujyt627ngapop7cmpkw4feopn4sk7lil",
           "tests": [
             {
               "inputs": {
@@ -348,7 +348,7 @@
         },
         "cluster_harmony": {
           "key": "cluster_harmony",
-          "digest": "qkwa2zvbskeut65g7e4ql4wgnebm2v7u",
+          "digest": "j5zcfn5a4ik35qe3fdntqnslke6vu7bc",
           "tests": [
             {
               "inputs": {
@@ -389,7 +389,7 @@
       "tasks": {
         "integrate_peakvi": {
           "key": "integrate_peakvi",
-          "digest": "cjitlwopy6rvcr46oc66pnu42k7la3f7",
+          "digest": "ckwyu7ojpmbrs2rgrs65fjgyrpt24ri4",
           "tests": [
             {
               "inputs": {
@@ -427,7 +427,7 @@
         },
         "cluster_peakvi": {
           "key": "cluster_peakvi",
-          "digest": "3df6owok5nefev4plb6cqipmghjlvfew",
+          "digest": "2yt5hzvj5awmnz3litaqkdx2a55uvkgv",
           "tests": [
             {
               "inputs": {
@@ -469,7 +469,7 @@
       "tasks": {
         "cellranger_atac_count": {
           "key": "cellranger_atac_count",
-          "digest": "lkbv6evcvhnomuhkud7ktfqaoejwvoge",
+          "digest": "nrjy3wge3qemj2lgkhocblm2memzhuxs",
           "tests": [
             {
               "inputs": {
@@ -591,7 +591,7 @@
         },
         "split_demux_fragments": {
           "key": "split_demux_fragments",
-          "digest": "zw4njxrvc5pydb5xt4lnjttp46ydn32s",
+          "digest": "my7zno5wvrcaov3zwkmvrii2vzdyn7oa",
           "tests": [
             {
               "inputs": {
@@ -627,7 +627,7 @@
                 },
                 "sample_split_fragments_tsv_gz": {
                   "value": [
-                    "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.${pool_id}.fragments.tsv.gz"
+                    "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_id}.${sample_id}.${pool_id}.fragments.tsv.gz"
                   ],
                   "test_tasks": [
                     "compare_file_basename",
@@ -640,7 +640,7 @@
         },
         "counts_to_adata": {
           "key": "counts_to_adata",
-          "digest": "dtfhx7vpybhidkc7woyxm7kpfyb3lqm3",
+          "digest": "guwndjbxdnjee6fb73g46x45ryzgdh53",
           "tests": [
             {
               "inputs": {
@@ -672,6 +672,11 @@
               }
             }
           ]
+        },
+        "check_output_files_exist": {
+          "key": "check_output_files_exist",
+          "digest": "4d2k7mzhcuijfnr435hkdtiislmsurjd",
+          "tests": []
         }
       }
     }
