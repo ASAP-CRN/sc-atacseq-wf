@@ -46,9 +46,9 @@ workflow sc_atacseq_analysis {
 
 	String workflow_execution_path = "workflow_execution"
 	String workflow_name = "pmdbs_sc_atacseq"
-	String workflow_version = "v1.0.0"
+	String workflow_version = "v1.1.0"
 	String workflow_release = "https://github.com/ASAP-CRN/sc-atacseq-wf/releases/tag/sc_atacseq_analysis-~{workflow_version}"
-	String crn_release_version = "v5.0.0"
+	String crn_release_version = "v6.0.0"
 
 	call GetWorkflowMetadata.get_workflow_metadata {
 		input:
