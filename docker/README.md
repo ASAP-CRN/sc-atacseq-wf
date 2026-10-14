@@ -36,7 +36,7 @@
 
 ### _Harmony integration option_
 
-- _Run harmony_: [`run_harmony`](./sc_atac_tools/scripts/run_harmony)
+- _Integrate harmony_: [`integrate_harmony`](./sc_atac_tools/scripts/integrate_harmony)
     - Applies Harmony batch correction to the spectral embedding
     - Stores corrected embedding in `obsm` for downstream clustering and UMAP
 
@@ -114,7 +114,7 @@
     - Calls peaks per cell type via `snap.tl.macs3` (groupby `cell_type`)
     - Constructs a peak-by-cell count matrix via `snap.pp.make_peak_matrix`
 
-- _Motif enrichment analysis_: [`motif_enrichment`](./sc_atac_tools/scripts/motif_enrichment)
+- _Motif enrichment analysis_: [`find_motif_enrichment`](./sc_atac_tools/scripts/find_motif_enrichment)
     - Identifies differentially accessible regions per cell type
     - Runs motif enrichment analysis via `snap.tl.motif_enrichment`
     - Links chromatin accessibility to transcription factor binding activity
