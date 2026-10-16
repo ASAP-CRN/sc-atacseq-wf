@@ -39,7 +39,7 @@ workflow preprocess {
 	String adata_raw_data_path = "~{workflow_raw_data_path_prefix}/counts_to_adata/~{adata_task_version}"
 
 	scatter (pool_object in pools) {
-		String cellranger_atac_count_output = "~{cellranger_atac_raw_data_path}/~{pool_object.pool_id}.raw_peak_bc_matrix.h5"
+		String cellranger_atac_count_output = "~{cellranger_atac_raw_data_path}/~{dataset_id}.~{pool_object.pool_id}.raw_peak_bc_matrix.h5"
 	}
 
 	# For each sample, outputs an array of true/false: [cellranger_atac_counts_complete]
@@ -53,24 +53,27 @@ workflow preprocess {
 	scatter (pool_index in range(length(pools))) {
 		Pool pool = pools[pool_index]
 
+		String dataset_pool_id = "~{dataset_id}.~{pool.pool_id}"
+
 		String cellranger_atac_count_complete = check_cellranger_output_files_exist.sample_preprocessing_complete[pool_index][0]
 
-		String cellranger_atac_outputs_tar_gz = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.cellranger_atac_outputs.tar.gz"
-		String cellranger_atac_singlecell_csv = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.singlecell.csv"
-		String cellranger_atac_peaks_bed = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.peaks.bed"
-		String cellranger_atac_cut_sites_bigwig = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.cut_sites.bigwig"
-		String cellranger_atac_raw_peaks = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.raw_peak_bc_matrix.h5"
-		String cellranger_atac_filtered_peaks = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.filtered_peak_bc_matrix.h5"
-		String cellranger_atac_filtered_tf = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.filtered_tf_bc_matrix.h5"
-		String cellranger_atac_fragments_tsv_gz = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.fragments.tsv.gz"
-		String cellranger_atac_fragments_tsv_gz_tbi = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.fragments.tsv.gz.tbi"
-		String cellranger_atac_summary_csv = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.summary.csv"
-		String cellranger_atac_peak_annotation_tsv = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.peak_annotation.tsv"
-		String cellranger_atac_peak_motif_mapping_bed = "~{cellranger_atac_raw_data_path}/~{pool.pool_id}.peak_motif_mapping.bed"
+		String cellranger_atac_outputs_tar_gz = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.cellranger_atac_outputs.tar.gz"
+		String cellranger_atac_singlecell_csv = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.singlecell.csv"
+		String cellranger_atac_peaks_bed = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.peaks.bed"
+		String cellranger_atac_cut_sites_bigwig = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.cut_sites.bigwig"
+		String cellranger_atac_raw_peaks = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.raw_peak_bc_matrix.h5"
+		String cellranger_atac_filtered_peaks = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.filtered_peak_bc_matrix.h5"
+		String cellranger_atac_filtered_tf = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.filtered_tf_bc_matrix.h5"
+		String cellranger_atac_fragments_tsv_gz = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.fragments.tsv.gz"
+		String cellranger_atac_fragments_tsv_gz_tbi = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.fragments.tsv.gz.tbi"
+		String cellranger_atac_summary_csv = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.summary.csv"
+		String cellranger_atac_peak_annotation_tsv = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.peak_annotation.tsv"
+		String cellranger_atac_peak_motif_mapping_bed = "~{cellranger_atac_raw_data_path}/~{dataset_pool_id}.peak_motif_mapping.bed"
 
 		if (cellranger_atac_count_complete == "false") {
 			call cellranger_atac_count {
 				input:
+					dataset_pool_id = dataset_pool_id,
 					pool_id = pool.pool_id,
 					fastq_R1s = pool.fastq_R1s,
 					fastq_R2s = pool.fastq_R2s,
@@ -154,7 +157,7 @@ workflow preprocess {
 
 			Array[String] project_sample_id = [team_id, "~{sample.sample_id}.~{pool.pool_id}", dataset_doi_url]
 
-			String preprocessed_adata_object = "~{adata_raw_data_path}/~{sample.sample_id}.~{pool.pool_id}.cleaned_unfiltered.h5ad"
+			String preprocessed_adata_object = "~{adata_raw_data_path}/~{dataset_id}.~{sample.sample_id}.~{pool.pool_id}.cleaned_unfiltered.h5ad"
 
 			if (run_counts_to_adata) {
 				call counts_to_adata {
@@ -283,6 +286,7 @@ task check_output_files_exist {
 
 task cellranger_atac_count {
 	input {
+		String dataset_pool_id
 		String pool_id
 
 		Array[File] fastq_R1s
@@ -350,55 +354,55 @@ task cellranger_atac_count {
 
 		# Save Cell Ranger ATAC outs
 		cp -r ~{pool_id}/outs atac_outputs
-		tar -czvf "~{pool_id}.cellranger_atac_outputs.tar.gz" atac_outputs
+		tar -czvf "~{dataset_pool_id}.cellranger_atac_outputs.tar.gz" atac_outputs
 
-		# Rename outputs to include sample ID
-		mv ~{pool_id}/outs/singlecell.csv ~{pool_id}.singlecell.csv
-		mv ~{pool_id}/outs/peaks.bed ~{pool_id}.peaks.bed
-		mv ~{pool_id}/outs/cut_sites.bigwig ~{pool_id}.cut_sites.bigwig
-		mv ~{pool_id}/outs/raw_peak_bc_matrix.h5 ~{pool_id}.raw_peak_bc_matrix.h5
-		mv ~{pool_id}/outs/filtered_peak_bc_matrix.h5 ~{pool_id}.filtered_peak_bc_matrix.h5
-		mv ~{pool_id}/outs/filtered_tf_bc_matrix.h5 ~{pool_id}.filtered_tf_bc_matrix.h5
-		mv ~{pool_id}/outs/fragments.tsv.gz.tbi ~{pool_id}.fragments.tsv.gz.tbi
-		mv ~{pool_id}/outs/summary.csv ~{pool_id}.summary.csv
-		mv ~{pool_id}/outs/peak_annotation.tsv ~{pool_id}.peak_annotation.tsv
-		mv ~{pool_id}/outs/peak_motif_mapping.bed ~{pool_id}.peak_motif_mapping.bed
+		# Rename outputs to include dataset ID and pool ID
+		mv ~{pool_id}/outs/singlecell.csv ~{dataset_pool_id}.singlecell.csv
+		mv ~{pool_id}/outs/peaks.bed ~{dataset_pool_id}.peaks.bed
+		mv ~{pool_id}/outs/cut_sites.bigwig ~{dataset_pool_id}.cut_sites.bigwig
+		mv ~{pool_id}/outs/raw_peak_bc_matrix.h5 ~{dataset_pool_id}.raw_peak_bc_matrix.h5
+		mv ~{pool_id}/outs/filtered_peak_bc_matrix.h5 ~{dataset_pool_id}.filtered_peak_bc_matrix.h5
+		mv ~{pool_id}/outs/filtered_tf_bc_matrix.h5 ~{dataset_pool_id}.filtered_tf_bc_matrix.h5
+		mv ~{pool_id}/outs/fragments.tsv.gz.tbi ~{dataset_pool_id}.fragments.tsv.gz.tbi
+		mv ~{pool_id}/outs/summary.csv ~{dataset_pool_id}.summary.csv
+		mv ~{pool_id}/outs/peak_annotation.tsv ~{dataset_pool_id}.peak_annotation.tsv
+		mv ~{pool_id}/outs/peak_motif_mapping.bed ~{dataset_pool_id}.peak_motif_mapping.bed
 
 		# Remove the 6th column representing the strand in the fragments file, so paired-ended is considered
 		## https://scverse.org/SnapATAC2/api/_autosummary/snapatac2.pp.import_fragments.html
-		zcat ~{pool_id}/outs/fragments.tsv.gz | grep -v "^#" | cut -f1-5 | gzip > ~{pool_id}.fragments.tsv.gz
+		zcat ~{pool_id}/outs/fragments.tsv.gz | grep -v "^#" | cut -f1-5 | gzip > ~{dataset_pool_id}.fragments.tsv.gz
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{pool_id}.cellranger_atac_outputs.tar.gz" \
-			-o "~{pool_id}.singlecell.csv" \
-			-o "~{pool_id}.peaks.bed" \
-			-o "~{pool_id}.cut_sites.bigwig" \
-			-o "~{pool_id}.raw_peak_bc_matrix.h5" \
-			-o "~{pool_id}.filtered_peak_bc_matrix.h5" \
-			-o "~{pool_id}.filtered_tf_bc_matrix.h5" \
-			-o "~{pool_id}.fragments.tsv.gz" \
-			-o "~{pool_id}.fragments.tsv.gz.tbi" \
-			-o "~{pool_id}.summary.csv" \
-			-o "~{pool_id}.peak_annotation.tsv" \
-			-o "~{pool_id}.peak_motif_mapping.bed"
+			-o "~{dataset_pool_id}.cellranger_atac_outputs.tar.gz" \
+			-o "~{dataset_pool_id}.singlecell.csv" \
+			-o "~{dataset_pool_id}.peaks.bed" \
+			-o "~{dataset_pool_id}.cut_sites.bigwig" \
+			-o "~{dataset_pool_id}.raw_peak_bc_matrix.h5" \
+			-o "~{dataset_pool_id}.filtered_peak_bc_matrix.h5" \
+			-o "~{dataset_pool_id}.filtered_tf_bc_matrix.h5" \
+			-o "~{dataset_pool_id}.fragments.tsv.gz" \
+			-o "~{dataset_pool_id}.fragments.tsv.gz.tbi" \
+			-o "~{dataset_pool_id}.summary.csv" \
+			-o "~{dataset_pool_id}.peak_annotation.tsv" \
+			-o "~{dataset_pool_id}.peak_motif_mapping.bed"
 	>>>
 
 	output {
-		String atac_outputs_tar_gz = "~{raw_data_path}/~{pool_id}.cellranger_atac_outputs.tar.gz"
-		String singlecell_csv = "~{raw_data_path}/~{pool_id}.singlecell.csv"
-		String peaks_bed = "~{raw_data_path}/~{pool_id}.peaks.bed"
-		String cut_sites_bigwig = "~{raw_data_path}/~{pool_id}.cut_sites.bigwig"
-		String raw_peaks = "~{raw_data_path}/~{pool_id}.raw_peak_bc_matrix.h5"
-		String filtered_peaks = "~{raw_data_path}/~{pool_id}.filtered_peak_bc_matrix.h5"
-		String filtered_tf = "~{raw_data_path}/~{pool_id}.filtered_tf_bc_matrix.h5"
-		String fragments_tsv_gz = "~{raw_data_path}/~{pool_id}.fragments.tsv.gz"
-		String fragments_tsv_gz_tbi = "~{raw_data_path}/~{pool_id}.fragments.tsv.gz.tbi"
-		String summary_csv = "~{raw_data_path}/~{pool_id}.summary.csv"
-		String peak_annotation_tsv = "~{raw_data_path}/~{pool_id}.peak_annotation.tsv"
-		String peak_motif_mapping_bed = "~{raw_data_path}/~{pool_id}.peak_motif_mapping.bed"
+		String atac_outputs_tar_gz = "~{raw_data_path}/~{dataset_pool_id}.cellranger_atac_outputs.tar.gz"
+		String singlecell_csv = "~{raw_data_path}/~{dataset_pool_id}.singlecell.csv"
+		String peaks_bed = "~{raw_data_path}/~{dataset_pool_id}.peaks.bed"
+		String cut_sites_bigwig = "~{raw_data_path}/~{dataset_pool_id}.cut_sites.bigwig"
+		String raw_peaks = "~{raw_data_path}/~{dataset_pool_id}.raw_peak_bc_matrix.h5"
+		String filtered_peaks = "~{raw_data_path}/~{dataset_pool_id}.filtered_peak_bc_matrix.h5"
+		String filtered_tf = "~{raw_data_path}/~{dataset_pool_id}.filtered_tf_bc_matrix.h5"
+		String fragments_tsv_gz = "~{raw_data_path}/~{dataset_pool_id}.fragments.tsv.gz"
+		String fragments_tsv_gz_tbi = "~{raw_data_path}/~{dataset_pool_id}.fragments.tsv.gz.tbi"
+		String summary_csv = "~{raw_data_path}/~{dataset_pool_id}.summary.csv"
+		String peak_annotation_tsv = "~{raw_data_path}/~{dataset_pool_id}.peak_annotation.tsv"
+		String peak_motif_mapping_bed = "~{raw_data_path}/~{dataset_pool_id}.peak_motif_mapping.bed"
 	}
 
 	runtime {
@@ -416,7 +420,8 @@ task cellranger_atac_count {
 	}
 
 	parameter_meta {
-		pool_id: {help: "Generated ASAP pool ID; used to name output files."}
+		dataset_pool_id: {help: "Generated ASAP dataset ID and pool ID (`<dataset_id>.<pool_id>`); used to name output files."}
+		pool_id: {help: "Generated ASAP pool ID; used as the Cell Ranger ATAC run ID."}
 		fastq_R1s: {help: "Sample's read 1 FASTQ file."}
 		fastq_R2s: {help: "Sample's read 2 FASTQ file."}
 		fastq_R3s: {help: "Sample's read 3 FASTQ file."}
@@ -592,17 +597,17 @@ task counts_to_adata {
 			--brain-region-level-1 "~{brain_region_level_1}" \
 			--brain-region-level-2 "~{brain_region_level_2}" \
 			--brain-region-level-3 "~{brain_region_level_3}" \
-			--adata-output ~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad
+			--adata-output ~{dataset_id}.~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad
 
 		upload_outputs \
 			-b ~{billing_project} \
 			-d ~{raw_data_path} \
 			-i ~{write_tsv(workflow_info)} \
-			-o "~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad"
+			-o "~{dataset_id}.~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad"
 	>>>
 
 	output {
-		String initial_adata_object = "~{raw_data_path}/~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad"
+		String initial_adata_object = "~{raw_data_path}/~{dataset_id}.~{sample_id}.~{pool_id}.cleaned_unfiltered.h5ad"
 	}
 
 	runtime {
@@ -622,8 +627,8 @@ task counts_to_adata {
 
 	parameter_meta {
 		team_id: {help: "Name of the CRN Team; stored in the AnnData objects."}
-		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects."}
-		pool_id: {help: "Generated ASAP pool ID; stored in the AnnData objects."}
+		dataset_id: {help: "Generated ASAP dataset ID; stored in the AnnData objects and used to name output files."}
+		pool_id: {help: "Generated ASAP pool ID; stored in the AnnData objects and used to name output files."}
 		source_subject_id: {help: "Source subject ID; stored in the AnnData objects."}
 		subject_id: {help: "Generated ASAP subject ID; stored in the AnnData objects."}
 		sample_id: {help: "Generated ASAP sample ID; stored in the AnnData objects and used to name output files."}

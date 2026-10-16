@@ -473,6 +473,7 @@
           "tests": [
             {
               "inputs": {
+                "dataset_pool_id": "${asap_dataset_id}.${pool_id}",
                 "pool_id": "${pool_id}",
                 "fastq_R1s": [
                   "gs://asap-raw-team-voet-pmdbs-sn-atacseq-10x/fastqs/NextSeq2000_20230614_ASA__a3f230__20230601_AT-014-a-ATAC_S10_L001_R1_001.fastq.gz"
@@ -495,14 +496,14 @@
               },
               "output_tests": {
                 "atac_outputs_tar_gz": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.cellranger_atac_outputs.tar.gz",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.cellranger_atac_outputs.tar.gz",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_gzip"
                   ]
                 },
                 "singlecell_csv": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.singlecell.csv",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.singlecell.csv",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_empty_lines",
@@ -511,49 +512,49 @@
                   ]
                 },
                 "peaks_bed": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.peaks.bed",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.peaks.bed",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_empty_lines"
                   ]
                 },
                 "cut_sites_bigwig": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.cut_sites.bigwig",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.cut_sites.bigwig",
                   "test_tasks": [
                     "compare_file_basename",
                     "bigwig_validator"
                   ]
                 },
                 "raw_peaks": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.raw_peak_bc_matrix.h5",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.raw_peak_bc_matrix.h5",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
                   ]
                 },
                 "filtered_peaks": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.filtered_peak_bc_matrix.h5",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.filtered_peak_bc_matrix.h5",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
                   ]
                 },
                 "filtered_tf": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.filtered_tf_bc_matrix.h5",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.filtered_tf_bc_matrix.h5",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"
                   ]
                 },
                 "fragments_tsv_gz": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.fragments.tsv.gz",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.fragments.tsv.gz",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_gzip"
                   ]
                 },
                 "fragments_tsv_gz_tbi": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.fragments.tsv.gz.tbi",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.fragments.tsv.gz.tbi",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_gzip",
@@ -561,7 +562,7 @@
                   ]
                 },
                 "summary_csv": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.summary.csv",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.summary.csv",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_empty_lines",
@@ -570,7 +571,7 @@
                   ]
                 },
                 "peak_annotation_tsv": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.peak_annotation.tsv",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.peak_annotation.tsv",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_empty_lines",
@@ -579,7 +580,7 @@
                   ]
                 },
                 "peak_motif_mapping_bed": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${pool_id}.peak_motif_mapping.bed",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${pool_id}.peak_motif_mapping.bed",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_empty_lines"
@@ -627,7 +628,7 @@
                 },
                 "sample_split_fragments_tsv_gz": {
                   "value": [
-                    "${input_resources_file_path}/${preprocess_workflow_name}/${dataset_id}.${sample_id}.${pool_id}.fragments.tsv.gz"
+                    "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${sample_id}.${pool_id}.fragments.tsv.gz"
                   ],
                   "test_tasks": [
                     "compare_file_basename",
@@ -663,7 +664,7 @@
               },
               "output_tests": {
                 "initial_adata_object": {
-                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${sample_id}.${pool_id}.cleaned_unfiltered.h5ad",
+                  "value": "${input_resources_file_path}/${preprocess_workflow_name}/${asap_dataset_id}.${sample_id}.${pool_id}.cleaned_unfiltered.h5ad",
                   "test_tasks": [
                     "compare_file_basename",
                     "check_hdf5"

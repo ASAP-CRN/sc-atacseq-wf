@@ -108,7 +108,7 @@ Example notebooks on the Verily Workbench (VWB) walk through loading the outputs
 
 If you process the data yourself instead of (or after) using this workflow, consider:
 
-- **Start from the sample-level outputs.** Cell Ranger ATAC and demultiplexing are the most expensive steps per pool. The per-sample `${sample_id}.${pool_id}.fragments.tsv.gz` and `${sample_id}.${pool_id}.cleaned_unfiltered.h5ad` files in the curated buckets are already demultiplexed (Vireo), have TSS enrichment computed and a 500 bp tile matrix, and have not had the cohort QC filters above applied, so you can apply your own QC.
+- **Start from the sample-level outputs.** Cell Ranger ATAC and demultiplexing are the most expensive steps per pool. The per-sample `${dataset_id}.${sample_id}.${pool_id}.fragments.tsv.gz` and `${dataset_id}.${sample_id}.${pool_id}.cleaned_unfiltered.h5ad` files in the curated buckets are already demultiplexed (Vireo), have TSS enrichment computed and a 500 bp tile matrix, and have not had the cohort QC filters above applied, so you can apply your own QC.
 - **Use raw counts for models.** PeakVI and differential accessibility tests expect raw counts; spectral embeddings and imputed gene activity are only for dimensionality reduction and plotting.
 - **Choose the batch key carefully.** This workflow integrates on `batch_id` (team, dataset and pool). Integrating on a variable confounded with biology (e.g. disease status or brain region) removes real signal.
 - **Pick a reference that matches your tissue.** Check that the cell types you care about exist in the reference taxonomy, and expect lower-confidence calls from gene activity than from RNA. If you have paired RNA (multiome), annotate on RNA and transfer labels to ATAC instead.
@@ -264,6 +264,7 @@ Example usage:
 
 - `cohort_id`: either the `team_id` for project-level cohort analysis, or the `cohort_id` for the full cohort
 - `workflow_run_timestamp`: format: `%Y-%m-%dT%H-%M-%SZ`
+- `dataset_id`: the ASAP dataset ID (`asap_dataset_id`); preprocessing outputs are named `${dataset_id}.${pool_id}` per pool (Cell Ranger ATAC) and `${dataset_id}.${sample_id}.${pool_id}` per demultiplexed sample
 - The list of samples used to generate the cohort analysis will be output alongside other cohort analysis outputs in the staging data bucket (`${cohort_id}.sample_list.tsv`)
 - The `MANIFEST.tsv` file in the staging data bucket describes the file name, md5 hash, timestamp, workflow version, workflow name, and workflow release for the run used to generate each file in that directory
 
@@ -338,49 +339,49 @@ asap-dev-{cohort,team-xxyy}-{source}-{modality_flavour}-{context}
             │   ├── ${cohort_id}.final_metadata.csv
             │   └── MANIFEST.tsv
             ├── preprocess
-            │   ├── ${poolA_id}.cellranger_atac_outputs.tar.gz
-            │   ├── ${poolA_id}.singlecell.csv
-            │   ├── ${poolA_id}.peaks.bed
-            │   ├── ${poolA_id}.cut_sites.bigwig
-            │   ├── ${poolA_id}.raw_peak_bc_matrix.h5
-            │   ├── ${poolA_id}.filtered_peak_bc_matrix.h5
-            │   ├── ${poolA_id}.filtered_tf_bc_matrix.h5
-            │   ├── ${poolA_id}.fragments.tsv.gz
-            │   ├── ${poolA_id}.fragments.tsv.gz.tbi
-            │   ├── ${poolA_id}.summary.csv
-            │   ├── ${poolA_id}.peak_annotation.tsv
-            │   ├── ${poolA_id}.peak_motif_mapping.bed
-            │   ├── ${sampleA_id}.${poolA_id}.fragments.tsv.gz
-            │   ├── ${sampleA_id}.${poolA_id}.cleaned_unfiltered.h5ad
-            │   ├── ${poolB_id}.cellranger_atac_outputs.tar.gz
-            │   ├── ${poolB_id}.singlecell.csv
-            │   ├── ${poolB_id}.peaks.bed
-            │   ├── ${poolB_id}.cut_sites.bigwig
-            │   ├── ${poolB_id}.raw_peak_bc_matrix.h5
-            │   ├── ${poolB_id}.filtered_peak_bc_matrix.h5
-            │   ├── ${poolB_id}.filtered_tf_bc_matrix.h5
-            │   ├── ${poolB_id}.fragments.tsv.gz
-            │   ├── ${poolB_id}.fragments.tsv.gz.tbi
-            │   ├── ${poolB_id}.summary.csv
-            │   ├── ${poolB_id}.peak_annotation.tsv
-            │   ├── ${poolB_id}.peak_motif_mapping.bed
-            │   ├── ${sampleB_id}.${poolB_id}.fragments.tsv.gz
-            │   ├── ${sampleB_id}.${poolB_id}.cleaned_unfiltered.h5ad
+            │   ├── ${dataset_id}.${poolA_id}.cellranger_atac_outputs.tar.gz
+            │   ├── ${dataset_id}.${poolA_id}.singlecell.csv
+            │   ├── ${dataset_id}.${poolA_id}.peaks.bed
+            │   ├── ${dataset_id}.${poolA_id}.cut_sites.bigwig
+            │   ├── ${dataset_id}.${poolA_id}.raw_peak_bc_matrix.h5
+            │   ├── ${dataset_id}.${poolA_id}.filtered_peak_bc_matrix.h5
+            │   ├── ${dataset_id}.${poolA_id}.filtered_tf_bc_matrix.h5
+            │   ├── ${dataset_id}.${poolA_id}.fragments.tsv.gz
+            │   ├── ${dataset_id}.${poolA_id}.fragments.tsv.gz.tbi
+            │   ├── ${dataset_id}.${poolA_id}.summary.csv
+            │   ├── ${dataset_id}.${poolA_id}.peak_annotation.tsv
+            │   ├── ${dataset_id}.${poolA_id}.peak_motif_mapping.bed
+            │   ├── ${dataset_id}.${sampleA_id}.${poolA_id}.fragments.tsv.gz
+            │   ├── ${dataset_id}.${sampleA_id}.${poolA_id}.cleaned_unfiltered.h5ad
+            │   ├── ${dataset_id}.${poolB_id}.cellranger_atac_outputs.tar.gz
+            │   ├── ${dataset_id}.${poolB_id}.singlecell.csv
+            │   ├── ${dataset_id}.${poolB_id}.peaks.bed
+            │   ├── ${dataset_id}.${poolB_id}.cut_sites.bigwig
+            │   ├── ${dataset_id}.${poolB_id}.raw_peak_bc_matrix.h5
+            │   ├── ${dataset_id}.${poolB_id}.filtered_peak_bc_matrix.h5
+            │   ├── ${dataset_id}.${poolB_id}.filtered_tf_bc_matrix.h5
+            │   ├── ${dataset_id}.${poolB_id}.fragments.tsv.gz
+            │   ├── ${dataset_id}.${poolB_id}.fragments.tsv.gz.tbi
+            │   ├── ${dataset_id}.${poolB_id}.summary.csv
+            │   ├── ${dataset_id}.${poolB_id}.peak_annotation.tsv
+            │   ├── ${dataset_id}.${poolB_id}.peak_motif_mapping.bed
+            │   ├── ${dataset_id}.${sampleB_id}.${poolB_id}.fragments.tsv.gz
+            │   ├── ${dataset_id}.${sampleB_id}.${poolB_id}.cleaned_unfiltered.h5ad
             │   ├── ...
-            │   ├── ${poolN_id}.cellranger_atac_outputs.tar.gz
-            │   ├── ${poolN_id}.singlecell.csv
-            │   ├── ${poolN_id}.peaks.bed
-            │   ├── ${poolN_id}.cut_sites.bigwig
-            │   ├── ${poolN_id}.raw_peak_bc_matrix.h5
-            │   ├── ${poolN_id}.filtered_peak_bc_matrix.h5
-            │   ├── ${poolN_id}.filtered_tf_bc_matrix.h5
-            │   ├── ${poolN_id}.fragments.tsv.gz
-            │   ├── ${poolN_id}.fragments.tsv.gz.tbi
-            │   ├── ${poolN_id}.summary.csv
-            │   ├── ${poolN_id}.peak_annotation.tsv
-            │   ├── ${poolN_id}.peak_motif_mapping.bed
-            │   ├── ${sampleN_id}.${poolN_id}.fragments.tsv.gz
-            │   ├── ${sampleN_id}.${poolN_id}.cleaned_unfiltered.h5ad
+            │   ├── ${dataset_id}.${poolN_id}.cellranger_atac_outputs.tar.gz
+            │   ├── ${dataset_id}.${poolN_id}.singlecell.csv
+            │   ├── ${dataset_id}.${poolN_id}.peaks.bed
+            │   ├── ${dataset_id}.${poolN_id}.cut_sites.bigwig
+            │   ├── ${dataset_id}.${poolN_id}.raw_peak_bc_matrix.h5
+            │   ├── ${dataset_id}.${poolN_id}.filtered_peak_bc_matrix.h5
+            │   ├── ${dataset_id}.${poolN_id}.filtered_tf_bc_matrix.h5
+            │   ├── ${dataset_id}.${poolN_id}.fragments.tsv.gz
+            │   ├── ${dataset_id}.${poolN_id}.fragments.tsv.gz.tbi
+            │   ├── ${dataset_id}.${poolN_id}.summary.csv
+            │   ├── ${dataset_id}.${poolN_id}.peak_annotation.tsv
+            │   ├── ${dataset_id}.${poolN_id}.peak_motif_mapping.bed
+            │   ├── ${dataset_id}.${sampleN_id}.${poolN_id}.fragments.tsv.gz
+            │   ├── ${dataset_id}.${sampleN_id}.${poolN_id}.cleaned_unfiltered.h5ad
             │   └── MANIFEST.tsv
             ├── workflow_version # plain text file
             └── workflow_metadata
