@@ -135,6 +135,10 @@ Run once per pool; only rerun when the preprocessing workflow version is updated
 
 > **Note**: Pooled inputs are processed and split into donor/subject/sample-level with demultiplexing and other tools. Donor, subject, and samples are used interchangeably _**only in this version of the workflow**_ because one subject = one sample per pool.
 
+> **Limitations**: Preprocessing is currently built around a single dataset: Team Voet's multiplexed (pooled) sc ATAC-seq data.
+> - **Vireo assignment files must be provided by the researchers.** Donor demultiplexing (`split_demux_fragments`) depends on `vireo_assignment_files`, and the workflow cannot generate them. A pool without a Vireo assignment file cannot be processed.
+> - **Non-multiplexed data is not supported.** Every pool goes through donor demultiplexing, and `vireo_assignment_files` is a required input. Running samples that were not pooled will require changes to the pipeline (e.g. skipping `split_demux_fragments` and converting the Cell Ranger ATAC fragments to AnnData directly).
+
 ## Cohort analysis
 
 Run once per team (all samples from a single team) if `project.run_project_cohort_analysis` is set to `true`, and once for the whole cohort (all samples from all teams). This can be rerun using different sample subsets; including additional samples requires this entire analysis to be rerun. Intermediate files from previous runs are not reused and are stored in timestamped directories.
@@ -149,7 +153,7 @@ An input template file can be found at [workflows/inputs.json](workflows/inputs.
 | Array[[Project](#project)] | projects | The project ID, set of samples and their associated reads and metadata, output bucket locations, and whether or not to run project-level cohort analysis. |
 | File | cellranger_atac_reference_data | Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads#reference-downloads. |
 | File | cellranger_atac_reference_chrom_sizes | Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting; see [demultiplexing section](#demultiplexing). |
-| Array[File] | vireo_assignment_files | Vireo donor assignment CSVs with columns: donor_id, sample, raw_bc. Covers all donors in the pool. |
+| Array[File] | vireo_assignment_files | Vireo donor assignment CSVs with columns: donor_id, sample, raw_bc. Covers all donors in the pool. Required; must be provided by the researchers, as the workflow cannot generate them (see [Preprocessing](#preprocessing)). |
 | String | mmc_taxonomy | Cell type taxonomy of the precomputed stats reference; appended to MMC output filenames. Must match allen_brain_mmc_precomputed_stats_h5. Options are `SEAAD` (human, [SEA-AD](https://brain-map.org/consortia/sea-ad)), `Siletti` (human, [Allen WHB-10Xv3 taxonomy](https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/WHB-10Xv3/20240831/)), or `ABC` (mouse, [WMB-10X](https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/index.html#mapmycells/WMB-10X/20240831/.)). |
 | File | allen_brain_mmc_precomputed_stats_h5 | A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy). |
 | Int? | n_top_genes | Number of HVG genes to keep. [3000] |
