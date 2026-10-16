@@ -134,3 +134,17 @@
 - _Export final artifacts_: [`export_final_artifacts`](./sc_atac_tools/scripts/export_final_artifacts)
     - Exports final `obs` metadata as `{cohort_id}.final_metadata.csv`
     - Writes final compressed AnnData object (`.h5ad`)
+
+
+# _SCRIPTS USED BY SC-MULTIOME-WF_
+
+These scripts are **not part of this workflow**. They are called by the multiome cohort analysis in [`sc-multiome-wf`](https://github.com/ASAP-CRN/sc-multiome-wf), which runs them with the `scvi_tools` image built here instead of maintaining its own scvi-tools image. Changes to them affect sc-multiome-wf once it updates its `sc-atacseq-wf` submodule.
+
+- _Integrate MultiVI_: [`integrate_multivi`](./scvi_tools/scripts/integrate_multivi)
+    - Trains a `MultiVI` model on paired RNA (HVGs, `layers["counts"]`) and ATAC (peaks flagged `var["selected"]`, raw counts in `.X`) with batch correction
+    - Uses `.X` only if the counts layer is missing and `.X` holds non-negative integers; otherwise fails
+    - Saves the joint latent space to `obsm[latent_key]` (`X_multiVI` in sc-multiome-wf) and the trained model to disk
+
+- _Cluster MultiVI_: [`cluster_multivi`](./scvi_tools/scripts/cluster_multivi)
+    - Builds KNN graph on the MultiVI latent space and runs Leiden clustering at each resolution (`leiden_multivi_<res>`)
+    - Generates UMAP colored by the Leiden clusters and `sample`, `batch` and `cell_type` when present

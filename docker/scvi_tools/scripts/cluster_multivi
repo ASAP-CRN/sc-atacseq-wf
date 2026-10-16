@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+Leiden clustering and UMAP on the MultiVI latent space of a paired Multiome MuData.
+
+Not used by sc-atacseq-wf. This script is called by the multiome cohort analysis in
+sc-multiome-wf (https://github.com/ASAP-CRN/sc-multiome-wf, task `cluster_multivi`), right after
+`integrate_multivi`. It lives in this repo only because sc-multiome-wf runs it with the
+`scvi_tools` image built here.
+"""
+
 import argparse
 import scanpy as sc
 import mudata as md
@@ -33,7 +42,7 @@ def cluster(
     # Without an explicit `color` every point renders in the same grey; plot the
     # clusters that were just computed, plus any metadata columns present.
     color_keys = leiden_keys + [
-        k for k in ("sample", "batch", "cell_type") if k in mdata.obs
+        k for k in ("sample", "batch_id", "cell_type") if k in mdata.obs
     ]
     print(f"Plotting UMAP coloured by: {color_keys}")
 
