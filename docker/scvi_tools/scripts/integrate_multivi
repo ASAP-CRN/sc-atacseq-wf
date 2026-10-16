@@ -2,16 +2,39 @@
 
 import os
 import argparse
+import numpy as np
 import pandas as pd
+from scipy import sparse
 import scvi
 import mudata as md
 import hdf5plugin
 
 
-def counts_layer_for(adata, counts_layer):
-    """The layer name to hand scvi for this modality, or None to fall back to .X."""
-    if counts_layer and counts_layer in adata.layers:
+def is_raw_counts(matrix) -> bool:
+    """Whether every stored value is a non-negative whole number."""
+    values = matrix.data if sparse.issparse(matrix) else np.asarray(matrix)
+    return bool(np.all(values >= 0) and np.all(np.mod(values, 1) == 0))
+
+
+def counts_layer_for(adata, counts_layer: str, name: str):
+    """
+    The layer name to hand scvi for this modality, or None to use .X.
+
+    .X can hold raw or transformed values, so it is only used in place of a
+    missing counts layer when it looks like raw counts.
+    """
+    if counts_layer in adata.layers:
+        print(f"  {name}: using layers['{counts_layer}']")
         return counts_layer
+
+    if not is_raw_counts(adata.X):
+        raise ValueError(
+            f"{name}: layers['{counts_layer}'] not found and .X is not raw counts "
+            f"(negative or non-integer values). MultiVI needs raw counts. "
+            f"Available layers: {list(adata.layers.keys())}."
+        )
+    print(f"[WARNING] {name}: layers['{counts_layer}'] not found; .X holds "
+          f"non-negative integers, so using .X as raw counts")
     return None
 
 
@@ -40,11 +63,9 @@ def prepare_paired_mudata(mdata: md.MuData):
             "MULTIVI requires fully paired cells; rebuild the MuData with joint_qc."
         )
 
-    # Keep only selected features per modality (mirrors integrate_peakvi/integrate_harmony).
-    # ATAC carries var['selected'] from snap.pp.select_features in merge_and_qc, which only
-    # marks features -- without subsetting here MULTIVI would get every 500bp tile. RNA
-    # reaches us straight from the `filter` task, before `process` computes highly variable
-    # genes, so it has no selection column and all genes are used.
+    # Keep only selected features per modality. ATAC peaks are flagged var['selected']
+    # by joint_qc (detected in a minimum fraction of paired cells). RNA is already
+    # subset to HVGs upstream, so it has no selection column and all its genes are used.
     rna = select_features(rna, "rna")
     atac = select_features(atac, "atac")
     print(f"{rna.n_vars} genes, {atac.n_vars} peaks over {rna.n_obs} paired cells")
@@ -61,8 +82,8 @@ def train_model(
     print("Training data with MultiVI...")
     scvi.model.MULTIVI.setup_mudata(
         mdata,
-        rna_layer=counts_layer_for(mdata.mod["rna"], counts_layer),
-        atac_layer=counts_layer_for(mdata.mod["atac"], counts_layer),
+        rna_layer=counts_layer_for(mdata.mod["rna"], counts_layer, "rna"),
+        atac_layer=counts_layer_for(mdata.mod["atac"], counts_layer, "atac"),
         batch_key=batch_key,
         modalities={"rna_layer": "rna", "atac_layer": "atac", "batch_key": "rna"},
     )
@@ -126,7 +147,7 @@ if __name__ == "__main__":
         "--counts-layer",
         type=str,
         default="counts",
-        help="Layer holding raw counts in each modality; falls back to .X if absent [counts]",
+        help="Layer holding raw counts in each modality; if absent, .X is used only if it holds non-negative integers, otherwise the run fails [counts]",
     )
     parser.add_argument(
         "-l",
