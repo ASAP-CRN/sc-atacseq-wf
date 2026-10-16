@@ -517,6 +517,8 @@ Links:
 
 These steps are run in the `split_demux_fragments` task in [preprocessing](workflows/preprocess/preprocess.wdl). Researchers should provide a Vireo assignment file that contains demultiplexed pooled sc ATAC-seq data. Vireo assigns individual cells to specific donors without requiring pre-existing genotype references. It efficiently identifies singlets and doublets by modeling genetic variation.
 
+A pool's cells can be spread across several Vireo assignment files (e.g. separate RNA and ATAC Vireo runs), so all provided files are combined and one call is resolved per barcode: rows repeated across files are collapsed, a barcode called `doublet` in any file is dropped, `unassigned` is ignored when another file calls the barcode as a singlet, and a barcode called as different donors across files is dropped (with a warning in the task log). The task log reports how many barcodes were kept and dropped per pool.
+
 **Generating chromosome sizes file**
 1. The Cell Ranger ARC reference is used in this pipeline, so untar `refdata-cellranger-arc-GRCh38-2024-A.tar.gz`
 2. Create the chromosome sizes file: `cut -f1,2 refdata-cellranger-arc-GRCh38-2024-A/fasta/genome.fa.fai > refdata-cellranger-arc-GRCh38-2024-A.chrom.sizes`

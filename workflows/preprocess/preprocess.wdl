@@ -470,11 +470,44 @@ task split_demux_fragments {
 		echo -e "~{pool_id}\t~{pool_id}.fragments.tsv.gz" >> "~{pool_id}.sample_to_fragment.tsv"
 
 		# Generate mapping of samples (pool), cell types (subject), and cell barcodes TSV
-		## Filter out 'doublet' and 'unassigned' cell types (subject)
+		## A pool's barcodes can be spread across several Vireo files (e.g. RNA and ATAC runs), so resolve one call per barcode:
+		## - rows repeated across files are collapsed
+		## - a barcode called 'doublet' in any file is dropped
+		## - 'unassigned' is ignored when another file calls the barcode as a singlet
+		## - a barcode called as different donors across files is dropped
 		echo -e "sample\tcell_type\tcell_barcode" > cell_barcodes.tsv
-		for f in ~{sep=' ' vireo_assignment_files}; do
-			awk -F ',' -v pool="~{pool_id}" '$2 ~ /^ASA/ && $3 ~ pool { OFS="\t"; print $3, $2, $4 }' "${f}" >> cell_barcodes.tsv
-		done
+		awk -F ',' -v pool="~{pool_id}" '
+			$3 == pool {
+				barcode = $4
+				seen[barcode] = 1
+				if ($2 == "doublet") {
+					doublet[barcode] = 1
+				} else if ($2 ~ /^ASA/ && !((barcode, $2) in barcode_donor)) {
+					barcode_donor[barcode, $2] = 1
+					n_donors[barcode]++
+					donor[barcode] = $2
+				}
+			}
+			END {
+				OFS = "\t"
+				for (barcode in seen) {
+					if (barcode in doublet) {
+						if (barcode in donor) n_singlet_doublet++
+						continue
+					}
+					if (n_donors[barcode] > 1) {
+						n_conflict++
+						continue
+					}
+					if (n_donors[barcode] == 1) {
+						print pool, donor[barcode], barcode
+						n_kept++
+					}
+				}
+				printf "Pool %s: %d barcodes kept; %d dropped as doublet in any file (singlet in another); %d dropped with conflicting donors\n", pool, n_kept, n_singlet_doublet, n_conflict > "/dev/stderr"
+				if (n_conflict > 0) printf "[WARNING] %d barcodes in pool %s are assigned to different donors across Vireo files and were dropped\n", n_conflict, pool > "/dev/stderr"
+			}
+		' ~{sep=' ' vireo_assignment_files} >> cell_barcodes.tsv
 		
 		if [[ $(wc -l < cell_barcodes.tsv) -le 1 ]]; then
 			echo "[ERROR] No matching samples found in any vireo assignment file" >&2
@@ -538,7 +571,7 @@ task split_demux_fragments {
 	}
 
 	meta {
-		description: "Split Cell Ranger fragment files to donor/sample-level fragment files with inputs containing demultiplexed samples generated with Vireo."
+		description: "Split Cell Ranger fragment files to donor/sample-level fragment files with inputs containing demultiplexed samples generated with Vireo; one Vireo call is resolved per barcode across all assignment files (duplicates collapsed, doublets in any file dropped, unassigned ignored when another file has a singlet call, conflicting donors dropped)."
 	}
 
 	parameter_meta {
