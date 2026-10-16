@@ -348,7 +348,7 @@
         },
         "cluster_harmony": {
           "key": "cluster_harmony",
-          "digest": "j5zcfn5a4ik35qe3fdntqnslke6vu7bc",
+          "digest": "mgorylebcw3jrei3avr2hyeps5wzgjcu",
           "tests": [
             {
               "inputs": {
@@ -592,7 +592,7 @@
         },
         "split_demux_fragments": {
           "key": "split_demux_fragments",
-          "digest": "my7zno5wvrcaov3zwkmvrii2vzdyn7oa",
+          "digest": "7uglwsaobdhwbek25eahkyo2l26xy66h",
           "tests": [
             {
               "inputs": {
@@ -641,7 +641,7 @@
         },
         "counts_to_adata": {
           "key": "counts_to_adata",
-          "digest": "guwndjbxdnjee6fb73g46x45ryzgdh53",
+          "digest": "bq7uorpeta3edh5viud5tzizes26duqq",
           "tests": [
             {
               "inputs": {
