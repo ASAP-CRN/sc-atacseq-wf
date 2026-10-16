@@ -42,6 +42,7 @@
 
 - _Harmony clustering_: [`cluster_harmony`](./sc_atac_tools/scripts/cluster_harmony)
     - Builds KNN graph and runs leiden clustering on the Harmony-corrected spectral embedding
+    - Keeps the uncorrected UMAP from bin processing as `obsm["X_umap_uncorrected"]`, so batch effects can be compared before and after Harmony
     - Recomputes the UMAP embedding (`obsm["X_umap"]`) on the Harmony-corrected spectral embedding and plots it colored by Leiden cluster
 
 - _Peak calling_: [`call_peaks`](./sc_atac_tools/scripts/call_peaks)

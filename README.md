@@ -67,7 +67,7 @@ The main output is `${cohort_id}.final.h5ad`. Useful contents:
 | `obs["sample"]`, `obs["subject"]`, `obs["pool"]`, `obs["team"]`, `obs["dataset"]`, `obs["batch"]`, `obs["batch_id"]`, `obs["brain_region_level_*"]` | Sample metadata; `batch_id` (team, dataset and pool) is the integration batch key |
 | `obs["cell_type"]`, `obs["phenotype"]`, `obs["rho"]`, `obs["prob"]` | MapMyCells call, before (`phenotype`) and after (`cell_type`) the confidence threshold, plus the reference's taxonomy levels (`supercluster_name`, `cluster_name`, `subcluster_name` for Siletti; `class_name`, `subclass_name`, `supertype_name` for SEAAD) |
 | `obs["leiden"]` | Leiden clusters on the Harmony embedding |
-| `obsm["X_spectral"]`, `obsm["X_spectral_harmony"]`, `obsm["X_umap"]` | Spectral embedding before and after Harmony, and UMAP of the Harmony embedding |
+| `obsm["X_spectral"]`, `obsm["X_spectral_harmony"]`, `obsm["X_umap"]`, `obsm["X_umap_uncorrected"]` | Spectral embedding before and after Harmony, UMAP of the Harmony embedding, and UMAP of the uncorrected spectral embedding (to compare batch effects before and after Harmony) |
 | `uns["merged_peaks"]` | Peaks called per cell type and merged across cell types |
 
 Other outputs you will likely want:
@@ -88,6 +88,10 @@ import scanpy as sc
 adata = sc.read_h5ad("cohort.final.h5ad")
 adata.obs["cell_type"].value_counts()
 sc.pl.umap(adata, color=["cell_type", "sample"])
+
+# Batch before and after Harmony
+sc.pl.embedding(adata, basis="X_umap_uncorrected", color="batch_id")
+sc.pl.umap(adata, color="batch_id")
 
 # Cell-by-peak matrix for differential accessibility; add cell types from the final object
 peaks = sc.read_h5ad("cohort.harmony.cell_type.peaks_matrix.h5ad")
