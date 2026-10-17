@@ -469,7 +469,7 @@
       "tasks": {
         "cellranger_atac_count": {
           "key": "cellranger_atac_count",
-          "digest": "nrjy3wge3qemj2lgkhocblm2memzhuxs",
+          "digest": "fnpar3iyxpc4ai5edd2lpzy6zntljwak",
           "tests": [
             {
               "inputs": {
