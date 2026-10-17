@@ -18,6 +18,7 @@ workflow cohort_analysis {
 		Array[String] preprocessing_output_file_paths = []
 
 		# Allen Institute's Map My Cells
+		String mmc_taxonomy
 		File allen_brain_mmc_precomputed_stats_h5
 
 		# Normalization parameters
@@ -40,6 +41,7 @@ workflow cohort_analysis {
 		String crn_release_version
 		String run_timestamp
 		String raw_data_path_prefix
+		String? modality
 		Array[String] staging_data_buckets
 		String billing_project
 		String container_registry
@@ -47,11 +49,16 @@ workflow cohort_analysis {
 	}
 
 	String sub_workflow_name = "cohort_analysis"
-	String sub_workflow_version = "1.0.0"
+	String sub_workflow_version = "1.1.0"
 
 	Array[Array[String]] workflow_info = [[run_timestamp, workflow_name, workflow_version, workflow_release]]
 
-	String raw_data_path = "~{raw_data_path_prefix}/~{sub_workflow_name}/~{sub_workflow_version}/~{run_timestamp}"
+	String raw_data_path = if defined(modality) then "~{raw_data_path_prefix}/~{sub_workflow_name}/~{modality}/~{sub_workflow_version}/~{run_timestamp}" else "~{raw_data_path_prefix}/~{sub_workflow_name}/~{sub_workflow_version}/~{run_timestamp}"
+
+	# Each modality needs its own staging prefix
+	String staging_path_prefix = "~{workflow_name}/release/~{crn_release_version}"
+	String preprocess_staging_data_path = if defined(modality) then "~{staging_path_prefix}/preprocess/~{modality}" else "~{staging_path_prefix}/preprocess"
+	String cohort_staging_data_path = if defined(modality) then "~{staging_path_prefix}/~{sub_workflow_name}/~{modality}" else "~{staging_path_prefix}/~{sub_workflow_name}"
 
 	call WriteCohortSampleList.write_cohort_sample_list {
 		input:
@@ -187,6 +194,7 @@ workflow cohort_analysis {
 		input:
 			cohort_id = cohort_id,
 			filtered_adata_object = make_gene_matrix.gene_matrix_adata_object, #!FileCoercion
+			mmc_taxonomy = mmc_taxonomy,
 			allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
 			raw_data_path = raw_data_path,
 			workflow_info = workflow_info,
@@ -260,7 +268,7 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = preprocessing_output_file_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = "~{workflow_name}/release/~{crn_release_version}/preprocess",
+			staging_data_path = preprocess_staging_data_path,
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -332,7 +340,7 @@ workflow cohort_analysis {
 		input:
 			output_file_paths = cohort_analysis_final_output_paths,
 			staging_data_buckets = staging_data_buckets,
-			staging_data_path = "~{workflow_name}/release/~{crn_release_version}/~{sub_workflow_name}",
+			staging_data_path = cohort_staging_data_path,
 			billing_project = billing_project,
 			zones = zones
 	}
@@ -408,6 +416,7 @@ workflow cohort_analysis {
 		project_sample_ids: {help: "Associated team ID, sample ID, and dataset DOI URL; used to generate a sample list."}
 		preprocessed_adata_objects: {help: "An array of preprocessed AnnData objects to run cohort analysis on."}
 		preprocessing_output_file_paths: {help: "Selected preprocessed output files to upload to the staging bucket alongside selected cohort analysis output files."}
+		mmc_taxonomy: {help: "Cell type taxonomy of the precomputed stats reference; appended to MMC output filenames. Must match allen_brain_mmc_precomputed_stats_h5. Options are 'SEAAD' or 'Siletti'; the workflow is human (hg38) only."}
 		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
 		n_top_genes: {help: "Number of highly-variable genes to keep. [3000]"}
 		n_comps: {help: "Number of principal components to compute. [30]"}
@@ -424,6 +433,7 @@ workflow cohort_analysis {
 		crn_release_version: {help: "CRN Cloud release version; used to organize outputs and for the CRN Cloud release."}
 		run_timestamp: {help: "UTC timestamp; stored in the file-level manifest and final manifest with all saved files."}
 		raw_data_path_prefix: {help: "Raw data bucket path prefix; location of raw bucket to upload task outputs to (`<raw_data_bucket>/workflow_execution/cohort_analysis`)."}
+		modality: {help: "Modality subdirectory ('rna', 'atac', or 'multiome') appended to the raw and staging data paths; set when several modality sub-workflows run together so they do not overwrite each other's outputs. Omit to write directly under the base paths."}
 		staging_data_buckets: {help: "Array of staging data buckets to upload intermediate files to (i.e., DEV or UAT buckets depending on internal QC status)."}
 		billing_project: {help: "Billing project to charge GCP costs."}
 		container_registry: {help: "Container registry where workflow Docker images are hosted."}
@@ -484,7 +494,7 @@ task merge_and_qc {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
@@ -535,11 +545,11 @@ task reduce_dimensions {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
@@ -605,11 +615,11 @@ task peak_calling {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 16
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -679,11 +689,11 @@ task benchmark_sc_integration {
 	}
 
 	runtime {
-		docker: "~{container_registry}/scvi_tools:1.0.0"
+		docker: "~{container_registry}/scvi_tools:1.1.0"
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -732,11 +742,11 @@ task make_gene_matrix {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
@@ -802,11 +812,11 @@ task process_gene_matrix {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
@@ -865,11 +875,11 @@ task impute_gene_matrix {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
@@ -925,11 +935,11 @@ task motif_enrichment {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 8
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		bootDiskSizeGb: 30
 		zones: zones
 	}
@@ -988,11 +998,11 @@ task export_final_artifacts {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 2
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones

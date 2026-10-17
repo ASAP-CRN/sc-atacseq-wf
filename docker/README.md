@@ -36,14 +36,14 @@
 
 ### _Harmony integration option_
 
-- _Run harmony_: [`run_harmony`](./sc_atac_tools/scripts/run_harmony)
+- _Integrate harmony_: [`integrate_harmony`](./sc_atac_tools/scripts/integrate_harmony)
     - Applies Harmony batch correction to the spectral embedding
     - Stores corrected embedding in `obsm` for downstream clustering and UMAP
 
 - _Harmony clustering_: [`cluster_harmony`](./sc_atac_tools/scripts/cluster_harmony)
-    - Builds KNN graph and runs leiden clustering on the spectral embedding
-    - Generates Harmony-integrated UMAP
-    - Calls peaks per cluster for use in downstream gene matrix construction
+    - Builds KNN graph and runs leiden clustering on the Harmony-corrected spectral embedding
+    - Keeps the uncorrected UMAP from bin processing as `obsm["X_umap_uncorrected"]`, so batch effects can be compared before and after Harmony
+    - Recomputes the UMAP embedding (`obsm["X_umap"]`) on the Harmony-corrected spectral embedding and plots it colored by Leiden cluster
 
 - _Peak calling_: [`call_peaks`](./sc_atac_tools/scripts/call_peaks)
     - Calls peaks per cluster via `snap.tl.macs3` (groupby `leiden`)
@@ -98,11 +98,12 @@
 ## _ANNOTATION_
 
 - _Map my cells_: [`mmc`](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/sc_tools/scripts/main/mmc)
-    - Runs Allen Brain Map's [MapMyCells](https://portal.brain-map.org/atlases-and-data/bkp/mapmycells) on the **raw** gene activity matrix against SEA-AD Human taxonomy
+    - Runs Allen Brain Map's [MapMyCells](https://portal.brain-map.org/atlases-and-data/bkp/mapmycells) on the **raw** gene activity matrix against the 10x whole human brain (Siletti) or SEA-AD taxonomy, set by `mmc_taxonomy`
     - Must be run on raw (un-normalized) gene counts — before `process_genes`
 
 - _Cell transcriptional phenotype_: [`transcriptional_phenotype`](https://github.com/ASAP-CRN/sc-rnaseq-wf/tree/main/docker/sc_tools/scripts/main/transcriptional_phenotype)
-    - Assigns `cell_type` to high-fidelity MMC mappings (correlation > 0.5, bootstrap probability > 0.5); all else labeled `"unknown"`
+    - Assigns `cell_type` to high-fidelity MMC mappings (correlation ≥ 0.5, bootstrap probability ≥ 0.5); all else labeled `"Unknown"`
+    - The taxonomy levels are read from the MMC results header: SEA-AD (class/subclass/supertype) or Siletti (supercluster/cluster/subcluster). For Siletti, `cell_type` is the supercluster, except cluster `Splat_395` (DA VGLUT2 neurons, within the heterogeneous `Splatter` supercluster), which is labeled "Dopaminergic" using cluster-level scores
     - Annotates AnnData and exports full cell type assignments
 
 > **Note**: `mmc` and `transcriptional_phenotype` are shared scripts from [`sc-rnaseq-wf`](https://github.com/ASAP-CRN/sc-rnaseq-wf). The gene activity matrix acts as a proxy for RNA expression by counting the TN5 insertions in each gene’s regulatory domain to enable cell type annotation.
@@ -114,7 +115,7 @@
     - Calls peaks per cell type via `snap.tl.macs3` (groupby `cell_type`)
     - Constructs a peak-by-cell count matrix via `snap.pp.make_peak_matrix`
 
-- _Motif enrichment analysis_: [`motif_enrichment`](./sc_atac_tools/scripts/motif_enrichment)
+- _Motif enrichment analysis_: [`find_motif_enrichment`](./sc_atac_tools/scripts/find_motif_enrichment)
     - Identifies differentially accessible regions per cell type
     - Runs motif enrichment analysis via `snap.tl.motif_enrichment`
     - Links chromatin accessibility to transcription factor binding activity
@@ -134,3 +135,17 @@
 - _Export final artifacts_: [`export_final_artifacts`](./sc_atac_tools/scripts/export_final_artifacts)
     - Exports final `obs` metadata as `{cohort_id}.final_metadata.csv`
     - Writes final compressed AnnData object (`.h5ad`)
+
+
+# _SCRIPTS USED BY SC-MULTIOME-WF_
+
+These scripts are **not part of this workflow**. They are called by the multiome cohort analysis in [`sc-multiome-wf`](https://github.com/ASAP-CRN/sc-multiome-wf), which runs them with the `scvi_tools` image built here instead of maintaining its own scvi-tools image. Changes to them affect sc-multiome-wf once it updates its `sc-atacseq-wf` submodule.
+
+- _Integrate MultiVI_: [`integrate_multivi`](./scvi_tools/scripts/integrate_multivi)
+    - Trains a `MultiVI` model on paired RNA (HVGs, `layers["counts"]`) and ATAC (peaks flagged `var["selected"]`, raw counts in `.X`) with batch correction
+    - Uses `.X` only if the counts layer is missing and `.X` holds non-negative integers; otherwise fails
+    - Saves the joint latent space to `obsm[latent_key]` (`X_multiVI` in sc-multiome-wf) and the trained model to disk
+
+- _Cluster MultiVI_: [`cluster_multivi`](./scvi_tools/scripts/cluster_multivi)
+    - Builds KNN graph on the MultiVI latent space and runs Leiden clustering at each resolution (`leiden_multivi_<res>`)
+    - Generates UMAP colored by the Leiden clusters and `sample`, `batch` and `cell_type` when present

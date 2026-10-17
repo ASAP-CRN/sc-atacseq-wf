@@ -88,11 +88,11 @@ task integrate_harmony {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
@@ -149,18 +149,18 @@ task cluster_harmony {
 	}
 
 	runtime {
-		docker: "~{container_registry}/sc_atac_tools:1.0.0"
+		docker: "~{container_registry}/sc_atac_tools:1.1.0"
 		cpu: 4
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
-		disks: "local-disk ~{disk_size} HDD"
+		disks: "local-disk ~{disk_size} SSD"
 		preemptible: 3
 		bootDiskSizeGb: 30
 		zones: zones
 	}
 
 	meta {
-		description: "Constructs a k-nearest neighbor graph on the Harmony-corrected spectral embedding and applies Leiden community detection to cluster cells."
+		description: "Constructs a k-nearest neighbor graph on the Harmony-corrected spectral embedding, applies Leiden community detection to cluster cells, and computes a UMAP embedding from the Harmony-corrected spectral embedding; the uncorrected UMAP is kept as obsm['X_umap_uncorrected']."
 	}
 
 	parameter_meta {
