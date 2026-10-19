@@ -495,7 +495,7 @@ task merge_and_qc {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.1.0"
-		cpu: 4
+		cpu: 16
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} SSD"
@@ -546,7 +546,7 @@ task reduce_dimensions {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.1.0"
-		cpu: 4
+		cpu: 8
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} SSD"
@@ -690,7 +690,7 @@ task benchmark_sc_integration {
 
 	runtime {
 		docker: "~{container_registry}/scvi_tools:1.1.0"
-		cpu: 4
+		cpu: 8
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} SSD"
@@ -813,7 +813,7 @@ task process_gene_matrix {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.1.0"
-		cpu: 4
+		cpu: 8
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} SSD"
@@ -936,7 +936,7 @@ task motif_enrichment {
 
 	runtime {
 		docker: "~{container_registry}/sc_atac_tools:1.1.0"
-		cpu: 8
+		cpu: 16
 		cpuPlatform: "Intel Cascade Lake"
 		memory: "~{mem_gb} GB"
 		disks: "local-disk ~{disk_size} SSD"
