@@ -12,7 +12,10 @@ def add_metadata(
     subject_id: str,
     sample_id: str,
     pool_id: str,
-    batch: str
+    batch: str,
+    brain_region_level_1: str,
+    brain_region_level_2: str,
+    brain_region_level_3: str
 ):
     print("Adding metadata to demultiplexed sample-level AnnData object")
     adata.obs["source_subject"] = source_subject_id
@@ -20,6 +23,9 @@ def add_metadata(
     adata.obs["sample"] = sample_id
     adata.obs["pool"] = pool_id
     adata.obs["batch"] = batch
+    adata.obs["brain_region_level_1"] = brain_region_level_1
+    adata.obs["brain_region_level_2"] = brain_region_level_2
+    adata.obs["brain_region_level_3"] = brain_region_level_3
     adata.obs["team"] = team_id
     adata.obs["dataset"] = dataset_id
     adata.obs["batch_id"] = f"{team_id}_{dataset_id}_{pool_id}"
@@ -42,7 +48,10 @@ def main(args):
         args.subject_id,
         args.sample_id,
         args.pool_id,
-        args.batch
+        args.batch,
+        args.brain_region_level_1,
+        args.brain_region_level_2,
+        args.brain_region_level_3
     )
 
     # Compute scores and add vars to in-memory AnnData
@@ -114,6 +123,24 @@ if __name__ == "__main__":
         type=str,
         required=True,
         help="ASAP batch from which the sample/dataset originated"
+    )
+    parser.add_argument(
+        "--brain-region-level-1",
+        type=str,
+        required=False,
+        help="Abbreviation of most granular anatomical region (Level 1)."
+    )
+    parser.add_argument(
+        "--brain-region-level-2",
+        type=str,
+        required=False,
+        help="Abbreviation of intermediate level anatomical region (Level 2)."
+    )
+    parser.add_argument(
+        "--brain-region-level-3",
+        type=str,
+        required=False,
+        help="Abbreviation of coarse level anatomical region (Level 3)."
     )
     parser.add_argument(
         "-o",

@@ -10,6 +10,13 @@ def cluster(
     print(f"Clustering...")
     snap.pp.knn(adata, use_rep="X_spectral_harmony")
     snap.tl.leiden(adata, resolution=0.2)
+    # Keep the uncorrected UMAP from process_bins (on X_spectral) so batch effects can be compared before/after Harmony
+    if "X_umap" in adata.obsm:
+        adata.obsm["X_umap_uncorrected"] = adata.obsm["X_umap"]
+    else:
+        print("[WARNING] No X_umap from process_bins; X_umap_uncorrected not saved")
+    # Recompute UMAP on the Harmony-corrected embedding; otherwise X_umap is the uncorrected one from process_bins
+    snap.tl.umap(adata, use_rep="X_spectral_harmony")
 
     umap_out = f"{plot_prefix}.harmony_umap.png"
     snap.pl.umap(

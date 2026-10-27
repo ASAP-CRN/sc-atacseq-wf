@@ -5,6 +5,9 @@ struct Sample {
 	String asap_subject_id
 	String sample_id
 	String? batch
+	String? brain_region_level_1
+	String? brain_region_level_2
+	String? brain_region_level_3
 }
 
 struct Pool {

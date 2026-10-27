@@ -18,6 +18,7 @@ workflow sc_atacseq_analysis {
 		Array[File] vireo_assignment_files
 
 		# Allen Institute's Map My Cells
+		String mmc_taxonomy
 		File allen_brain_mmc_precomputed_stats_h5
 
 		# Normalization parameters
@@ -45,9 +46,9 @@ workflow sc_atacseq_analysis {
 
 	String workflow_execution_path = "workflow_execution"
 	String workflow_name = "pmdbs_sc_atacseq"
-	String workflow_version = "v1.0.0"
+	String workflow_version = "v1.1.0"
 	String workflow_release = "https://github.com/ASAP-CRN/sc-atacseq-wf/releases/tag/sc_atacseq_analysis-~{workflow_version}"
-	String crn_release_version = "v5.0.0"
+	String crn_release_version = "v6.0.0"
 
 	call GetWorkflowMetadata.get_workflow_metadata {
 		input:
@@ -100,6 +101,7 @@ workflow sc_atacseq_analysis {
 					project_sample_ids = preprocess.project_sample_ids,
 					preprocessed_adata_objects = preprocess.initial_adata_object,
 					preprocessing_output_file_paths = preprocessing_output_file_paths,
+					mmc_taxonomy = mmc_taxonomy,
 					allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
 					n_top_genes = n_top_genes,
 					n_comps = n_comps,
@@ -133,6 +135,7 @@ workflow sc_atacseq_analysis {
 				project_sample_ids = flatten(preprocess.project_sample_ids),
 				preprocessed_adata_objects = flatten(preprocess.initial_adata_object),
 				preprocessing_output_file_paths = flatten(preprocessing_output_file_paths),
+				mmc_taxonomy = mmc_taxonomy,
 				allen_brain_mmc_precomputed_stats_h5 = allen_brain_mmc_precomputed_stats_h5,
 				n_top_genes = n_top_genes,
 				n_comps = n_comps,
@@ -311,6 +314,7 @@ workflow sc_atacseq_analysis {
 		cellranger_atac_reference_data: {help: "Cell Ranger ATAC reference data; see https://www.10xgenomics.com/support/software/cell-ranger-atac/downloads."}
 		cellranger_atac_reference_chrom_sizes: {help: "Chromosome sizes file (.chrom.sizes or .fa.fai) from the Cell Ranger ATAC reference, used to validate fragment coordinates during splitting."}
 		vireo_assignment_files: {help: "Vireo donor assignment CSV with columns: donor_id, sample, raw_bc. Covers all donors in the pool."}
+		mmc_taxonomy: {help: "Cell type taxonomy of the precomputed stats reference; appended to MMC output filenames. Must match allen_brain_mmc_precomputed_stats_h5. Options are 'SEAAD' or 'Siletti'; the workflow is human (hg38) only."}
 		allen_brain_mmc_precomputed_stats_h5: {help: "A precomputed statistics file from the Allen Brain Cell Atlas containing reference statistics (the average gene expression profile per cell type cluster and cell type taxonomy)."}
 		n_top_genes: {help: "Number of HVG genes to keep. [3000]"}
 		n_comps: {help: "Number of principal components to compute. [30]"}
